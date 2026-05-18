@@ -330,6 +330,26 @@ CREATE TABLE appointments (
                               notes          TEXT,
                               created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                               updated_at     DATETIME NULL,                          -- [v19 audit]
+    -- [audit/race-condition] Columnas virtuales que materializan el "slot activo"
+    -- de la cita. Si la cita esta en estado activo (1=PENDING, 2=CONFIRMED,
+    -- 3=IN_PROGRESS) el slot vale (membership + start) y (booth + start);
+    -- si esta en cualquier otro estado (CANCELLED, NO_SHOW, COMPLETED) o no
+    -- usa cabina, vale NULL. El indice UNIQUE permite multiples NULLs, asi
+    -- que las citas no activas o sin cabina conviven sin restriccion.
+    -- Esto bloquea a NIVEL BD que dos transacciones concurrentes inserten
+    -- dos citas activas con el mismo (empleado, slot) o (cabina, slot),
+    -- complementando los locks pesimistas (que solo protegen las filas de
+    -- membership/booth, no el predicado temporal).
+                              active_slot_key       VARCHAR(50) GENERATED ALWAYS AS (
+                                  CASE WHEN id_status IN (1, 2, 3)
+                                       THEN CONCAT(id_membership, '_', start_datetime)
+                                       ELSE NULL END
+                              ) VIRTUAL,
+                              active_booth_slot_key VARCHAR(50) GENERATED ALWAYS AS (
+                                  CASE WHEN id_booth IS NOT NULL AND id_status IN (1, 2, 3)
+                                       THEN CONCAT(id_booth, '_', start_datetime)
+                                       ELSE NULL END
+                              ) VIRTUAL,
                               CONSTRAINT fk_appointment_business
                                   FOREIGN KEY (id_business) REFERENCES businesses(id_business),
                               CONSTRAINT fk_appointment_client
@@ -341,7 +361,11 @@ CREATE TABLE appointments (
                               CONSTRAINT fk_appointment_status
                                   FOREIGN KEY (id_status) REFERENCES appointment_statuses(id_status),
                               CONSTRAINT chk_appointment_times
-                                  CHECK (start_datetime < end_datetime)
+                                  CHECK (start_datetime < end_datetime),
+                              CONSTRAINT uq_appointment_active_slot
+                                  UNIQUE (active_slot_key),
+                              CONSTRAINT uq_appointment_active_booth_slot
+                                  UNIQUE (active_booth_slot_key)
 ) ENGINE=InnoDB;
 
 -- ------------------------------------------------------------
@@ -509,18 +533,19 @@ INSERT INTO businesses (name, slug, email, appointment_interval)
 VALUES ('Otro', 'otro', 'otro@optima.com', 30);
 
 -- u1: Admin Demo (identidad)
+-- Password seed: "12345678". Cada usuario lleva su PROPIO hash BCrypt (salt
+-- distinto) para que crackear uno no comprometa los demas.
 INSERT INTO users (full_name, email, password_hash)
 VALUES ('Admin Demo', 'admin@optima.com',
-        '$2a$10$XLihaXA2hZhv9fmi1KkYHewNFyhdnAexajF2fDQS9TZSa3a1gke4q');
+        '$2a$10$PqBj6CFmvPqwYJetBkVQA.w062mh3mrb2DxF78lIQj2dI/XqjptI.');
 -- m1: Admin Demo en business 1 con rol ADMIN
 INSERT INTO memberships (id_user, id_business, id_role) VALUES (1, 1, 1);
 
--- u2: Empleado Demo (mismo password "12345678", mismo hash BCrypt;
--- el salt va embebido en el hash). Sirve para probar el rol EMPLOYEE
--- en la coleccion Postman.
+-- u2: Empleado Demo (mismo password "12345678" pero salt distinto). Sirve
+-- para probar el rol EMPLOYEE en la coleccion Postman.
 INSERT INTO users (full_name, email, password_hash)
 VALUES ('Empleado Demo', 'empleado@optima.com',
-        '$2a$10$XLihaXA2hZhv9fmi1KkYHewNFyhdnAexajF2fDQS9TZSa3a1gke4q');
+        '$2a$10$fCI9ZhcMUj5Z.fmPX2nZ7.SrSn22K42fxU8dvf8GCm8NUDoGud8xq');
 -- m2: Empleado Demo en business 1 con rol EMPLOYEE
 INSERT INTO memberships (id_user, id_business, id_role) VALUES (2, 1, 2);
 
@@ -535,14 +560,14 @@ VALUES (2, 'Cliente Ajeno Seed', TRUE);
 -- ============================================================
 
 -- ------------------------------------------------------------
--- 2 empleados mas (mismo password "12345678", mismo hash BCrypt).
+-- 2 empleados mas (mismo password "12345678" pero hash distinto cada uno).
 -- [v16 membership] Cada user va seguido de su membership con (b1, role
 -- EMPLOYEE) para mantener la coincidencia 1:1 user_id <-> membership_id.
 -- ------------------------------------------------------------
 -- u3: Maria
 INSERT INTO users (full_name, email, password_hash, phone)
 VALUES ('Maria Garcia', 'maria@optima.com',
-        '$2a$10$XLihaXA2hZhv9fmi1KkYHewNFyhdnAexajF2fDQS9TZSa3a1gke4q',
+        '$2a$10$Gs/mSNCqSc5puTJzCA0NIe23YqUEJtCG/YZ4WVep9L9SZZTb.DSy6',
         '600111001');
 -- m3: Maria en business 1 con rol EMPLOYEE
 INSERT INTO memberships (id_user, id_business, id_role) VALUES (3, 1, 2);
@@ -550,7 +575,7 @@ INSERT INTO memberships (id_user, id_business, id_role) VALUES (3, 1, 2);
 -- u4: Carlos
 INSERT INTO users (full_name, email, password_hash, phone)
 VALUES ('Carlos Lopez', 'carlos@optima.com',
-        '$2a$10$XLihaXA2hZhv9fmi1KkYHewNFyhdnAexajF2fDQS9TZSa3a1gke4q',
+        '$2a$10$zBo7AGlqJF08rLwjLaUXV.D4aAFyFjwhutIlrPes6lVaJmbrvSP1u',
         '600111002');
 -- m4: Carlos en business 1 con rol EMPLOYEE
 INSERT INTO memberships (id_user, id_business, id_role) VALUES (4, 1, 2);
