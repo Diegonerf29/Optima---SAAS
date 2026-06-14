@@ -1,9 +1,18 @@
 // Layout principal de la app: sidebar persistente y area de contenido con Outlet
-import { useCallback, useState } from 'react'
+import { Suspense, useCallback, useState } from 'react'
 import { Navigate, Outlet } from 'react-router-dom'
 import { Menu } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { Sidebar } from './Sidebar'
+
+/** Spinner del area de contenido mientras se carga el chunk diferido de la pagina */
+function PageFallback() {
+  return (
+    <div className="flex h-full items-center justify-center">
+      <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-slate-200 border-t-blue-500" />
+    </div>
+  )
+}
 
 /** Layout de paginas protegidas: sidebar fijo en escritorio, panel en movil */
 export function AppLayout() {
@@ -30,7 +39,9 @@ export function AppLayout() {
         </header>
 
         <main className="flex-1 overflow-y-auto">
-          <Outlet />
+          <Suspense fallback={<PageFallback />}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>
