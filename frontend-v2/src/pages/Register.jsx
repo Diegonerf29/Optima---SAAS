@@ -1,9 +1,9 @@
 // Wizard de registro en 3 pasos: negocio, ubicacion y cuenta de administrador
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { useNavigate, Navigate, Link } from 'react-router-dom'
 import {
   Building2, UserCircle, MapPin, ArrowLeft, ArrowRight, Check,
-  AlertCircle, AlertTriangle, Eye, EyeOff, Info, Lock,
+  AlertCircle, AlertTriangle, Eye, EyeOff, Info,
 } from 'lucide-react'
 import { Input, INPUT_SANITIZE } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'

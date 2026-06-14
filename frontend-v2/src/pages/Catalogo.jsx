@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Plus, Pencil, Archive, ArchiveRestore, Tag, Scissors, Search, X, Clock, ChevronRight,
-  RefreshCw, Filter, LayoutGrid, List, Calendar, Trash2,
+  RefreshCw, Filter, LayoutGrid, List, Calendar,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -867,7 +867,6 @@ function CatChip({ active, onClick, children }) {
 /** Tarjeta de servicio con duracion, precio e impuesto */
 function ServiceCard({ service, taxes, isAdmin, archived, onOpen, onEdit, onArchive, onReactivate }) {
   const color = catColor(service.categoryId)
-  const taxPct = taxPercentage(taxes, service.taxId)
   const totalWithVat = priceWithVat(service, taxes)
   return (
     <div

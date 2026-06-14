@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ChevronLeft, ChevronRight, Plus, RefreshCw, Printer,
-  Palette, SlidersHorizontal, X,
+  SlidersHorizontal, X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
@@ -17,13 +17,13 @@ import { totalBooked } from '@/lib/format'
 import {
   MONTHS_ES, DAYS_ES_SHORT, VIEW_MODES,
   DEFAULT_DAY_START, DEFAULT_DAY_END, HOUR_PX,
-  PALETTES, GRAY_PALETTE, STATUS_STYLES,
+  STATUS_STYLES,
   pad2, keyOf, isSameDay, startOfWeek, buildMonthGrid, rangeFor,
   apptDate, minutesOf, layoutEvents, openRangesFor,
   blocksForCell, labelForBlock, blockForAppointment, absenceForAppointment,
 } from '@/components/calendar/utils'
 import {
-  HourColumn, HourSlots, NowLine, PositionedEvent, EventChip, BlockOverlay, AbsenceOverlay,
+  HourColumn, HourSlots, NowLine, PositionedEvent, EventChip, BlockOverlay,
 } from '@/components/calendar/cells'
 import { ResourceDayGrid }  from '@/components/calendar/ResourceDayGrid'
 import { WeekResourceGrid } from '@/components/calendar/WeekResourceGrid'

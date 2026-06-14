@@ -55,6 +55,14 @@ const fmtSinceLong = (iso) => {
 
 const telHref = (phone) => 'tel:' + String(phone || '').replace(/\s/g, '')
 
+/** Icono de orden de columna; recibe el estado de orden por props para vivir fuera del render */
+function SortIcon({ k, sortKey, sortDir }) {
+  if (sortKey !== k) return <ChevronsUpDown size={12} className="opacity-60" />
+  return sortDir === 'asc'
+    ? <ArrowUp size={12} className="text-blue-500" />
+    : <ArrowDown size={12} className="text-blue-500" />
+}
+
 /** Listado y gestion de clientes con buscador en servidor, paginacion y archivado */
 export default function Clientes() {
   const { user } = useAuth()
@@ -199,14 +207,6 @@ export default function Clientes() {
     }
   }
 
-
-  const SortIcon = ({ k }) => {
-    if (sortKey !== k) return <ChevronsUpDown size={12} className="opacity-60" />
-    return sortDir === 'asc'
-      ? <ArrowUp size={12} className="text-blue-500" />
-      : <ArrowDown size={12} className="text-blue-500" />
-  }
-
   return (
     <div className="px-4 sm:px-6 lg:px-8 xl:px-10 py-8">
 
@@ -309,7 +309,7 @@ export default function Clientes() {
                     className="cursor-pointer select-none px-6 py-3.5 text-left text-[11px] font-semibold uppercase tracking-wider hover:text-blue-600 transition text-slate-400"
                   >
                     <span className={`inline-flex items-center gap-1 ${sortKey === 'fullName' ? 'text-[#1e3a5f]' : ''}`}>
-                      Nombre <SortIcon k="fullName" />
+                      Nombre <SortIcon k="fullName" sortKey={sortKey} sortDir={sortDir} />
                     </span>
                   </th>
                   <th className="px-6 py-3.5 text-left text-[11px] font-semibold text-slate-400 uppercase tracking-wider hidden md:table-cell">Email</th>
@@ -319,7 +319,7 @@ export default function Clientes() {
                     className="cursor-pointer select-none px-6 py-3.5 text-left text-[11px] font-semibold uppercase tracking-wider hidden md:table-cell hover:text-blue-600 transition text-slate-400"
                   >
                     <span className={`inline-flex items-center gap-1 ${sortKey === 'createdAt' ? 'text-[#1e3a5f]' : ''}`}>
-                      Cliente desde <SortIcon k="createdAt" />
+                      Cliente desde <SortIcon k="createdAt" sortKey={sortKey} sortDir={sortDir} />
                     </span>
                   </th>
                   <th className="px-6 py-3.5 text-right text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Acciones</th>

@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Users, UserCheck, CalendarCheck, Banknote, AlertCircle,
+  Users, CalendarCheck, Banknote, AlertCircle,
   Plus, Search, Clock, Scissors, MapPin, User, ArrowRight,
   ChevronRight, CalendarDays,
 } from 'lucide-react'

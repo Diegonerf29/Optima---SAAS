@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 /** Reglas de limpieza para campos de entrada */
 export const INPUT_SANITIZE = {
   DIGITS_ONLY: /[^0-9]/g,
-  PHONE: /[^0-9+\s()\-]/g,
+  PHONE: /[^0-9+\s()-]/g,
 }
 
 // Teclas de edicion/navegacion que nunca se filtran
