@@ -189,7 +189,7 @@ export default function Citas() {
   // (no se mueven de modo durante la jornada) Comparar contra startOfToday
   // en lugar de `now` evita reordenes y movimientos inesperados
   const startOfToday = useMemo(() => {
-    const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime()
+    const d = new Date(now); d.setHours(0, 0, 0, 0); return d.getTime()
   }, [now])
 
   const visible = appointments.filter((a) => {

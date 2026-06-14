@@ -22,7 +22,8 @@ export function ResourceDayGrid({
   appointmentInterval = 30,
 }) {
   const dayKey = keyOf(cursor)
-  const dayEvents = eventsByDay.get(dayKey) || []
+  // Referencia estable de la lista del dia para no recalcular los buckets en cada render
+  const dayEvents = useMemo(() => eventsByDay.get(dayKey) || [], [eventsByDay, dayKey])
   const openRanges = openRangesFor(businessHours, cursor)
   const isToday = isSameDay(cursor, new Date())
 
