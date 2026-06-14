@@ -11,7 +11,8 @@ import { useToast } from '@/components/ui/Toast'
 import { AppointmentDetailModal } from '@/components/appointments/AppointmentDetailModal'
 import { OnboardingChecklist } from '@/components/dashboard/OnboardingChecklist'
 import api, { getErrorMessage } from '@/lib/api'
-import { totalBooked } from '@/lib/format'
+import { totalBooked, ymd, minutesBetween, hhmmFromIso, fmtEur } from '@/lib/format'
+import { avatarColor, initials } from '@/lib/avatar'
 
 
 const ACTIVE_STATUSES = ['PENDING', 'CONFIRMED', 'IN_PROGRESS']
@@ -53,30 +54,6 @@ const STATUS_TABS = [
   { key: 'CANCELLED',   label: 'Cancelada' },
   { key: 'NO_SHOW',     label: 'No presentado' },
 ]
-
-const AVATAR_GRADIENTS = [
-  'from-cyan-400 to-blue-500',
-  'from-amber-400 to-orange-500',
-  'from-emerald-400 to-teal-500',
-  'from-indigo-400 to-violet-500',
-  'from-pink-400 to-rose-500',
-  'from-sky-400 to-blue-500',
-]
-const avatarGradient = (id) => AVATAR_GRADIENTS[(id ?? 0) % AVATAR_GRADIENTS.length]
-const initials = (name) =>
-  name?.trim().split(/\s+/).filter(Boolean).slice(0, 2).map((s) => s[0]?.toUpperCase()).join('') || '?'
-
-const ymd = (d) => {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const da = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${da}`
-}
-const minutesBetween = (a, b) => (new Date(b) - new Date(a)) / 60000
-const hhmm = (iso) => String(iso).slice(11, 16)
-
-const fmtEur = (n) =>
-  Number(n).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
 
 const fullDate = (d) =>
   d.toLocaleDateString('es-ES', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
@@ -153,7 +130,7 @@ function NextAppointmentHero({ appt, mins, onOpen }) {
             Ver detalle
           </button>
           <span className="flex-1 px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-white text-xs font-semibold text-center tabular-nums">
-            {hhmm(appt.startDateTime)} – {hhmm(appt.endDateTime)}
+            {hhmmFromIso(appt.startDateTime)} – {hhmmFromIso(appt.endDateTime)}
           </span>
         </div>
       </div>
@@ -234,7 +211,7 @@ function TodayTimeline({ list, now, onSelect, dayStart = 9, dayEnd = 21 }) {
               onClick={() => onSelect(a)}
               className="absolute top-1.5 bottom-1.5 rounded text-[10px] font-semibold text-white px-1.5 overflow-hidden whitespace-nowrap text-ellipsis hover:-translate-y-0.5 hover:shadow-md transition"
               style={{ left: `${left}%`, width: `${width}%`, background: STATUS_COLORS[a.statusName] }}
-              title={`${a.clientName} · ${hhmm(a.startDateTime)}`}
+              title={`${a.clientName} · ${hhmmFromIso(a.startDateTime)}`}
             >
               {a.clientName}
             </button>
@@ -566,7 +543,7 @@ export default function Dashboard() {
                         >
                           <td className="px-6 py-3.5">
                             <div className="flex items-center gap-3">
-                              <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${avatarGradient(a.id)} flex items-center justify-center text-white text-xs font-bold shrink-0`}>
+                              <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${avatarColor(a.id)} flex items-center justify-center text-white text-xs font-bold shrink-0`}>
                                 {initials(a.clientName)}
                               </div>
                               <div className="min-w-0">
@@ -576,7 +553,7 @@ export default function Dashboard() {
                             </div>
                           </td>
                           <td className="px-2 py-3.5 tabular-nums">
-                            <div className="font-semibold text-[#1e3a5f]">{hhmm(a.startDateTime)} – {hhmm(a.endDateTime)}</div>
+                            <div className="font-semibold text-[#1e3a5f]">{hhmmFromIso(a.startDateTime)} – {hhmmFromIso(a.endDateTime)}</div>
                             <div className="text-xs text-slate-400">Hoy</div>
                           </td>
                           <td className="px-2 py-3.5 text-slate-600 hidden md:table-cell">

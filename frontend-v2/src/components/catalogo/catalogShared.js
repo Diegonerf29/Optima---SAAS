@@ -1,10 +1,9 @@
 // constantes y helpers compartidos por el catalogo de servicios, categorias e impuestos
+// fmtEur vive en lib compartido; se reexporta para conservar el API del modulo
+export { fmtEur } from '@/lib/format'
 
 export const emptyService = { name: '', description: '', price: '', durationMinutes: '', categoryId: '', taxId: '' }
 export const emptyCategory = { name: '' }
-
-export const fmtEur = (n) =>
-  Number(n).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
 
 export const fmtSince = (iso) =>
   iso

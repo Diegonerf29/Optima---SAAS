@@ -13,6 +13,7 @@ import { useCatalog } from '@/context/CatalogContext'
 import { useToast } from '@/components/ui/Toast'
 import { usePagedFetch } from '@/hooks/usePagedFetch'
 import api, { getErrorMessage } from '@/lib/api'
+import { ymd } from '@/lib/format'
 import { EmployeeCard } from '@/components/employees/EmployeeCard'
 import { EmployeeDrawer } from '@/components/employees/EmployeeDrawer'
 
@@ -131,11 +132,10 @@ export default function Empleados() {
     setModal('deactivate')
     setUpcomingInfo({ loading: true, count: null })
 
-    const t = new Date()
-    const ymd = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`
+    const from = ymd(new Date())
     try {
       const r = await api.get(`/api/businesses/${bId}/appointments`, {
-        params: { membershipId: e.id, from: ymd, size: 1 },
+        params: { membershipId: e.id, from, size: 1 },
         signal: controller.signal,
       })
       if (controller.signal.aborted) return

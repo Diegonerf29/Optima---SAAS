@@ -1,5 +1,23 @@
 // Funciones de formato de fechas, horas y precios para la interfaz de citas
 
+/** Date local a "YYYY-MM-DD" sin pasar por UTC (evita el desfase de toISOString) */
+export const ymd = (d) => {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const da = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${da}`
+}
+
+/** Minutos transcurridos entre dos instantes (ISO o Date) */
+export const minutesBetween = (a, b) => (new Date(b) - new Date(a)) / 60000
+
+/** "HH:mm" extraido de un LocalDateTime ISO del servidor ("...THH:mm:ss") */
+export const hhmmFromIso = (iso) => String(iso).slice(11, 16)
+
+/** Importe en euros con dos decimales y separador de miles local */
+export const fmtEur = (n) =>
+  Number(n).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
+
 /** Normaliza un LocalTime ("HH:mm" o "HH:mm:ss") a "HH:mm:ss" */
 export const toHms = (t) => {
   const parts = String(t ?? '').split(':')

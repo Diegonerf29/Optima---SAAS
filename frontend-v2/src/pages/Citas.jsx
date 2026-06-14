@@ -17,7 +17,8 @@ import { useCatalog } from '@/context/CatalogContext'
 import { useToast } from '@/components/ui/Toast'
 import { usePagedFetch } from '@/hooks/usePagedFetch'
 import api, { getErrorMessage } from '@/lib/api'
-import { formatDateTime, totalBooked } from '@/lib/format'
+import { formatDateTime, totalBooked, ymd, minutesBetween, fmtEur } from '@/lib/format'
+import { avatarColor, initials } from '@/lib/avatar'
 import { dotClassFromColorAndId } from '@/lib/employeeColor'
 
 
@@ -38,25 +39,6 @@ const STATUS_DOT = {
   COMPLETED:   'bg-emerald-500',
   CANCELLED:   'bg-slate-400',
   NO_SHOW:     'bg-rose-500',
-}
-
-const AVATAR_COLORS = [
-  'from-cyan-400 to-blue-500',
-  'from-amber-400 to-orange-500',
-  'from-emerald-400 to-teal-500',
-  'from-indigo-400 to-violet-500',
-  'from-pink-400 to-rose-500',
-  'from-sky-400 to-blue-500',
-]
-const avatarColor = (id) => AVATAR_COLORS[(id ?? 0) % AVATAR_COLORS.length]
-const initials = (name) =>
-  name?.trim().split(/\s+/).slice(0, 2).map((s) => s[0]?.toUpperCase()).join('') || '?'
-
-const ymd = (d) => {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const da = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${da}`
 }
 
 // Devuelve {from, to} para un preset
@@ -97,7 +79,6 @@ const datePreset = (key) => {
   }
 }
 
-const minutesBetween = (a, b) => (new Date(b) - new Date(a)) / 60000
 const formatDuration = (a, b) => {
   const m = minutesBetween(a, b)
   const h = Math.floor(m / 60)
@@ -300,8 +281,8 @@ export default function Citas() {
 
       <div className="mb-5 grid grid-cols-2 md:grid-cols-5 gap-3">
         <StatTile label="En esta página" value={pageStats.count} tone="default" />
-        <StatTile label="€ previstos"    value={`${pageStats.total.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`} tone="default" />
-        <StatTile label="€ cobrados"     value={`${pageStats.paid.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`}  tone="success" />
+        <StatTile label="€ previstos"    value={fmtEur(pageStats.total)} tone="default" />
+        <StatTile label="€ cobrados"     value={fmtEur(pageStats.paid)}  tone="success" />
         <StatTile label="Sin cobrar"     value={pageStats.unpaidCount} tone="warning" />
         <StatTile label="Canceladas / no show" value={pageStats.lost} tone="danger" />
       </div>

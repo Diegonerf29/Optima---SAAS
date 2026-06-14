@@ -15,17 +15,8 @@ import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/components/ui/Toast'
 import { usePagedFetch } from '@/hooks/usePagedFetch'
 import api, { getErrorMessage } from '@/lib/api'
+import { avatarColor } from '@/lib/avatar'
 import { AppointmentWizard } from '@/components/appointments/AppointmentWizard'
-
-const AVATAR_COLORS = [
-  'from-cyan-400 to-blue-500',
-  'from-amber-400 to-orange-500',
-  'from-emerald-400 to-teal-500',
-  'from-indigo-400 to-violet-500',
-  'from-pink-400 to-rose-500',
-  'from-sky-400 to-blue-500',
-]
-const avatarColor = (id) => AVATAR_COLORS[(id ?? 0) % AVATAR_COLORS.length]
 
 const empty = { fullName: '', email: '', phone: '', notes: '' }
 
