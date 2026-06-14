@@ -13,6 +13,12 @@ services:
     volumes:
       - db_data:/var/lib/mysql
       - ./docs/schema_v20.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    # la api espera a que mysql responda de verdad y no solo a que arranque
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uoptima_user", "-poptima_pass"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
     networks:
       - optima-network
 
@@ -22,7 +28,8 @@ services:
     working_dir: /app
     restart: on-failure
     depends_on:
-      - mysqldb
+      mysqldb:
+        condition: service_healthy
     ports:
       - "8080:8080"
     volumes:

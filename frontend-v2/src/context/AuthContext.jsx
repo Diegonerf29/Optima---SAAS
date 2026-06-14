@@ -4,10 +4,20 @@ import api from '@/lib/api'
 
 const AuthContext = createContext(null)
 
+/** Decodifica el payload de un JWT (base64url + UTF-8); el atob a secas falla con `-`/`_` o acentos */
+function decodeJwtPayload(token) {
+  let b64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+  while (b64.length % 4) b64 += '='
+  const json = decodeURIComponent(
+    atob(b64).split('').map((c) => '%' + c.charCodeAt(0).toString(16).padStart(2, '0')).join('')
+  )
+  return JSON.parse(json)
+}
+
 /** Lee los datos basicos de la credencial de sesion */
 function decodeJwt(token) {
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]))
+    const payload = decodeJwtPayload(token)
     return {
       token,
       userId:     payload.userId,
@@ -23,7 +33,7 @@ function decodeJwt(token) {
 /** Revisa si la credencial ya no es valida */
 function isJwtExpired(token) {
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]))
+    const payload = decodeJwtPayload(token)
     return typeof payload.exp === 'number' && payload.exp * 1000 <= Date.now()
   } catch {
     return true

@@ -1,6 +1,7 @@
 package com.optima.api.common.mail;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
  * envia correos simples
  * si falla no rompe la operacion principal
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MailService {
@@ -31,8 +33,9 @@ public class MailService {
 
         try {
             mailSender.send(message);
-        } catch (MailException ignored) {
-
+        } catch (MailException ex) {
+            // se anota el fallo en el log para poder diagnosticarlo
+            log.warn("No se pudo enviar el correo a {}: {}", to, ex.getMessage());
         }
     }
 }

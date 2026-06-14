@@ -55,6 +55,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
             .addLimit(Bandwidth.classic(20, Refill.intervally(20, Duration.ofHours(1))))
             .build();
 
+    /** tope de ips guardadas por mapa para no agotar memoria */
+    private static final int MAX_TRACKED_IPS = 10_000;
+
     // se guarda un cubo por ip
     private final Map<String, Bucket> loginBuckets = new ConcurrentHashMap<>();
     private final Map<String, Bucket> registerBuckets = new ConcurrentHashMap<>();
@@ -99,18 +102,27 @@ public class RateLimitFilter extends OncePerRequestFilter {
         String xff = request.getHeader("X-Forwarded-For");
         String ip = (xff != null && !xff.isBlank()) ? xff.split(",")[0].trim() : request.getRemoteAddr();
         if ("/api/auth/token".equals(uri)) {
-            return loginBuckets.computeIfAbsent(ip, k -> LOGIN_BUCKET.get());
+            return bucketFor(loginBuckets, ip, LOGIN_BUCKET);
         }
         if ("/api/auth/register".equals(uri)) {
-            return registerBuckets.computeIfAbsent(ip, k -> REGISTER_BUCKET.get());
+            return bucketFor(registerBuckets, ip, REGISTER_BUCKET);
         }
         if ("/api/auth/forgot-password".equals(uri)) {
-            return forgotBuckets.computeIfAbsent(ip, k -> FORGOT_BUCKET.get());
+            return bucketFor(forgotBuckets, ip, FORGOT_BUCKET);
         }
         if ("/api/auth/reset-password".equals(uri)) {
-            return resetBuckets.computeIfAbsent(ip, k -> RESET_BUCKET.get());
+            return bucketFor(resetBuckets, ip, RESET_BUCKET);
         }
         return null;
+    }
+
+    /** devuelve el cubo de la ip y vacia el mapa si crece demasiado */
+    private Bucket bucketFor(Map<String, Bucket> buckets, String ip, Supplier<Bucket> factory) {
+        // se prefiere reiniciar los limites a dejar que la memoria crezca sin tope
+        if (buckets.size() > MAX_TRACKED_IPS) {
+            buckets.clear();
+        }
+        return buckets.computeIfAbsent(ip, k -> factory.get());
     }
 
     /** escribe la respuesta de too many requests */

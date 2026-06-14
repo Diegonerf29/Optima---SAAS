@@ -171,6 +171,14 @@ public class AppointmentValidator {
             );
         }
 
+        // los segundos desalinean la agenda aunque el minuto sea valido
+        if (startDateTime.getSecond() != 0 || startDateTime.getNano() != 0) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "La hora de inicio no puede incluir segundos"
+            );
+        }
+
         int minutes = startDateTime.getMinute();
 
         if (minutes % interval != 0) {
@@ -186,6 +194,14 @@ public class AppointmentValidator {
     public void validateBusinessHours(Long businessId,
                                       LocalDateTime startDateTime,
                                       LocalDateTime endDateTime) {
+        // si cruza medianoche las horas no se pueden comparar dentro del mismo dia
+        if (!startDateTime.toLocalDate().equals(endDateTime.toLocalDate())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "La cita no puede cruzar medianoche"
+            );
+        }
+
         int dayOfWeek = startDateTime.getDayOfWeek().getValue();
         List<BusinessHour> hoursOfDay =
                 businessHourRepository.findAllByBusinessIdAndDayOfWeekOrderByStartTimeAsc(

@@ -60,6 +60,11 @@ public class PasswordResetService {
         }
 
         User user = userOpt.get();
+        // un usuario desactivado se trata igual que si no existiera
+        if (!user.getIsActive()) {
+            return;
+        }
+
         String rawToken = generateRawToken();
         String tokenHash = sha256Hex(rawToken);
 
@@ -110,6 +115,11 @@ public class PasswordResetService {
         }
 
         User user = reset.getUser();
+        // un usuario desactivado no puede recuperar su cuenta
+        if (!user.getIsActive()) {
+            throw badToken();
+        }
+
         user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
 

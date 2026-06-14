@@ -1,6 +1,7 @@
 package com.optima.api.common.geocoding;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -15,6 +16,7 @@ import java.util.Optional;
  * intenta obtener coordenadas a partir de una direccion
  * si falla devuelve vacio y sigue el flujo
  */
+@Slf4j
 @Service
 public class GeocodingService {
 
@@ -84,8 +86,9 @@ public class GeocodingService {
             return Optional.of(new Coordinates(
                     new BigDecimal(latStr),
                     new BigDecimal(lonStr)));
-        } catch (Exception ignored) {
-            // si falla se sigue sin coordenadas
+        } catch (Exception ex) {
+            // si falla se sigue sin coordenadas pero queda anotado en el log
+            log.warn("Geocoding fallido para '{}': {}", query, ex.getMessage());
             return Optional.empty();
         }
     }

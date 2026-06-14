@@ -272,6 +272,12 @@ public class AppointmentService {
                                                        LocalDate to,
                                                        Long membershipId,
                                                        Pageable pageable) {
+        // un rango invertido se rechaza antes de consultar
+        if (from != null && to != null && from.isAfter(to)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "La fecha 'from' no puede ser posterior a 'to'");
+        }
+
         // si el campo no se puede ordenar se rechaza antes de consultar la base de datos
         pageable.getSort().forEach(order -> {
             if (!SORTABLE_FIELDS.contains(order.getProperty())) {
