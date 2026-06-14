@@ -36,9 +36,12 @@ Si hay cualquier problema ejecutándola en local, se puede acceder a esa URL dir
 
 ---
 
-## Nota sobre seguridad (JWT)
+## Configuración y seguridad
 
-La clave JWT tiene un valor por defecto en `application.properties` para que la aplicación funcione sin configurar nada extra. Sabemos que en un entorno real esto debería estar en una variable de entorno y no en el código fuente. En nuestra versión desplegada en AWS sí está externalizada en un `.env` que no se sube al repositorio. Aquí se deja en el código solo para facilitar la corrección.
+Toda la configuración sensible (clave JWT, credenciales de base de datos y correo) se externaliza mediante variables de entorno; el repositorio no contiene valores de producción. El fichero [`.env-example`](.env-example) documenta cada variable con valores de desarrollo listos para arrancar en local, y para producción se usa un `.env` propio —no versionado— con claves aleatorias.
+
+- **JWT**: la clave de firma se lee de `JWT_SECRET`. En local hay un valor de desarrollo por defecto; en producción se define una clave aleatoria de 64+ caracteres.
+- **Base de datos y correo**: las credenciales viven en variables de entorno, fuera del control de versiones.
 
 ---
 
