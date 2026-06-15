@@ -5,6 +5,7 @@ import { AuthProvider } from '@/context/AuthContext'
 import { CatalogProvider } from '@/context/CatalogContext'
 import { ToastProvider } from '@/components/ui/Toast'
 import { AppLayout } from '@/components/layout/AppLayout'
+import { ChunkErrorBoundary } from '@/components/layout/ChunkErrorBoundary'
 import Login from '@/pages/Login'
 
 // Carga diferida del resto de rutas para dividir el bundle por pagina; Login
@@ -39,8 +40,9 @@ export default function App() {
         <ToastProvider>
           <CatalogProvider>
             {/* Limite para las rutas publicas; las protegidas tienen el suyo en AppLayout */}
-            <Suspense fallback={<FullScreenFallback />}>
-              <Routes>
+            <ChunkErrorBoundary>
+              <Suspense fallback={<FullScreenFallback />}>
+                <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -57,7 +59,8 @@ export default function App() {
                 </Route>
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Routes>
-            </Suspense>
+              </Suspense>
+            </ChunkErrorBoundary>
           </CatalogProvider>
         </ToastProvider>
       </AuthProvider>

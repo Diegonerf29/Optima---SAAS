@@ -1,9 +1,10 @@
 // Layout principal de la app: sidebar persistente y area de contenido con Outlet
 import { Suspense, useCallback, useState } from 'react'
-import { Navigate, Outlet } from 'react-router-dom'
+import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { Menu } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { Sidebar } from './Sidebar'
+import { ChunkErrorBoundary } from './ChunkErrorBoundary'
 
 /** Spinner del area de contenido mientras se carga el chunk diferido de la pagina */
 function PageFallback() {
@@ -17,6 +18,7 @@ function PageFallback() {
 /** Layout de paginas protegidas: sidebar fijo en escritorio, panel en movil */
 export function AppLayout() {
   const { user } = useAuth()
+  const { pathname } = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
   const closeMobile = useCallback(() => setMobileOpen(false), [])
 
@@ -39,9 +41,12 @@ export function AppLayout() {
         </header>
 
         <main className="flex-1 overflow-y-auto">
-          <Suspense fallback={<PageFallback />}>
-            <Outlet />
-          </Suspense>
+          {/* key por ruta: si una vista falla al cargar, navegar a otra resetea el limite y reintenta */}
+          <ChunkErrorBoundary key={pathname}>
+            <Suspense fallback={<PageFallback />}>
+              <Outlet />
+            </Suspense>
+          </ChunkErrorBoundary>
         </main>
       </div>
     </div>
