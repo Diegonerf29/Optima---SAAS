@@ -71,6 +71,7 @@ export function ToastProvider({ children }) {
 }
 
 /** Funcion para emitir avisos; lanza si se usa fuera del proveedor */
+// eslint-disable-next-line react-refresh/only-export-components -- hook colocado con su provider a proposito (solo afecta al fast-refresh de dev)
 export function useToast() {
   const ctx = useContext(ToastContext)
   if (!ctx) throw new Error('useToast must be inside ToastProvider')

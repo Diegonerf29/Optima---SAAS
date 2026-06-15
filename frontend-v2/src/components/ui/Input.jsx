@@ -2,6 +2,7 @@ import { useId } from 'react'
 import { cn } from '@/lib/utils'
 
 /** Reglas de limpieza para campos de entrada */
+// eslint-disable-next-line react-refresh/only-export-components -- constante de saneado colocada con el Input a proposito (solo afecta al fast-refresh de dev)
 export const INPUT_SANITIZE = {
   DIGITS_ONLY: /[^0-9]/g,
   PHONE: /[^0-9+\s()-]/g,

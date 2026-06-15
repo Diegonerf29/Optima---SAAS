@@ -205,6 +205,7 @@ export function AuthProvider({ children }) {
 }
 
 /** Funcion para consumir AuthContext; lanza si se usa fuera del proveedor */
+// eslint-disable-next-line react-refresh/only-export-components -- hook colocado con su provider a proposito (solo afecta al fast-refresh de dev)
 export function useAuth() {
   const ctx = useContext(AuthContext)
   if (!ctx) throw new Error('useAuth must be inside AuthProvider')

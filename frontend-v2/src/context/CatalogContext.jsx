@@ -52,6 +52,7 @@ export function CatalogProvider({ children }) {
 }
 
 /** Funcion para consumir CatalogContext; lanza si se usa fuera del proveedor */
+// eslint-disable-next-line react-refresh/only-export-components -- hook colocado con su provider a proposito (solo afecta al fast-refresh de dev)
 export function useCatalog() {
   const ctx = useContext(CatalogContext)
   if (!ctx) throw new Error('useCatalog debe usarse dentro de <CatalogProvider>')
