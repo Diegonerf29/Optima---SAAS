@@ -1,98 +1,26 @@
 // Listado paginado de citas con filtros por fecha, estado, empleado y wizard de creacion
 import { useEffect, useMemo, useState } from 'react'
 import {
-  Plus, Search, CalendarDays, Clock, User, Scissors, MapPin, FilterX,
+  Plus, Search, CalendarDays, FilterX,
   AlertCircle, Zap, ArrowRight, RefreshCw, List, Calendar,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
-import { StatusBadge, Badge } from '@/components/ui/Badge'
 import { Pagination } from '@/components/ui/Pagination'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { AppointmentWizard } from '@/components/appointments/AppointmentWizard'
 import { AppointmentDetailModal } from '@/components/appointments/AppointmentDetailModal'
+import { AppointmentCard } from '@/components/appointments/AppointmentCard'
+import { DayGroupedList } from '@/components/appointments/DayGroupedList'
+import { datePreset, fmtMinsLeft, STATUS_DOT } from '@/components/appointments/citasShared'
 import { useAuth } from '@/context/AuthContext'
 import { useCatalog } from '@/context/CatalogContext'
 import { useToast } from '@/components/ui/Toast'
 import { usePagedFetch } from '@/hooks/usePagedFetch'
 import api, { getErrorMessage } from '@/lib/api'
-import { formatDateTime, totalBooked, ymd, minutesBetween, fmtEur } from '@/lib/format'
-import { avatarColor, initials } from '@/lib/avatar'
-import { dotClassFromColorAndId } from '@/lib/employeeColor'
+import { totalBooked, fmtEur } from '@/lib/format'
 
-
-// Degradado del bloque de fecha de cada tarjeta, segun el estado
-const TINTS = {
-  PENDING:     'from-amber-400 to-orange-500',
-  CONFIRMED:   'from-blue-500 to-indigo-500',
-  IN_PROGRESS: 'from-cyan-400 to-blue-500',
-  COMPLETED:   'from-emerald-400 to-teal-500',
-  CANCELLED:   'from-slate-400 to-slate-500',
-  NO_SHOW:     'from-slate-400 to-slate-500',
-}
-
-const STATUS_DOT = {
-  PENDING:     'bg-orange-500',
-  CONFIRMED:   'bg-blue-500',
-  IN_PROGRESS: 'bg-sky-500',
-  COMPLETED:   'bg-emerald-500',
-  CANCELLED:   'bg-slate-400',
-  NO_SHOW:     'bg-rose-500',
-}
-
-// Devuelve {from, to} para un preset
-const datePreset = (key) => {
-  const today = new Date()
-  const mondayOf = (d) => {
-    const x = new Date(d)
-    const wd = x.getDay() === 0 ? 7 : x.getDay()
-    x.setDate(x.getDate() - (wd - 1))
-    return x
-  }
-  switch (key) {
-    case 'today':     return { from: ymd(today), to: ymd(today) }
-    case 'tomorrow': {
-      const t = new Date(today); t.setDate(t.getDate() + 1)
-      return { from: ymd(t), to: ymd(t) }
-    }
-    case 'week': {
-      const mon = mondayOf(today)
-      const sun = new Date(mon); sun.setDate(mon.getDate() + 6)
-      return { from: ymd(mon), to: ymd(sun) }
-    }
-    case 'next7': {
-      const end = new Date(today); end.setDate(today.getDate() + 6)
-      return { from: ymd(today), to: ymd(end) }
-    }
-    case 'month': {
-      const first = new Date(today.getFullYear(), today.getMonth(), 1)
-      const last  = new Date(today.getFullYear(), today.getMonth() + 1, 0)
-      return { from: ymd(first), to: ymd(last) }
-    }
-    case 'lastMonth': {
-      const first = new Date(today.getFullYear(), today.getMonth() - 1, 1)
-      const last  = new Date(today.getFullYear(), today.getMonth(), 0)
-      return { from: ymd(first), to: ymd(last) }
-    }
-    default: return { from: '', to: '' }
-  }
-}
-
-const formatDuration = (a, b) => {
-  const m = minutesBetween(a, b)
-  const h = Math.floor(m / 60)
-  const r = m % 60
-  if (h <= 0) return `${m} min`
-  return r ? `${h} h ${r} min` : `${h} h`
-}
-const fmtMinsLeft = (m) => {
-  if (m <= 0) return 'ahora mismo'
-  if (m < 60) return `${m} min`
-  const h = Math.floor(m / 60)
-  const r = m % 60
-  return r ? `${h} h ${r} min` : `${h} h`
-}
 
 /** Listado de citas con filtros por fecha, empleado y estado, y wizard para crear o editar */
 export default function Citas() {
@@ -525,136 +453,3 @@ function StatTile({ label, value, tone }) {
   )
 }
 
-// D3: estados terminales en los que NO se muestra el chip "Pasada" (la cita
-// ya fue cerrada manualmente por el admin, su pasado es esperado)
-const STATES_CERRADOS = new Set(['COMPLETED', 'CANCELLED', 'NO_SHOW'])
-
-/** Tarjeta de cita con bloque de fecha, datos del cliente y resumen del estado */
-function AppointmentCard({ appointment: a, onClick, employeeColor }) {
-  const isInProgress = a.statusName === 'IN_PROGRESS'
-  const servicesLabel = a.bookedServices?.map((b) => b.serviceName).join(' + ') || 'Sin servicios'
-  const showUnpaidChip = !a.isPaid && (a.statusName === 'COMPLETED' || a.statusName === 'IN_PROGRESS')
-  // Chip "Pasada": SOLO indicador visual, no cambia el estado en BD Avisa
-  // al admin que la cita esta sin cerrar y deberia marcarla manualmente
-  // (COMPLETED / CANCELLED / NO_SHOW segun lo que ocurrio)
-  const isOverdue = new Date(a.endDateTime).getTime() < Date.now()
-                    && !STATES_CERRADOS.has(a.statusName)
-  // Punto del color del empleado (F del audit): si el admin asigno color
-  // en Empleadosjsx, ese; si no, color automatico por membershipId
-  const empDot = dotClassFromColorAndId(employeeColor, a.membershipId)
-  return (
-    <div
-      onClick={onClick}
-      className={`bg-white rounded-2xl border ${isInProgress ? 'border-sky-200' : 'border-slate-100/80'} shadow-[0_2px_12px_-2px_rgba(15,23,42,0.06)] p-5 hover:shadow-[0_4px_16px_-4px_rgba(15,23,42,0.1)] hover:border-blue-200/60 transition-all cursor-pointer relative overflow-hidden`}
-    >
-      {isInProgress && <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-cyan-400 to-blue-500" />}
-      <div className="flex items-center gap-5">
-        <div className={`flex flex-col items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br ${TINTS[a.statusName] || 'from-cyan-400 to-blue-500'} shrink-0 shadow-[0_8px_20px_-8px_rgba(14,165,233,0.4)]`}>
-          <span className="text-2xl font-bold text-white leading-none">{new Date(a.startDateTime).getDate()}</span>
-          <span className="text-[10px] text-white/80 uppercase font-semibold tracking-wide">
-            {new Date(a.startDateTime).toLocaleDateString('es-ES', { month: 'short' })}
-          </span>
-        </div>
-
-        <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${avatarColor(a.clientId)} flex items-center justify-center text-white text-xs font-bold shrink-0`}>
-          {initials(a.clientName)}
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">
-            <p className="font-bold text-[#1e3a5f] text-base truncate">{a.clientName}</p>
-            <StatusBadge status={a.statusName} />
-            {a.isPaid && <Badge variant="success">Pagada</Badge>}
-            {showUnpaidChip && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700 ring-1 ring-amber-200">
-                Pendiente cobro
-              </span>
-            )}
-            {isOverdue && (
-              <span
-                title="La cita pasó sin marcarse como completada, cancelada ni ausencia. Ciérrala manualmente."
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-50 text-rose-700 ring-1 ring-rose-200"
-              >
-                Pasada sin cerrar
-              </span>
-            )}
-          </div>
-
-          <div className="text-xs text-slate-500 font-medium mb-1 truncate">
-            <Scissors size={11} className="inline -mt-0.5 mr-1 text-slate-400" /> {servicesLabel}
-          </div>
-
-          <div className="flex flex-wrap gap-3 text-xs text-slate-400 font-medium">
-            <span className="flex items-center gap-1.5">
-              <Clock size={12} />
-              {formatDateTime(a.startDateTime)} · {formatDuration(a.startDateTime, a.endDateTime)}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className={`w-2 h-2 rounded-full shrink-0 ${empDot}`} aria-hidden />
-              <User size={12} />{a.userFullName}
-            </span>
-            {a.boothName && <span className="flex items-center gap-1.5"><MapPin size={12} />{a.boothName}</span>}
-          </div>
-        </div>
-
-        <div className="shrink-0 text-right">
-          <p className={`text-xl font-bold tabular-nums ${a.isPaid ? 'text-[#1e3a5f]' : (showUnpaidChip ? 'text-orange-600' : 'text-[#1e3a5f]')}`}>
-            {totalBooked(a.bookedServices)} €
-          </p>
-          <p className="text-[11px] text-slate-400 mt-0.5">Ver detalle</p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/** Lista agrupada por dia con cabeceras y AppointmentCard por cita */
-function DayGroupedList({ list, onOpen, empColorMap }) {
-  // Agrupa por fecha (yyyy-mm-dd) manteniendo el orden de `list`
-  const groups = useMemo(() => {
-    const m = new Map()
-    list.forEach((a) => {
-      const key = a.startDateTime.slice(0, 10)
-      if (!m.has(key)) m.set(key, [])
-      m.get(key).push(a)
-    })
-    return [...m.entries()]
-  }, [list])
-
-  const fmtDayHeader = (ymdStr) => {
-    const d = new Date(`${ymdStr}T00:00:00`)
-    const today = new Date(); today.setHours(0, 0, 0, 0)
-    const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1)
-    const tag =
-      d.getTime() === today.getTime()    ? 'Hoy'    :
-      d.getTime() === tomorrow.getTime() ? 'Mañana' : ''
-    const long = d.toLocaleDateString('es-ES', { weekday: 'long', day: '2-digit', month: 'long' })
-    return tag ? `${tag} · ${long}` : long
-  }
-
-  return (
-    <div className="space-y-6">
-      {groups.map(([day, list]) => (
-        <section key={day}>
-          <div className="flex items-center gap-3 mb-3">
-            <h2 className="text-xs font-bold text-[#1e3a5f] uppercase tracking-wider capitalize">
-              {fmtDayHeader(day)}
-            </h2>
-            <span className="text-xs text-slate-400">· {list.length} cita{list.length === 1 ? '' : 's'}</span>
-            <div className="flex-1 h-px bg-slate-100" />
-          </div>
-          <div className="appt-grid">
-            {list.map((a) => (
-              <AppointmentCard
-                key={a.id}
-                appointment={a}
-                onClick={() => onOpen(a)}
-                employeeColor={empColorMap?.get(a.membershipId)}
-              />
-            ))}
-          </div>
-        </section>
-      ))}
-    </div>
-  )
-}
