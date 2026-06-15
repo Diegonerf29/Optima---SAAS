@@ -4,7 +4,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { Menu } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { Sidebar } from './Sidebar'
-import { ChunkErrorBoundary } from './ChunkErrorBoundary'
+import { ErrorBoundary } from './ErrorBoundary'
 
 /** Spinner del area de contenido mientras se carga el chunk diferido de la pagina */
 function PageFallback() {
@@ -42,11 +42,11 @@ export function AppLayout() {
 
         <main className="flex-1 overflow-y-auto">
           {/* key por ruta: si una vista falla al cargar, navegar a otra resetea el limite y reintenta */}
-          <ChunkErrorBoundary key={pathname}>
+          <ErrorBoundary key={pathname}>
             <Suspense fallback={<PageFallback />}>
               <Outlet />
             </Suspense>
-          </ChunkErrorBoundary>
+          </ErrorBoundary>
         </main>
       </div>
     </div>
