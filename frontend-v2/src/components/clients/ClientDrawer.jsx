@@ -1,4 +1,5 @@
 // panel lateral con la ficha completa de un cliente y sus acciones
+import { useEffect, useId, useRef } from 'react'
 import {
   Pencil, Archive, ArchiveRestore, Mail, Phone, X, Calendar, CalendarPlus, ExternalLink,
 } from 'lucide-react'
@@ -7,14 +8,30 @@ import { avatarColor, fmtSinceLong, telHref } from './clientShared'
 
 /** Panel lateral con contacto, notas y acciones (nueva cita, editar, archivar, restaurar) */
 export function ClientDrawer({ client, isArchived, onClose, onNewAppointment, onEdit, onArchive, onReactivate }) {
+  const titleId = useId()
+  const panelRef = useRef(null)
+
+  // Al abrir lleva el foco al panel y al cerrar lo restaura (misma accesibilidad que Modal)
+  useEffect(() => {
+    const prevFocus = document.activeElement
+    panelRef.current?.focus()
+    return () => { if (prevFocus instanceof HTMLElement) prevFocus.focus() }
+  }, [])
+
   return (
     <>
       <div
         onClick={onClose}
+        aria-hidden="true"
         className="fixed inset-0 z-40 bg-slate-900/30 backdrop-blur-sm animate-[fadeIn_200ms_ease-out]"
       />
       <aside
-        className="fixed top-0 right-0 z-50 h-[100dvh] w-[420px] max-w-[95vw] bg-white shadow-[0_28px_56px_-16px_rgba(15,23,42,0.22)] flex flex-col animate-[slideInRight_240ms_cubic-bezier(0.2,0.7,0.2,1)]"
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className="fixed top-0 right-0 z-50 h-[100dvh] w-[420px] max-w-[95vw] bg-white shadow-[0_28px_56px_-16px_rgba(15,23,42,0.22)] flex flex-col animate-[slideInRight_240ms_cubic-bezier(0.2,0.7,0.2,1)] focus:outline-none"
       >
         <div className="px-6 pt-6 pb-4 border-b border-slate-100 flex items-start justify-between gap-4">
           <div className="flex items-center gap-4 min-w-0">
@@ -22,7 +39,7 @@ export function ClientDrawer({ client, isArchived, onClose, onNewAppointment, on
               {client.fullName?.[0]?.toUpperCase()}
             </div>
             <div className="min-w-0">
-              <div className="text-lg font-bold text-[#1e3a5f] truncate">{client.fullName}</div>
+              <div id={titleId} className="text-lg font-bold text-[#1e3a5f] truncate">{client.fullName}</div>
               <div className="text-xs text-slate-400 mt-0.5 inline-flex items-center gap-1.5">
                 <Calendar size={12} /> Cliente desde {fmtSinceLong(client.createdAt)}
               </div>
