@@ -6,6 +6,7 @@ import com.optima.api.modules.business.service.BoothService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -36,7 +37,7 @@ public class BoothController {
     @GetMapping
     public Page<BoothResponse> listActive(@PathVariable @Positive Long businessId,
                                           @RequestParam(defaultValue = "true") boolean active,
-                                          @PageableDefault(sort = "name") Pageable pageable) {
+                                          @ParameterObject @PageableDefault(sort = "name") Pageable pageable) {
         return boothService.listActive(businessId, active, pageable);
     }
 

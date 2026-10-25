@@ -6,6 +6,7 @@ import com.optima.api.modules.business.service.ScheduleBlockService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -35,7 +36,7 @@ public class ScheduleBlockController {
     /** lista de bloqueos de agenda */
     @GetMapping
     public Page<ScheduleBlockResponse> listByBusiness(@PathVariable @Positive Long businessId,
-                                                      @PageableDefault(sort = "id") Pageable pageable) {
+                                                      @ParameterObject @PageableDefault(sort = "id") Pageable pageable) {
         return blockService.listByBusiness(businessId, pageable);
     }
 

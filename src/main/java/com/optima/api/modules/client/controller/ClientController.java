@@ -6,6 +6,7 @@ import com.optima.api.modules.client.service.ClientService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -38,7 +39,7 @@ public class ClientController {
     public Page<ClientResponse> listByBusiness(@PathVariable @Positive Long businessId,
                                                @RequestParam(defaultValue = "true") boolean active,
                                                @RequestParam(required = false) String search,
-                                               @PageableDefault(sort = {"fullName", "id"}) Pageable pageable) {
+                                               @ParameterObject @PageableDefault(sort = {"fullName", "id"}) Pageable pageable) {
         return clientService.listByBusiness(businessId, active, search, pageable);
     }
 

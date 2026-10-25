@@ -8,6 +8,7 @@ import com.optima.api.modules.user.service.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -43,7 +44,7 @@ public class UserController {
      */
     @GetMapping("/invitations")
     @PreAuthorize("hasRole('ADMIN')")
-    public Page<UserResponse> listInvitations(@PathVariable @Positive Long businessId, @PageableDefault(sort = "invitedAt") Pageable pageable) {
+    public Page<UserResponse> listInvitations(@PathVariable @Positive Long businessId, @ParameterObject @PageableDefault(sort = "invitedAt") Pageable pageable) {
         return userService.listInvitations(businessId, pageable);
     }
 
@@ -54,7 +55,7 @@ public class UserController {
     public Page<UserResponse> listByBusiness(@AuthenticationPrincipal AuthPrincipal principal,
                                              @PathVariable @Positive Long businessId,
                                              @RequestParam(defaultValue = "true") boolean active,
-                                             @PageableDefault(sort = {"user.fullName", "id"}) Pageable pageable) {
+                                             @ParameterObject @PageableDefault(sort = {"user.fullName", "id"}) Pageable pageable) {
         // un EMPLOYEE ve nombre y color de sus compañeros, no su email ni su telefono (M7)
         return userService.listByBusiness(businessId, active, pageable)
                 .map(u -> u.visibleTo(principal.userId(), principal.role()));

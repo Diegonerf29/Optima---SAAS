@@ -10,6 +10,7 @@ import com.optima.api.modules.appointment.service.AppointmentService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -46,7 +47,7 @@ public class AppointmentController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(required = false) @Positive Long membershipId,
             @RequestParam(required = false) @Positive Long clientId,
-            @PageableDefault(sort = {"startDateTime", "id"}) Pageable pageable) {
+            @ParameterObject @PageableDefault(sort = {"startDateTime", "id"}) Pageable pageable) {
         return appointmentService.searchAppointments(businessId, from, to, membershipId, clientId, pageable);
     }
 

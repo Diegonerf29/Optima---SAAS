@@ -6,6 +6,7 @@ import com.optima.api.modules.user.service.EmployeeAbsenceService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -41,7 +42,7 @@ public class EmployeeAbsenceController {
     @GetMapping
     public Page<EmployeeAbsenceResponse> listByEmployee(@PathVariable @Positive Long businessId,
                                                         @PathVariable @Positive Long membershipId,
-                                                        @PageableDefault(sort = {"startDateTime", "id"}) Pageable pageable) {
+                                                        @ParameterObject @PageableDefault(sort = {"startDateTime", "id"}) Pageable pageable) {
         return absenceService.listByEmployee(businessId, membershipId, pageable);
     }
 
