@@ -12,10 +12,10 @@
 	<artifactId>api</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Optima Backend API</name>
-	<description>Backend REST multi-tenant para gestion de citas. TFG DAM.</description>
-	<url>https://github.com/mirsugogu/tfg-backend</url>
+	<description>Backend REST multi-tenant de Optima: agenda y gestion de citas para locales pequeños.</description>
+	<url>https://github.com/Diegonerf29/Optima---SAAS</url>
 	<scm>
-		<url>https://github.com/mirsugogu/tfg-backend</url>
+		<url>https://github.com/Diegonerf29/Optima---SAAS</url>
 	</scm>
 	<properties>
 		<java.version>21</java.version>
