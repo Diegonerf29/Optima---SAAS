@@ -162,14 +162,14 @@ Objetivo: trabajar sobre una versión que recibe parches y saber al momento si u
 
 ### Fase 2 — Seguridad
 
-- [ ] 2.1 Alta de empleado con email existente → invitación que se acepta (A3, D2)
-- [ ] 2.2 Límite de intentos: IP real solo si viene del proxy, sin vaciar todos los contadores, y límite por email en el login (M3)
-- [ ] 2.3 Revocar sesiones: `token_version` en `users`, `POST /api/auth/logout` y pedir la contraseña para cambiar el email. Con esto ya se puede alargar la sesión a una jornada (~12 h) para el PC de recepción (M5, sección 1.3)
-- [ ] 2.4 "Olvidé mi contraseña": correo en segundo plano (`@Async`), anular los enlaces anteriores y borrar los caducados (M6, B16)
-- [ ] 2.5 Negocio o usuario desactivado: comprobarlo en `TenantGuardFilter` y permitir la reactivación (M4, D3)
-- [ ] 2.6 Eliminar `POST /api/businesses`, que crea negocios sin dueño (M9)
-- [ ] 2.7 Verificar el email al registrarse (P4)
-- [ ] 2.8 Mensajes de error genéricos para `IllegalArgumentException` y límites de tamaño en textos y listas (B3, B4)
+- [x] 2.1 Alta de empleado con email existente → invitación que se acepta (A3, D2)
+- [x] 2.2 Límite de intentos: IP real solo si viene del proxy, sin vaciar todos los contadores, y límite por email en el login (M3)
+- [x] 2.3 Revocar sesiones: `token_version` en `users`, `POST /api/auth/logout` y pedir la contraseña para cambiar el email. Con esto ya se puede alargar la sesión a una jornada (~12 h) para el PC de recepción (M5, sección 1.3)
+- [x] 2.4 "Olvidé mi contraseña": correo en segundo plano (`@Async`), anular los enlaces anteriores y borrar los caducados (M6, B16)
+- [x] 2.5 Negocio o usuario desactivado: comprobarlo en `TenantGuardFilter` y permitir la reactivación (M4, D3)
+- [x] 2.6 Eliminar `POST /api/businesses`, que crea negocios sin dueño (M9)
+- [x] 2.7 Verificar el email al registrarse (P4)
+- [x] 2.8 Mensajes de error genéricos para `IllegalArgumentException` y límites de tamaño en textos y listas (B3, B4)
 
 **Hecho cuando:** cada arreglo tiene su test y ningún hallazgo alto queda pendiente salvo A1 (que es manual, fase 0).
 
@@ -193,7 +193,7 @@ Objetivo: trabajar sobre una versión que recibe parches y saber al momento si u
 ### Fase 5 — Backend preparado para producción
 
 - [ ] 5.1 Perfiles: `dev` para local y valores seguros por defecto para producción. Credenciales de la BD por variables de entorno; Swagger y `show-sql` apagados fuera de `dev` (M10, B1, B2)
-- [ ] 5.2 Flyway: el esquema actual pasa a `V1__esquema_inicial.sql`, los datos de demo van aparte (solo `dev`) y `ddl-auto=validate` (B15, B10)
+- [x] 5.2 (hecho en la fase 2, antes de los cambios de esquema) Flyway: el esquema actual pasa a `V1__esquema_inicial.sql`, los datos de demo van aparte (solo `dev`) y `ddl-auto=validate` (B15, B10)
 - [ ] 5.3 Actuator con solo `/actuator/health` público (P1)
 - [ ] 5.4 `Dockerfile` en dos etapas: compila con Maven y ejecuta `java -jar` con un usuario sin privilegios (M10, P2)
 - [ ] 5.5 `docker-compose.yml` solo para desarrollo y `docker-compose.prod.yml` sin puertos de MySQL abiertos, usuario de BD con permisos mínimos y `TZ` (M10, M3)

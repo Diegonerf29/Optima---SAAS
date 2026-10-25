@@ -22,6 +22,14 @@ Cada cambio que se aplica al código se apunta aquí y en la columna **Estado** 
 | 25/10/2026 | `73bebe7`, `00fa333` | Primeros 47 tests: unitarios (`PasswordValidator`, `AppointmentValidator`, `TenantGuardFilter`) y de integración con MySQL real en Docker (Testcontainers) (paso 1.3) | A4 🟡 |
 | 25/10/2026 | `16b8540` | Migración a Spring Boot 4.1.2 (Jackson 3, springdoc 3.2, bucket4j nuevo), páginas con formato JSON estable y clase común `ErrorWriter` para los errores de los filtros (pasos 1.4 y 6.1) | M11 ✅, B5 ✅ |
 | 25/10/2026 | `df026c5` | GitHub Actions (`./mvnw verify` en cada push y pull request) y Dependabot (pasos 1.5 y 1.6) | B18 🟡, M11 ✅ |
+| 25/10/2026 | `7493c2f` | Flyway: `V1__esquema_inicial.sql` y datos de demo aparte (solo `dev` y tests), `ddl-auto=validate`, ids fijos en roles y estados. Se elimina `docs/schema_v20.sql` (paso 5.2, adelantado) | B15 ✅, B10 🟡 |
+| 25/10/2026 | `aec2cfa` | Invitaciones de empleados: un email que ya tiene cuenta recibe una invitación y el negocio no ve sus datos hasta que acepta (paso 2.1). IP real solo desde el proxy, mapas con tamaño máximo y límite de 5 fallos por cuenta (paso 2.2) | A3 ✅, M3 🟡 |
+| 25/10/2026 | `2836160` | `token_version`: cambiar o restablecer la contraseña y "cerrar sesión en todos los dispositivos" invalidan los tokens; cambiar el email exige la contraseña; sesión de 12 h (paso 2.3) | M5 ✅ |
+| 25/10/2026 | `0334d76` | Correo en segundo plano (`@Async`), solo vale el último enlace de recuperación, limpieza nocturna de códigos caducados y logs sin datos personales (paso 2.4) | M6 ✅, B16 🟡, B19 🟡 |
+| 25/10/2026 | `540af49` | Negocio desactivado: el filtro solo deja verlo y reactivarlo; sus ADMIN pueden seguir entrando para reactivarlo (paso 2.5) | M4 ✅ |
+| 25/10/2026 | `e05c12c` | Se elimina `POST /api/businesses` (paso 2.6) | M9 ✅ |
+| 25/10/2026 | `d2b3018` | Verificación del email al registrarse y al cambiarlo; sin email confirmado no se puede invitar a otras cuentas (paso 2.7) | — (P4 del plan) |
+| 25/10/2026 | `80bc7d7` | Mensaje genérico para `IllegalArgumentException` y límites de tamaño en notas, descripciones, listas de servicios, login y rango de ausencias (paso 2.8) | B3 ✅, B4 ✅ |
 
 **Estados:** ⏳ Pendiente · 🟡 En parte · ✅ Resuelto
 
@@ -67,17 +75,17 @@ Además hay 14 problemas de gravedad media (por ejemplo, **doble reserva posible
 |----|----------|------|----------|-------------------|--------|
 | A1 | Secretos reales en el historial de Git | Configuración | 🔴 Alta | `.env-example`, `application.properties` (commits < `16335ce`) | ⏳ Pendiente |
 | A2 | Clave JWT con valor por defecto público | Autenticación | 🔴 Alta | `src/main/resources/application.properties:23` | ✅ Resuelto |
-| A3 | Alta de empleado reutiliza cuentas ajenas y filtra sus datos | Permisos / multi-tenant | 🔴 Alta | `modules/user/service/UserService.java:57` | ⏳ Pendiente |
+| A3 | Alta de empleado reutiliza cuentas ajenas y filtra sus datos | Permisos / multi-tenant | 🔴 Alta | `modules/user/service/UserService.java:57` | ✅ Resuelto |
 | A4 | No existe ningún test automatizado | Tests | 🔴 Alta | `pom.xml`, falta `src/test` | 🟡 En parte |
 | M1 | Doble reserva posible con peticiones simultáneas | API / BD | 🟠 Media | `modules/appointment/service/AppointmentService.java:67` | ⏳ Pendiente |
 | M2 | Con intervalo de 45 min la disponibilidad ofrece huecos que luego se rechazan | API | 🟠 Media | `AvailabilityService.java:325` / `AppointmentValidator.java:182` | ⏳ Pendiente |
-| M3 | El límite de intentos se puede saltar con `X-Forwarded-For` | Autenticación | 🟠 Media | `common/security/RateLimitFilter.java:102` | ⏳ Pendiente |
-| M4 | Negocio desactivado: los tokens siguen funcionando y no se puede reactivar | Permisos | 🟠 Media | `common/security/TenantGuardFilter.java:72` | ⏳ Pendiente |
-| M5 | Los tokens no se invalidan al cambiar contraseña; email cambiable sin contraseña | Autenticación | 🟠 Media | `modules/user/service/UserService.java:163` | ⏳ Pendiente |
-| M6 | "Olvidé mi contraseña" permite enumerar cuentas por tiempo y deja tokens viejos válidos | Autenticación | 🟠 Media | `modules/auth/service/PasswordResetService.java:53` | ⏳ Pendiente |
+| M3 | El límite de intentos se puede saltar con `X-Forwarded-For` | Autenticación | 🟠 Media | `common/security/RateLimitFilter.java:102` | 🟡 En parte |
+| M4 | Negocio desactivado: los tokens siguen funcionando y no se puede reactivar | Permisos | 🟠 Media | `common/security/TenantGuardFilter.java:72` | ✅ Resuelto |
+| M5 | Los tokens no se invalidan al cambiar contraseña; email cambiable sin contraseña | Autenticación | 🟠 Media | `modules/user/service/UserService.java:163` | ✅ Resuelto |
+| M6 | "Olvidé mi contraseña" permite enumerar cuentas por tiempo y deja tokens viejos válidos | Autenticación | 🟠 Media | `modules/auth/service/PasswordResetService.java:53` | ✅ Resuelto |
 | M7 | Un empleado puede modificar cualquier cita, pagos y clientes | Permisos | 🟠 Media | `AppointmentController.java:72`, `ClientController.java:58` | ⏳ Pendiente |
 | M8 | El estado de pago no tiene control ni registro y editar recalcula precios | Pagos | 🟠 Media | `AppointmentService.java:550` | ⏳ Pendiente |
-| M9 | `POST /api/businesses` crea negocios huérfanos | API / permisos | 🟠 Media | `modules/business/controller/BusinessController.java:25` | ⏳ Pendiente |
+| M9 | `POST /api/businesses` crea negocios huérfanos | API / permisos | 🟠 Media | `modules/business/controller/BusinessController.java:25` | ✅ Resuelto |
 | M10 | Base de datos y Docker con configuración insegura para producción | Configuración / BD | 🟠 Media | `docker-compose.yml`, `docs/schema_v20.sql:902` | ⏳ Pendiente |
 | M11 | Dependencias desactualizadas con vulnerabilidades conocidas | Dependencias | 🟠 Media | `pom.xml:8` | ✅ Resuelto |
 | M12 | `AppointmentService` duplica ~120 líneas entre crear y editar | Código repetido | 🟠 Media | `AppointmentService.java:117` y `:432` | ⏳ Pendiente |
@@ -85,23 +93,23 @@ Además hay 14 problemas de gravedad media (por ejemplo, **doble reserva posible
 | M14 | Fechas comparadas con el reloj del servidor (UTC) y no con la hora del negocio | API | 🟠 Media | `CreateAppointmentRequest.java:29` | ⏳ Pendiente |
 | B1 | Swagger público y activado por defecto | Configuración | 🟢 Baja | `application.properties:50` | ⏳ Pendiente |
 | B2 | `show-sql=true` por defecto | Configuración | 🟢 Baja | `application.properties:13` | ⏳ Pendiente |
-| B3 | Se devuelven al cliente mensajes internos de `IllegalArgumentException` | API | 🟢 Baja | `GlobalExceptionHandler.java:48` | ⏳ Pendiente |
-| B4 | Faltan límites de tamaño en textos y listas | API | 🟢 Baja | varios DTOs | ⏳ Pendiente |
+| B3 | Se devuelven al cliente mensajes internos de `IllegalArgumentException` | API | 🟢 Baja | `GlobalExceptionHandler.java:48` | ✅ Resuelto |
+| B4 | Faltan límites de tamaño en textos y listas | API | 🟢 Baja | varios DTOs | ✅ Resuelto |
 | B5 | Código que escribe errores JSON repetido en 4 sitios | Código repetido | 🟢 Baja | `SecurityConfig.java:57`, filtros | ✅ Resuelto |
 | B6 | "No se encontró…" y `findOrThrow` repetidos en todos los servicios | Código repetido | 🟢 Baja | todos los `*Service.java` | ⏳ Pendiente |
 | B7 | DTOs `Create*`/`Update*` idénticos y expresiones regulares copiadas | Código repetido | 🟢 Baja | `dto/request/*` | ⏳ Pendiente |
 | B8 | Lógica duplicada en ausencias y horarios de empleados | Código repetido | 🟢 Baja | `EmployeeAbsenceService.java:48` | ⏳ Pendiente |
 | B9 | Nombres engañosos (`{userId}` es un id de membresía, etc.) | Estructura | 🟢 Baja | `EmployeeAbsenceController.java:19` | ⏳ Pendiente |
-| B10 | Estados y roles como texto suelto; IDs fijos en el SQL | Estructura / BD | 🟢 Baja | `schema_v20.sql:185` | ⏳ Pendiente |
+| B10 | Estados y roles como texto suelto; IDs fijos en el SQL | Estructura / BD | 🟢 Baja | `schema_v20.sql:185` | 🟡 En parte |
 | B11 | Un impuesto se puede archivar aunque lo usen servicios activos | API | 🟢 Baja | `TaxService.java:88` | ⏳ Pendiente |
 | B12 | Huecos pasados en disponibilidad y edición de citas hacia el pasado | API | 🟢 Baja | `UpdateAppointmentRequest.java:23` | ⏳ Pendiente |
 | B13 | Un negocio puede quedarse sin ningún administrador | Permisos | 🟢 Baja | `UserService.java:98` | ⏳ Pendiente |
 | B14 | Filtros de seguridad registrados dos veces | Estructura | 🟢 Baja | `common/security/*Filter.java` | ⏳ Pendiente |
-| B15 | Sin migraciones de BD ni validación del esquema | Base de datos | 🟢 Baja | `application.properties:12`, `schema_v20.sql` | ⏳ Pendiente |
-| B16 | La tabla `password_resets` crece sin límite | Base de datos | 🟢 Baja | `PasswordResetService.java` | ⏳ Pendiente |
+| B15 | Sin migraciones de BD ni validación del esquema | Base de datos | 🟢 Baja | `application.properties:12`, `schema_v20.sql` | ✅ Resuelto |
+| B16 | La tabla `password_resets` crece sin límite | Base de datos | 🟢 Baja | `PasswordResetService.java` | 🟡 En parte |
 | B17 | Listados paginados sin orden por defecto | API | 🟢 Baja | repositorios `findByBusinessId…` | ⏳ Pendiente |
 | B18 | Documentación desactualizada y sin integración continua | Documentación | 🟢 Baja | `README.md:121`, `pom.xml:16` | 🟡 En parte |
-| B19 | Llamadas externas dentro de transacciones y datos personales en logs | API | 🟢 Baja | `BusinessService.java:69`, `GeocodingService.java:91` | ⏳ Pendiente |
+| B19 | Llamadas externas dentro de transacciones y datos personales en logs | API | 🟢 Baja | `BusinessService.java:69`, `GeocodingService.java:91` | 🟡 En parte |
 | B20 | Búsqueda de clientes sin escapar `%` y `_`; bloqueos de BD → 500 | API | 🟢 Baja | `ClientRepository.java:30` | ⏳ Pendiente |
 | — | Frontend no presente en el repositorio | Frontend | Informativo | `README.md:121` | — |
 | — | Pagos: solo existe un indicador `isPaid` | Pagos | Informativo | ver M8 | — |
