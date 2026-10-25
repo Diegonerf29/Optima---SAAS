@@ -38,15 +38,16 @@ public class AppointmentController {
         return appointmentService.createAppointment(businessId, request);
     }
 
-    /** lista citas con filtros */
+    /** lista citas con filtros opcionales: rango de fechas, empleado y cliente (historial del cliente) */
     @GetMapping
     public Page<AppointmentResponse> searchAppointments(
             @PathVariable @Positive Long businessId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(required = false) @Positive Long membershipId,
+            @RequestParam(required = false) @Positive Long clientId,
             @PageableDefault(sort = {"startDateTime", "id"}) Pageable pageable) {
-        return appointmentService.searchAppointments(businessId, from, to, membershipId, pageable);
+        return appointmentService.searchAppointments(businessId, from, to, membershipId, clientId, pageable);
     }
 
     /** devuelve una cita por id */

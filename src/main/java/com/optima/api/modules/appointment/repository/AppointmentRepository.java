@@ -42,12 +42,14 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
               AND (:from IS NULL OR a.startDateTime >= :from)
               AND (:to IS NULL OR a.startDateTime < :to)
               AND (:membershipId IS NULL OR a.membership.id = :membershipId)
+              AND (:clientId IS NULL OR a.client.id = :clientId)
             """)
     Page<Appointment> searchAppointments(
             @Param("businessId") Long businessId,
             @Param("from") LocalDateTime from,
             @Param("to") LocalDateTime to,
             @Param("membershipId") Long membershipId,
+            @Param("clientId") Long clientId,
             Pageable pageable
     );
 

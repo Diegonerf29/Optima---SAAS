@@ -146,6 +146,18 @@ class AppointmentIntegrationTest extends IntegrationTest {
         assertThat(semana.path("page").path("totalElements").asLong()).isEqualTo(2);
     }
 
+    @Test
+    void buscarCitasDeUnCliente() throws Exception {
+        long otroCliente = e.crear("/clients", Map.of("fullName", "Otro"));
+        crear(e.cita(en(LUNES, "10:00"), null, e.servicio30));
+        Map<String, Object> deOtro = e.cita(en(LUNES, "11:00"), null, e.servicio30);
+        deOtro.put("clientId", otroCliente);
+        crear(deOtro);
+        JsonNode historial = json(e.leer("/appointments?clientId=" + otroCliente).andReturn());
+        assertThat(historial.path("page").path("totalElements").asLong()).isEqualTo(1);
+        assertThat(historial.path("content").get(0).path("clientId").asLong()).isEqualTo(otroCliente);
+    }
+
     private long crear(Map<String, Object> cita) throws Exception {
         return json(e.crearCita(cita).andExpect(status().isCreated()).andReturn()).path("id").asLong();
     }

@@ -125,6 +125,7 @@ public class AppointmentService {
                                                        LocalDate from,
                                                        LocalDate to,
                                                        Long membershipId,
+                                                       Long clientId,
                                                        Pageable pageable) {
         // un rango invertido se rechaza antes de consultar
         if (from != null && to != null && from.isAfter(to)) {
@@ -145,7 +146,7 @@ public class AppointmentService {
 
         // se busca la pagina ya filtrada
         Page<Appointment> appointmentPage = appointmentRepository.searchAppointments(
-                businessId, fromInclusive, toExclusive, membershipId, pageable);
+                businessId, fromInclusive, toExclusive, membershipId, clientId, pageable);
 
         List<Appointment> appointments = appointmentPage.getContent();
         if (appointments.isEmpty()) {
