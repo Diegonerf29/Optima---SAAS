@@ -4,7 +4,7 @@
 #   docker build -f frontend/Dockerfile -t optima-web .
 
 # etapa 1: compilar la aplicacion (el resultado son ficheros estaticos en dist/)
-FROM node:24-alpine AS build
+FROM node:26-alpine AS build
 WORKDIR /app
 # primero solo las dependencias: si no cambian, Docker reutiliza esta capa
 COPY frontend/package.json frontend/package-lock.json ./
