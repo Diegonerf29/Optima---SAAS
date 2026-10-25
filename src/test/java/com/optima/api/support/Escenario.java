@@ -41,6 +41,8 @@ public final class Escenario {
     public long servicio30;
     public long servicio45;
     public long servicio60;
+    public long impuestoId;
+    public long categoriaId;
 
     private Escenario(MockMvc mvc, String token, String adminEmail, long businessId, long membershipId) {
         this.mvc = mvc;
@@ -79,13 +81,29 @@ public final class Escenario {
             crear("/users/" + membershipId + "/schedules", Map.of("dayOfWeek", dia, "startTime", "16:00", "endTime", "20:00"));
         }
         crear("/hours", Map.of("dayOfWeek", 7, "isClosed", true));
-        long impuesto = crear("/taxes", Map.of("name", "IVA21", "percentage", 21));
-        long categoria = crear("/categories", Map.of("name", "Cortes"));
-        servicio30 = crear("/services", servicio(categoria, impuesto, "Corte", "15.00", 30));
-        servicio45 = crear("/services", servicio(categoria, impuesto, "Color", "25.50", 45));
-        servicio60 = crear("/services", servicio(categoria, impuesto, "Peinado", "40.00", 60));
+        impuestoId = crear("/taxes", Map.of("name", "IVA21", "percentage", 21));
+        categoriaId = crear("/categories", Map.of("name", "Cortes"));
+        servicio30 = crear("/services", servicio(categoriaId, impuestoId, "Corte", "15.00", 30));
+        servicio45 = crear("/services", servicio(categoriaId, impuestoId, "Color", "25.50", 45));
+        servicio60 = crear("/services", servicio(categoriaId, impuestoId, "Peinado", "40.00", 60));
         clienteId = crear("/clients", Map.of("fullName", "Cliente de prueba", "phone", "600000001"));
         cabinaId = crear("/booths", Map.of("name", "Cabina 1"));
+    }
+
+    /** empleado nuevo con el mismo horario que el admin; devuelve su membershipId y su email */
+    public Empleado empleado(String nombre) throws Exception {
+        String email = nombre.toLowerCase().replace(' ', '-') + "-" + unico() + "@ejemplo.com";
+        long id = crear("/users", Map.of("roleId", 2, "fullName", nombre, "email", email,
+                "password", CLAVE, "phone", "611111111"));
+        for (int dia = 1; dia <= 6; dia++) {
+            crear("/users/" + id + "/schedules", Map.of("dayOfWeek", dia, "startTime", "10:00", "endTime", "14:00"));
+            crear("/users/" + id + "/schedules", Map.of("dayOfWeek", dia, "startTime", "16:00", "endTime", "20:00"));
+        }
+        return new Empleado(id, email, TestApi.tokenDeNegocio(mvc, email, CLAVE, businessId));
+    }
+
+    /** empleado creado por el escenario y su token */
+    public record Empleado(long membershipId, String email, String token) {
     }
 
     private static Map<String, Object> servicio(long categoria, long impuesto, String nombre, String precio, int minutos) {

@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -56,8 +57,9 @@ public class ClientController {
         return clientService.update(businessId, id, request);
     }
 
-    /** archiva un cliente sin borrarlo */
+    /** archiva un cliente sin borrarlo (solo ADMIN, M7) */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deactivate(@PathVariable @Positive Long businessId, @PathVariable @Positive Long id) {
         clientService.deactivate(businessId, id);
@@ -67,6 +69,7 @@ public class ClientController {
      * reactiva un cliente que estaba archivado
      */
     @PatchMapping("/{id}/reactivate")
+    @PreAuthorize("hasRole('ADMIN')")
     public ClientResponse reactivate(@PathVariable @Positive Long businessId,
                                      @PathVariable @Positive Long id) {
         return clientService.reactivate(businessId, id);

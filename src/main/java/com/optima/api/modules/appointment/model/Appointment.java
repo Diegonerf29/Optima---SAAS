@@ -58,6 +58,19 @@ public class Appointment {
     @Column(name = "is_paid", nullable = false)
     private Boolean isPaid = false;
 
+    /** cuando se cobro (vacio si no esta pagada) */
+    @Column(name = "paid_at")
+    private LocalDateTime paidAt;
+
+    /** empleado que la cobro */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "paid_by_membership_id")
+    private Membership paidBy;
+
+    /** forma de pago: CASH, CARD, BIZUM u OTHER */
+    @Column(name = "payment_method", length = 20)
+    private String paymentMethod;
+
     /** fecha y hora de inicio */
     @Column(name = "start_datetime", nullable = false)
     private LocalDateTime startDateTime;

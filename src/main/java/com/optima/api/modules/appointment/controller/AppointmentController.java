@@ -8,12 +8,14 @@ import com.optima.api.modules.appointment.dto.response.AppointmentResponse;
 import com.optima.api.modules.appointment.service.AppointmentService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
+import com.optima.api.common.security.AuthPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -72,9 +74,10 @@ public class AppointmentController {
 
     /** cambia el estado de pago de una cita */
     @PatchMapping("/{id}/payment")
-    public AppointmentResponse markPayment(@PathVariable @Positive Long businessId,
+    public AppointmentResponse markPayment(@AuthenticationPrincipal AuthPrincipal principal,
+                                           @PathVariable @Positive Long businessId,
                                            @PathVariable @Positive Long id,
                                            @Valid @RequestBody UpdatePaymentRequest request) {
-        return appointmentService.markPayment(businessId, id, request);
+        return appointmentService.markPayment(businessId, id, request, principal);
     }
 }

@@ -30,7 +30,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
     /** busca citas con filtros y paginacion */
     @EntityGraph(attributePaths = {"client", "membership", "membership.user",
-                                    "booth", "status"})
+                                    "booth", "status", "paidBy", "paidBy.user"})
     @Query("""
             SELECT a FROM Appointment a
             WHERE a.business.id = :businessId

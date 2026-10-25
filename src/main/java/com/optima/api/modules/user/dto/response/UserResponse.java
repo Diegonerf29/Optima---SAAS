@@ -50,4 +50,15 @@ public record UserResponse(
                 m.getCreatedAt()
         );
     }
+
+    /** copia sin email ni telefono: lo que ve un EMPLOYEE de sus compañeros (M7) */
+    public UserResponse withoutContact() {
+        return new UserResponse(id, userId, businessId, roleId, roleName, fullName,
+                null, null, color, isActive, status, invitedAt, createdAt);
+    }
+
+    /** el ADMIN ve todo; un EMPLOYEE solo ve el contacto de su propia ficha */
+    public UserResponse visibleTo(Long callerUserId, String callerRole) {
+        return "ADMIN".equals(callerRole) || userId.equals(callerUserId) ? this : withoutContact();
+    }
 }

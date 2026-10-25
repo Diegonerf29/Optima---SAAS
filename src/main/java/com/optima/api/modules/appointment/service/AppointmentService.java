@@ -1,6 +1,7 @@
 package com.optima.api.modules.appointment.service;
 
 import com.optima.api.common.exception.NotFoundException;
+import com.optima.api.common.security.AuthPrincipal;
 import com.optima.api.modules.appointment.dto.request.CreateAppointmentRequest;
 import com.optima.api.modules.appointment.dto.request.UpdateAppointmentRequest;
 import com.optima.api.modules.appointment.dto.request.UpdateAppointmentStatusRequest;
@@ -107,7 +108,7 @@ public class AppointmentService {
         appointment.setNotes(request.notes());
 
         Appointment saved = saveCheckingConflicts(appointment);
-        return AppointmentResponse.from(saved, saveBookedServices(saved, services));
+        return AppointmentResponse.from(saved, saveBookedServices(saved, services, Map.of()));
     }
 
     /** busca citas con paginacion y filtros opcionales */
@@ -226,6 +227,12 @@ public class AppointmentService {
         if (!start.equals(appointment.getStartDateTime())) {
             validateNotInPast(business, start);
         }
+        List<BookedService> previous = bookedServiceRepository.findAllByAppointmentId(appointment.getId());
+        // lo cobrado no se toca (M8)
+        if (Boolean.TRUE.equals(appointment.getIsPaid()) && !serviceIdsOf(services).equals(serviceIdsOfBooked(previous))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "La cita ya está cobrada: no se pueden cambiar sus servicios");
+        }
         // la propia cita no cuenta como ocupada
         validateSlot(business, membership, booth, start, end, appointmentId);
 
@@ -241,18 +248,56 @@ public class AppointmentService {
 
         Appointment saved = saveCheckingConflicts(appointment);
 
-        // se borra lo viejo y se guarda lo nuevo
+        // se rehacen los servicios reservados conservando el precio de los que ya estaban (M8):
+        // editar una nota o mover la cita no debe cambiar lo que se cobra
+        Map<Long, BookedService> previousByService = previous.stream()
+                .collect(Collectors.toMap(bs -> bs.getService().getId(), bs -> bs));
         bookedServiceRepository.deleteAllByAppointmentId(saved.getId());
         bookedServiceRepository.flush();
-        return AppointmentResponse.from(saved, saveBookedServices(saved, services));
+        return AppointmentResponse.from(saved, saveBookedServices(saved, services, previousByService));
     }
 
-    /** cambia el estado de pago de una cita del negocio */
+    /**
+     * cobra una cita o deshace el cobro (M7, M8)
+     * cualquiera puede cobrar (en un local pequeño cobra quien esta en recepcion);
+     * deshacer un cobro solo lo puede hacer un ADMIN. Se guarda quien cobro, cuando y como
+     */
     public AppointmentResponse markPayment(Long businessId,
                                            Long appointmentId,
-                                           UpdatePaymentRequest request) {
+                                           UpdatePaymentRequest request,
+                                           AuthPrincipal caller) {
         Appointment appointment = findAppointment(businessId, appointmentId);
-        appointment.setIsPaid(request.isPaid());
+        boolean alreadyPaid = Boolean.TRUE.equals(appointment.getIsPaid());
+
+        if (Boolean.TRUE.equals(request.isPaid())) {
+            if (alreadyPaid) {
+                // repetir el cobro (doble clic) no cambia nada
+                return toResponse(appointment);
+            }
+            String status = appointment.getStatus().getName();
+            if ("CANCELLED".equals(status) || "NO_SHOW".equals(status)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "No se puede cobrar una cita cancelada o a la que el cliente no vino");
+            }
+            Membership cashier = membershipRepository.findByUserIdAndBusinessId(caller.userId(), businessId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "No perteneces a este negocio"));
+            appointment.setIsPaid(true);
+            appointment.setPaidAt(businessClock.now(appointment.getBusiness()));
+            appointment.setPaidBy(cashier);
+            appointment.setPaymentMethod(request.paymentMethod() != null ? request.paymentMethod() : "OTHER");
+        } else {
+            if (!alreadyPaid) {
+                return toResponse(appointment);
+            }
+            if (!"ADMIN".equals(caller.role())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "Solo un administrador puede deshacer un cobro");
+            }
+            appointment.setIsPaid(false);
+            appointment.setPaidAt(null);
+            appointment.setPaidBy(null);
+            appointment.setPaymentMethod(null);
+        }
         return toResponse(appointmentRepository.save(appointment));
     }
 
@@ -263,9 +308,11 @@ public class AppointmentService {
     }
 
     private Set<Long> bookedServiceIds(Appointment appointment) {
-        return bookedServiceRepository.findAllByAppointmentId(appointment.getId()).stream()
-                .map(b -> b.getService().getId())
-                .collect(Collectors.toSet());
+        return serviceIdsOfBooked(bookedServiceRepository.findAllByAppointmentId(appointment.getId()));
+    }
+
+    private static Set<Long> serviceIdsOfBooked(List<BookedService> booked) {
+        return booked.stream().map(b -> b.getService().getId()).collect(Collectors.toSet());
     }
 
     /** una cita no puede empezar antes de la hora actual del negocio (M14) */
@@ -321,14 +368,19 @@ public class AppointmentService {
         return "";
     }
 
-    /** congela precio e impuesto de cada servicio en el momento de reservar */
-    private List<BookedService> saveBookedServices(Appointment appointment, List<BusinessService> services) {
+    /**
+     * congela precio e impuesto de cada servicio en el momento de reservar
+     * si el servicio ya estaba en la cita (previous) se mantiene el precio que tenia
+     */
+    private List<BookedService> saveBookedServices(Appointment appointment, List<BusinessService> services,
+                                                   Map<Long, BookedService> previous) {
         List<BookedService> booked = services.stream().map(service -> {
+            BookedService before = previous.get(service.getId());
             BookedService b = new BookedService();
             b.setAppointment(appointment);
             b.setService(service);
-            b.setAppliedPrice(service.getPrice());
-            b.setAppliedTaxPercentage(service.getTax().getPercentage());
+            b.setAppliedPrice(before != null ? before.getAppliedPrice() : service.getPrice());
+            b.setAppliedTaxPercentage(before != null ? before.getAppliedTaxPercentage() : service.getTax().getPercentage());
             return b;
         }).toList();
         return bookedServiceRepository.saveAll(booked);

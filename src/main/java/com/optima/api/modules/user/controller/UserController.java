@@ -51,18 +51,22 @@ public class UserController {
      * lista empleados activos o archivados del negocio
      */
     @GetMapping
-    public Page<UserResponse> listByBusiness(@PathVariable @Positive Long businessId,
+    public Page<UserResponse> listByBusiness(@AuthenticationPrincipal AuthPrincipal principal,
+                                             @PathVariable @Positive Long businessId,
                                              @RequestParam(defaultValue = "true") boolean active,
                                              @PageableDefault(sort = {"user.fullName", "id"}) Pageable pageable) {
-        return userService.listByBusiness(businessId, active, pageable);
+        // un EMPLOYEE ve nombre y color de sus compañeros, no su email ni su telefono (M7)
+        return userService.listByBusiness(businessId, active, pageable)
+                .map(u -> u.visibleTo(principal.userId(), principal.role()));
     }
 
     /**
      * obtiene un empleado del negocio por su id
      */
     @GetMapping("/{id}")
-    public UserResponse getById(@PathVariable @Positive Long businessId, @PathVariable @Positive Long id) {
-        return userService.getById(businessId, id);
+    public UserResponse getById(@AuthenticationPrincipal AuthPrincipal principal,
+                                @PathVariable @Positive Long businessId, @PathVariable @Positive Long id) {
+        return userService.getById(businessId, id).visibleTo(principal.userId(), principal.role());
     }
 
     /**
