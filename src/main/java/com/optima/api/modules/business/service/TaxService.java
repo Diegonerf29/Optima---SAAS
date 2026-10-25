@@ -1,5 +1,6 @@
 package com.optima.api.modules.business.service;
 
+import com.optima.api.common.exception.NotFoundException;
 import com.optima.api.modules.business.dto.request.CreateTaxRequest;
 import com.optima.api.modules.business.dto.response.TaxResponse;
 import com.optima.api.modules.business.dto.request.UpdateTaxRequest;
@@ -33,8 +34,7 @@ public class TaxService {
      */
     public TaxResponse create(Long businessId, CreateTaxRequest request) {
         var business = businessRepository.findById(businessId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                "No se encontró el negocio con ID: " + businessId));
+            .orElseThrow(() -> new NotFoundException("el negocio", businessId));
 
         // se compara con el nombre ya recortado, igual que se guarda (B11)
         String name = request.name().trim();
@@ -123,8 +123,6 @@ public class TaxService {
     /** busca un impuesto dentro del negocio o lanza error */
     private Tax findOrThrow(Long businessId, Long id) {
         return taxRepository.findByIdAndBusinessId(id, businessId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                "No se encontró el impuesto con ID: " + id
-                    + " en el negocio con ID: " + businessId));
+            .orElseThrow(() -> new NotFoundException("el impuesto", id));
     }
 }

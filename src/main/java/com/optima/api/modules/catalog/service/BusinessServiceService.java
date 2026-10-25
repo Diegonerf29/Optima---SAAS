@@ -1,5 +1,6 @@
 package com.optima.api.modules.catalog.service;
 
+import com.optima.api.common.exception.NotFoundException;
 import com.optima.api.modules.catalog.dto.request.CreateServiceRequest;
 import com.optima.api.modules.catalog.dto.request.UpdateServiceRequest;
 import com.optima.api.modules.catalog.dto.response.BusinessServiceResponse;
@@ -46,19 +47,12 @@ public class BusinessServiceService {
         }
 
         Business business = businessRepository.findById(businessId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró el negocio con ID: " + businessId
-                ));
+                .orElseThrow(() -> new NotFoundException("el negocio", businessId));
 
         // la categoria tiene que ser de este negocio y seguir activa
         ServiceCategory category = categoryRepository
                 .findByIdAndBusinessId(request.categoryId(), businessId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró la categoría con ID: " + request.categoryId()
-                                + " en el negocio con ID: " + businessId
-                ));
+                .orElseThrow(() -> new NotFoundException("la categoría", request.categoryId()));
         if (!category.getIsActive()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "La categoría con ID: " + request.categoryId() + " está desactivada");
@@ -67,11 +61,7 @@ public class BusinessServiceService {
         // con el impuesto hacemos lo mismo para no mezclar datos
         Tax tax = taxRepository
                 .findByIdAndBusinessId(request.taxId(), businessId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró el impuesto con ID: " + request.taxId()
-                                + " en el negocio con ID: " + businessId
-                ));
+                .orElseThrow(() -> new NotFoundException("el impuesto", request.taxId()));
         if (!tax.getIsActive()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "El impuesto con ID: " + request.taxId() + " está desactivado");
@@ -119,10 +109,7 @@ public class BusinessServiceService {
         // si le cambian la categoria la nueva tambien tiene que valer
         ServiceCategory category = categoryRepository
                 .findByIdAndBusinessId(request.categoryId(), businessId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró la categoría con ID: " + request.categoryId()
-                                + " en el negocio con ID: " + businessId));
+                .orElseThrow(() -> new NotFoundException("la categoría", request.categoryId()));
         if (!request.categoryId().equals(service.getCategory().getId())
                 && !category.getIsActive()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -132,10 +119,7 @@ public class BusinessServiceService {
         // con el impuesto igual
         Tax tax = taxRepository
                 .findByIdAndBusinessId(request.taxId(), businessId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró el impuesto con ID: " + request.taxId()
-                                + " en el negocio con ID: " + businessId));
+                .orElseThrow(() -> new NotFoundException("el impuesto", request.taxId()));
         if (!request.taxId().equals(service.getTax().getId())
                 && !tax.getIsActive()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -193,9 +177,6 @@ public class BusinessServiceService {
     /** busca el servicio dentro del negocio y si no lanza error */
     private BusinessService findOrThrow(Long businessId, Long id) {
         return serviceRepository.findByIdAndBusinessId(id, businessId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró el servicio con ID: " + id
-                                + " en el negocio con ID: " + businessId));
+                .orElseThrow(() -> new NotFoundException("el servicio", id));
     }
 }

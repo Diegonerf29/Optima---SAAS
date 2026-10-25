@@ -1,5 +1,6 @@
 package com.optima.api.modules.catalog.service;
 
+import com.optima.api.common.exception.NotFoundException;
 import com.optima.api.modules.business.model.Business;
 import com.optima.api.modules.business.repository.BusinessRepository;
 import com.optima.api.modules.catalog.dto.request.CreateCategoryRequest;
@@ -39,10 +40,7 @@ public class ServiceCategoryService {
         }
 
         Business business = businessRepository.findById(businessId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró el negocio con ID: " + businessId
-                ));
+                .orElseThrow(() -> new NotFoundException("el negocio", businessId));
 
         ServiceCategory category = new ServiceCategory();
         category.setBusiness(business);
@@ -122,9 +120,6 @@ public class ServiceCategoryService {
     /** busca la categoria dentro del negocio */
     private ServiceCategory findOrThrow(Long businessId, Long id) {
         return categoryRepository.findByIdAndBusinessId(id, businessId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró la categoría con ID: " + id
-                                + " en el negocio con ID: " + businessId));
+                .orElseThrow(() -> new NotFoundException("la categoría", id));
     }
 }

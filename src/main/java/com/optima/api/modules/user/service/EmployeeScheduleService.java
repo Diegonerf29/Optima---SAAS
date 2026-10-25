@@ -1,5 +1,6 @@
 package com.optima.api.modules.user.service;
 
+import com.optima.api.common.exception.NotFoundException;
 import com.optima.api.modules.business.model.Membership;
 import com.optima.api.modules.business.repository.MembershipRepository;
 import com.optima.api.modules.user.dto.request.CreateEmployeeScheduleRequest;
@@ -102,19 +103,13 @@ public class EmployeeScheduleService {
      */
     private Membership ensureMembershipOfBusiness(Long businessId, Long membershipId) {
         return membershipRepository.findByIdAndBusinessId(membershipId, businessId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró el empleado con ID: " + membershipId
-                                + " en el negocio con ID: " + businessId));
+                .orElseThrow(() -> new NotFoundException("el empleado", membershipId));
     }
 
     /** busca el tramo dentro de la relacion */
     private EmployeeSchedule findOrThrow(Long membershipId, Long id) {
         return scheduleRepository.findByIdAndMembershipId(id, membershipId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró el horario con ID: " + id
-                                + " para el empleado con ID: " + membershipId));
+                .orElseThrow(() -> new NotFoundException("el horario", id));
     }
 
     /** valida que la hora de inicio sea anterior a la de fin */

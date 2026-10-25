@@ -1,5 +1,6 @@
 package com.optima.api.modules.business.service;
 
+import com.optima.api.common.exception.NotFoundException;
 import com.optima.api.modules.business.dto.response.BusinessResponse;
 import com.optima.api.modules.business.dto.request.CreateBusinessRequest;
 import com.optima.api.modules.business.dto.request.UpdateBusinessRequest;
@@ -150,8 +151,7 @@ public class BusinessService {
     /** busca un negocio por id o lanza 404 */
     private Business findOrThrow(Long id) {
         return businessRepository.findById(id)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                "No se encontró el negocio con ID: " + id));
+            .orElseThrow(() -> new NotFoundException("el negocio", id));
     }
 
     /** comprueba que la zona horaria exista; si viene vacia se deja la que habia */

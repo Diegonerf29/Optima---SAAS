@@ -1,5 +1,6 @@
 package com.optima.api.modules.client.service;
 
+import com.optima.api.common.exception.NotFoundException;
 import com.optima.api.modules.appointment.repository.AppointmentRepository;
 import com.optima.api.modules.business.model.Business;
 import com.optima.api.modules.business.repository.BusinessRepository;
@@ -33,9 +34,7 @@ public class ClientService {
     /** crea el cliente dentro del negocio correspondiente */
     public ClientResponse create(Long businessId, CreateClientRequest request) {
         Business business = businessRepository.findById(businessId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró el negocio con ID: " + businessId));
+                .orElseThrow(() -> new NotFoundException("el negocio", businessId));
 
         Client c = new Client();
         c.setBusiness(business);
@@ -120,10 +119,7 @@ public class ClientService {
     /** busca el cliente dentro de su negocio */
     private Client findOrThrow(Long businessId, Long id) {
         return clientRepository.findByIdAndBusinessId(id, businessId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró el cliente con ID: " + id
-                                + " en el negocio con ID: " + businessId));
+                .orElseThrow(() -> new NotFoundException("el cliente", id));
     }
 
     /** limpia campos opcionales para que no se guarden vacios innecesarios */

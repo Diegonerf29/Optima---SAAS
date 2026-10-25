@@ -1,13 +1,12 @@
 package com.optima.api.modules.appointment.service;
 
+import com.optima.api.common.exception.NotFoundException;
 import com.optima.api.modules.appointment.dto.response.AppointmentStatusResponse;
 import com.optima.api.modules.appointment.model.AppointmentStatus;
 import com.optima.api.modules.appointment.repository.AppointmentStatusRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -30,10 +29,7 @@ public class AppointmentStatusService {
     /** busca un estado por id */
     public AppointmentStatusResponse getStatusById(Long id) {
         AppointmentStatus status = statusRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontro el estado con ID: " + id
-                ));
+                .orElseThrow(() -> new NotFoundException("el estado", id));
 
         return AppointmentStatusResponse.from(status);
     }

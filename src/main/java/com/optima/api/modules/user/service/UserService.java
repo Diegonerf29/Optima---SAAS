@@ -1,5 +1,6 @@
 package com.optima.api.modules.user.service;
 
+import com.optima.api.common.exception.NotFoundException;
 import com.optima.api.common.mail.MailService;
 import com.optima.api.modules.appointment.repository.AppointmentRepository;
 import com.optima.api.modules.auth.dto.response.MembershipSummaryResponse;
@@ -55,14 +56,10 @@ public class UserService {
     /** crea un empleado dentro del negocio; callerUserId es el ADMIN que lo da de alta */
     public UserResponse create(Long businessId, CreateUserRequest request, Long callerUserId) {
         Business business = businessRepository.findById(businessId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró el negocio con ID: " + businessId));
+                .orElseThrow(() -> new NotFoundException("el negocio", businessId));
 
         Role role = roleRepository.findById(request.roleId())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró el rol con ID: " + request.roleId()));
+                .orElseThrow(() -> new NotFoundException("el rol", request.roleId()));
 
         String email = request.email().trim().toLowerCase();
 
@@ -166,9 +163,7 @@ public class UserService {
         }
 
         Role role = roleRepository.findById(request.roleId())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró el rol con ID: " + request.roleId()));
+                .orElseThrow(() -> new NotFoundException("el rol", request.roleId()));
 
         // quitar el rol al ultimo ADMIN dejaria el negocio sin nadie que lo gestione (B13)
         boolean losesAdmin = "ADMIN".equals(m.getRole().getName()) && !"ADMIN".equals(role.getName());
@@ -231,18 +226,14 @@ public class UserService {
     @Transactional(readOnly = true)
     public MeResponse getMyProfile(Long userId) {
         User u = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró el usuario con ID: " + userId));
+                .orElseThrow(() -> new NotFoundException("el usuario", userId));
         return MeResponse.from(u);
     }
 
     /** actualiza los datos del propio usuario */
     public MeResponse updateMyProfile(Long userId, UpdateMeRequest request) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró el usuario con ID: " + userId));
+                .orElseThrow(() -> new NotFoundException("el usuario", userId));
 
         String email = request.email().trim().toLowerCase();
         boolean emailChanges = !user.getEmail().equalsIgnoreCase(email);
@@ -283,9 +274,7 @@ public class UserService {
     /** cambia la contrasena del propio usuario */
     public void changePassword(Long userId, String currentPassword, String newPassword) {
         User u = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró el usuario con ID: " + userId));
+                .orElseThrow(() -> new NotFoundException("el usuario", userId));
 
         if (!u.getIsActive()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -311,9 +300,6 @@ public class UserService {
     /** busca la relacion dentro del negocio */
     private Membership findOrThrow(Long businessId, Long id) {
         return membershipRepository.findByIdAndBusinessId(id, businessId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró el empleado con ID: " + id
-                                + " en el negocio con ID: " + businessId));
+                .orElseThrow(() -> new NotFoundException("el empleado", id));
     }
 }

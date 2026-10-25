@@ -1,5 +1,6 @@
 package com.optima.api.modules.auth.service;
 
+import com.optima.api.common.exception.NotFoundException;
 import com.optima.api.common.mail.MailService;
 import com.optima.api.common.security.SecureTokens;
 import com.optima.api.modules.auth.dto.request.VerifyEmailRequest;
@@ -92,7 +93,7 @@ public class EmailVerificationService {
     /** vuelve a enviar el enlace a un usuario que aun no ha confirmado */
     public void resend(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+                .orElseThrow(() -> new NotFoundException("el usuario", userId));
         if (user.hasVerifiedEmail()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tu email ya está confirmado");
         }

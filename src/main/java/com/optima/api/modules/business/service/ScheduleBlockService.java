@@ -1,5 +1,6 @@
 package com.optima.api.modules.business.service;
 
+import com.optima.api.common.exception.NotFoundException;
 import com.optima.api.modules.business.dto.request.CreateScheduleBlockRequest;
 import com.optima.api.modules.business.dto.response.ScheduleBlockResponse;
 import com.optima.api.modules.business.model.Booth;
@@ -32,8 +33,7 @@ public class ScheduleBlockService {
     /** crea un bloqueo de agenda y valida sus referencias */
     public ScheduleBlockResponse create(Long businessId, CreateScheduleBlockRequest request) {
         Business business = businessRepository.findById(businessId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "No se encontró el negocio con ID: " + businessId));
+                .orElseThrow(() -> new NotFoundException("el negocio", businessId));
 
         if (request.startDate().isAfter(request.endDate())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -51,17 +51,13 @@ public class ScheduleBlockService {
         Membership membership = null;
         if (request.membershipId() != null) {
             membership = membershipRepository.findByIdAndBusinessId(request.membershipId(), businessId)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                            "No se encontró el empleado con ID: " + request.membershipId()
-                                    + " en el negocio con ID: " + businessId));
+                    .orElseThrow(() -> new NotFoundException("el empleado", request.membershipId()));
         }
 
         Booth booth = null;
         if (request.boothId() != null) {
             booth = boothRepository.findByIdAndBusinessId(request.boothId(), businessId)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                            "No se encontró la cabina con ID: " + request.boothId()
-                                    + " en el negocio con ID: " + businessId));
+                    .orElseThrow(() -> new NotFoundException("la cabina", request.boothId()));
         }
 
         ScheduleBlock b = new ScheduleBlock();
@@ -96,8 +92,6 @@ public class ScheduleBlockService {
 
     private ScheduleBlock findOrThrow(Long businessId, Long id) {
         return blockRepository.findByIdAndBusinessId(id, businessId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "No se encontró el bloqueo con ID: " + id
-                                + " en el negocio con ID: " + businessId));
+                .orElseThrow(() -> new NotFoundException("el bloqueo", id));
     }
 }

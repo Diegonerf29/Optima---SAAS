@@ -1,5 +1,6 @@
 package com.optima.api.modules.user.service;
 
+import com.optima.api.common.exception.NotFoundException;
 import com.optima.api.modules.auth.dto.response.MembershipSummaryResponse;
 import com.optima.api.modules.business.model.Membership;
 import com.optima.api.modules.business.repository.MembershipRepository;
@@ -51,7 +52,6 @@ public class InvitationService {
                 .filter(m -> m.getUser().getId().equals(userId))
                 .filter(m -> Boolean.TRUE.equals(m.getInvitationPending()))
                 // mismo mensaje si no existe o es de otra persona, para no dar pistas
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "No se encontró la invitación con ID: " + membershipId));
+                .orElseThrow(() -> new NotFoundException("la invitación", membershipId));
     }
 }

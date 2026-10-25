@@ -1,5 +1,6 @@
 package com.optima.api.modules.user.service;
 
+import com.optima.api.common.exception.NotFoundException;
 import com.optima.api.modules.business.model.Membership;
 import com.optima.api.modules.business.repository.MembershipRepository;
 import com.optima.api.modules.user.dto.request.CreateEmployeeAbsenceRequest;
@@ -113,19 +114,13 @@ public class EmployeeAbsenceService {
      */
     private Membership ensureMembershipOfBusiness(Long businessId, Long membershipId) {
         return membershipRepository.findByIdAndBusinessId(membershipId, businessId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró el empleado con ID: " + membershipId
-                                + " en el negocio con ID: " + businessId));
+                .orElseThrow(() -> new NotFoundException("el empleado", membershipId));
     }
 
     /** busca la ausencia dentro de la relacion */
     private EmployeeAbsence findOrThrow(Long membershipId, Long id) {
         return absenceRepository.findByIdAndMembershipId(id, membershipId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró la ausencia con ID: " + id
-                                + " para el empleado con ID: " + membershipId));
+                .orElseThrow(() -> new NotFoundException("la ausencia", id));
     }
 
     /** valida que el inicio sea anterior al fin */

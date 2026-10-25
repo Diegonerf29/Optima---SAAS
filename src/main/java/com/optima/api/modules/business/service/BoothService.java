@@ -1,5 +1,6 @@
 package com.optima.api.modules.business.service;
 
+import com.optima.api.common.exception.NotFoundException;
 import com.optima.api.modules.appointment.repository.AppointmentRepository;
 import com.optima.api.modules.business.dto.response.BoothResponse;
 import com.optima.api.modules.business.dto.request.CreateBoothRequest;
@@ -35,8 +36,7 @@ public class BoothService {
      */
     public BoothResponse create(Long businessId, CreateBoothRequest request) {
         Business business = businessRepository.findById(businessId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "No se encontró el negocio con ID: " + businessId));
+                .orElseThrow(() -> new NotFoundException("el negocio", businessId));
 
         String name = request.name().trim();
         if (boothRepository.existsByBusinessIdAndNameIgnoreCase(businessId, name)) {
@@ -125,8 +125,6 @@ public class BoothService {
 
     private Booth findOrThrow(Long businessId, Long id) {
         return boothRepository.findByIdAndBusinessId(id, businessId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "No se encontró la cabina con ID: " + id
-                                + " en el negocio con ID: " + businessId));
+                .orElseThrow(() -> new NotFoundException("la cabina", id));
     }
 }

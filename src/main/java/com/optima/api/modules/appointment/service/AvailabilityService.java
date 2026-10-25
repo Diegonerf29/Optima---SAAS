@@ -1,5 +1,6 @@
 package com.optima.api.modules.appointment.service;
 
+import com.optima.api.common.exception.NotFoundException;
 import com.optima.api.modules.appointment.dto.response.AvailabilityResponse;
 import com.optima.api.modules.appointment.dto.response.AvailabilitySlotResponse;
 import com.optima.api.modules.appointment.model.Appointment;
@@ -61,8 +62,7 @@ public class AvailabilityService {
         // se obtiene la duracion total para construir los huecos
 
         Business business = businessRepository.findById(businessId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "No se encontró el negocio con ID: " + businessId));
+                .orElseThrow(() -> new NotFoundException("el negocio", businessId));
 
         // "hoy" segun la zona horaria del negocio, no la del servidor (M14)
         if (date.isBefore(businessClock.today(business))) {
@@ -184,9 +184,7 @@ public class AvailabilityService {
             return membershipRepository.findAllByBusinessIdAndIsActiveTrue(businessId);
         }
         Membership emp = membershipRepository.findByIdAndBusinessId(membershipId, businessId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "No se encontró el empleado con ID: " + membershipId
-                                + " en el negocio con ID: " + businessId));
+                .orElseThrow(() -> new NotFoundException("el empleado", membershipId));
         if (!emp.getIsActive()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "El empleado con ID: " + membershipId + " está desactivado");
@@ -200,9 +198,7 @@ public class AvailabilityService {
             return boothRepository.findAllByBusinessIdAndIsActiveTrue(businessId);
         }
         Booth b = boothRepository.findByIdAndBusinessId(boothId, businessId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "No se encontró la cabina con ID: " + boothId
-                                + " en el negocio con ID: " + businessId));
+                .orElseThrow(() -> new NotFoundException("la cabina", boothId));
         if (!b.getIsActive()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "La cabina con ID: " + boothId + " está desactivada");
