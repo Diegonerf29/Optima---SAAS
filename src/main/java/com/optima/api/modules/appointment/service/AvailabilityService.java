@@ -223,8 +223,8 @@ public class AvailabilityService {
         LocalDateTime rangeStart = max(date.atTime(range.getStartTime()), dayStart);
         LocalDateTime rangeEnd   = min(date.atTime(range.getEndTime()),   dayEnd);
 
-        // se ajusta el inicio al siguiente corte valido del intervalo
-        LocalDateTime cursor = alignUpToInterval(rangeStart, interval);
+        // se ajusta el inicio al siguiente hueco contando desde la apertura del tramo (M2)
+        LocalDateTime cursor = SlotGrid.alignUp(rangeStart, dayStart, interval);
 
         while (!cursor.plusMinutes(totalDuration).isAfter(rangeEnd)) {
             LocalDateTime slotStart = cursor;
@@ -283,15 +283,6 @@ public class AvailabilityService {
             if (!overlap) return b;
         }
         return null;
-    }
-
-    /** ajusta la hora al siguiente corte del intervalo */
-    private LocalDateTime alignUpToInterval(LocalDateTime t, int interval) {
-        int minute = t.getMinute();
-        int mod = minute % interval;
-        if (mod == 0 && t.getSecond() == 0 && t.getNano() == 0) return t;
-        return t.plusMinutes((long) interval - mod)
-                .withSecond(0).withNano(0);
     }
 
     /** devuelve la fecha mas tardia */

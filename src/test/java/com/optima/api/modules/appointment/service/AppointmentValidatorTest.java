@@ -68,19 +68,30 @@ class AppointmentValidatorTest {
                 .isInstanceOf(ResponseStatusException.class);
     }
 
-    // intervalo
+    // intervalo (contado desde la apertura del tramo)
+
+    private static final LocalTime APERTURA = LocalTime.of(10, 0);
 
     @Test
     void intervaloRechazaSegundos() {
-        assertThatThrownBy(() -> validator.validateAppointmentInterval(LUNES_10.withSecond(30), 30))
+        assertThatThrownBy(() -> validator.validateAppointmentInterval(LUNES_10.withSecond(30), APERTURA, 30))
                 .isInstanceOf(ResponseStatusException.class);
     }
 
     @Test
     void intervaloDe30AceptaEnPuntoYMedia() {
-        assertThatCode(() -> validator.validateAppointmentInterval(LUNES_10, 30)).doesNotThrowAnyException();
-        assertThatCode(() -> validator.validateAppointmentInterval(LUNES_10.withMinute(30), 30)).doesNotThrowAnyException();
-        assertThatThrownBy(() -> validator.validateAppointmentInterval(LUNES_10.withMinute(15), 30))
+        assertThatCode(() -> validator.validateAppointmentInterval(LUNES_10, APERTURA, 30)).doesNotThrowAnyException();
+        assertThatCode(() -> validator.validateAppointmentInterval(LUNES_10.withMinute(30), APERTURA, 30)).doesNotThrowAnyException();
+        assertThatThrownBy(() -> validator.validateAppointmentInterval(LUNES_10.withMinute(15), APERTURA, 30))
+                .isInstanceOf(ResponseStatusException.class);
+    }
+
+    @Test
+    void intervaloDe45AceptaLasOnceYMedia() {
+        // 10:00, 10:45, 11:30... (antes solo aceptaba :00 y :45, bug M2)
+        assertThatCode(() -> validator.validateAppointmentInterval(LUNES_10.withHour(11).withMinute(30), APERTURA, 45))
+                .doesNotThrowAnyException();
+        assertThatThrownBy(() -> validator.validateAppointmentInterval(LUNES_10.withHour(11).withMinute(0), APERTURA, 45))
                 .isInstanceOf(ResponseStatusException.class);
     }
 

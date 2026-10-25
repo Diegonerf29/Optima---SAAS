@@ -160,8 +160,12 @@ public class AppointmentValidator {
         }
     }
 
-    /** comprueba que la hora respete el intervalo del negocio */
+    /**
+     * comprueba que la hora caiga en un hueco del intervalo del negocio
+     * los huecos se cuentan desde la apertura del tramo (opening), igual que en la disponibilidad (M2)
+     */
     public void validateAppointmentInterval(LocalDateTime startDateTime,
+                                            LocalTime opening,
                                             Integer interval) {
         if (interval == null || interval <= 0) {
             throw new ResponseStatusException(
@@ -179,21 +183,22 @@ public class AppointmentValidator {
             );
         }
 
-        int minutes = startDateTime.getMinute();
-
-        if (minutes % interval != 0) {
+        if (!SlotGrid.isAligned(startDateTime.toLocalTime(), opening, interval)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "La hora de inicio debe ser múltiplo de "
-                            + interval + " minutos"
+                    "La hora de inicio debe coincidir con un hueco de " + interval
+                            + " minutos contando desde la apertura (" + opening + ")"
             );
         }
     }
 
-    /** comprueba que la cita encaje en el horario del negocio */
-    public void validateBusinessHours(Long businessId,
-                                      LocalDateTime startDateTime,
-                                      LocalDateTime endDateTime) {
+    /**
+     * comprueba que la cita encaje en el horario del negocio
+     * devuelve el tramo de apertura en el que cae, para validar el intervalo desde su apertura
+     */
+    public BusinessHour validateBusinessHours(Long businessId,
+                                              LocalDateTime startDateTime,
+                                              LocalDateTime endDateTime) {
         // si cruza medianoche las horas no se pueden comparar dentro del mismo dia
         if (!startDateTime.toLocalDate().equals(endDateTime.toLocalDate())) {
             throw new ResponseStatusException(
@@ -210,17 +215,15 @@ public class AppointmentValidator {
         LocalTime appointmentStart = startDateTime.toLocalTime();
         LocalTime appointmentEnd = endDateTime.toLocalTime();
 
-        boolean fits = hoursOfDay.stream()
+        return hoursOfDay.stream()
                 .filter(h -> !Boolean.TRUE.equals(h.getIsClosed()))
-                .anyMatch(h -> !appointmentStart.isBefore(h.getStartTime())
-                        && !appointmentEnd.isAfter(h.getEndTime()));
-
-        if (!fits) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "El negocio está cerrado en ese día y horario"
-            );
-        }
+                .filter(h -> !appointmentStart.isBefore(h.getStartTime())
+                        && !appointmentEnd.isAfter(h.getEndTime()))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "El negocio está cerrado en ese día y horario"
+                ));
     }
 
     /** comprueba que el cambio de estado sea valido */

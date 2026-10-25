@@ -43,7 +43,11 @@ public final class TestApi {
     }
 
     public static JsonNode json(MvcResult result) throws Exception {
-        return JSON.readTree(result.getResponse().getContentAsString());
+        return json(result.getResponse().getContentAsString());
+    }
+
+    public static JsonNode json(String body) {
+        return JSON.readTree(body);
     }
 
     public static String toJson(Object value) {

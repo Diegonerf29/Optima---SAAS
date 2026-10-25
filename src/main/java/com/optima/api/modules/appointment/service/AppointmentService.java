@@ -14,6 +14,7 @@ import com.optima.api.modules.appointment.repository.AppointmentStatusRepository
 import com.optima.api.modules.appointment.repository.BookedServiceRepository;
 import com.optima.api.modules.business.model.Booth;
 import com.optima.api.modules.business.model.Business;
+import com.optima.api.modules.business.model.BusinessHour;
 import com.optima.api.modules.business.model.Membership;
 import com.optima.api.modules.business.repository.BoothRepository;
 import com.optima.api.modules.business.repository.BusinessRepository;
@@ -243,8 +244,8 @@ public class AppointmentService {
         Long membershipId = membership.getId();
         Long boothId = booth != null ? booth.getId() : null;
 
-        validator.validateAppointmentInterval(start, business.getAppointmentInterval());
-        validator.validateBusinessHours(business.getId(), start, end);
+        BusinessHour opening = validator.validateBusinessHours(business.getId(), start, end);
+        validator.validateAppointmentInterval(start, opening.getStartTime(), business.getAppointmentInterval());
         validator.validateEmployeeSchedule(membershipId, start, end);
         validator.validateNoOverlap(membershipId, start, end, excludeAppointmentId);
         validator.validateNoEmployeeAbsence(membershipId, start, end);
