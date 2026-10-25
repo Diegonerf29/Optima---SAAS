@@ -41,3 +41,6 @@ AGENTS.md
 
 # Archivos descartados durante la limpieza pre-entrega (no se suben al repo)
 innecesario/
+
+# copias de seguridad de la base de datos (deploy/backup.sh)
+backups/

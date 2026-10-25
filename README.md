@@ -144,3 +144,4 @@ En producción se usa [`docker-compose.prod.yml`](docker-compose.prod.yml) en un
 
 - La imagen de la web ([`frontend/Dockerfile`](frontend/Dockerfile)) compila React con Node y lo sirve con Caddy ([`deploy/Caddyfile`](deploy/Caddyfile)), que además pide el certificado HTTPS y pasa `/api` a la API. Web y API comparten dominio, así que no hace falta CORS.
 - Para probar la imagen de producción en local basta con `DOMAIN=localhost` en el `.env` (Caddy usa entonces un certificado propio).
+- Guía completa del servidor (SSH, cortafuegos, correo, copias de seguridad, actualizaciones y avisos): [`deploy/README.md`](deploy/README.md).
