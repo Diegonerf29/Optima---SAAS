@@ -8,8 +8,8 @@ Es un SaaS **multi-tenant**: muchos negocios comparten la misma aplicación y la
 
 ## Qué hace
 
-- **Agenda**: citas por empleado y cabina, con huecos libres calculados según el horario del negocio (con turno partido), el de cada empleado, ausencias, bloqueos y citas ya reservadas.
-- **Clientes**, **catálogo** (servicios, categorías e impuestos), **equipo** (empleados, horarios, ausencias) y **configuración del negocio** (horario, cabinas, zona horaria).
+- **Agenda**: citas por empleado y cabina, con huecos libres calculados según el horario del negocio (con turno partido), el de cada empleado (quien no tiene horario propio trabaja todo el del local), ausencias, bloqueos y citas ya reservadas.
+- **Clientes**, **catálogo** (servicios, categorías e impuestos; un negocio nuevo ya trae el IVA 21 % y la categoría General), **equipo** (empleados, horarios, ausencias) y **configuración del negocio** (horario, cabinas, zona horaria).
 - **Cobros**: quién cobró, cuándo y cómo (efectivo, tarjeta, Bizum); total con IVA calculado en el servidor.
 - **Emails a clientes**: confirmación, cambios, cancelación y recordatorio el día antes.
 - **Cuentas**: registro de negocio, confirmación del email, invitaciones de empleados, recuperación de contraseña y cierre de sesión en todos los dispositivos.
@@ -19,10 +19,11 @@ Es un SaaS **multi-tenant**: muchos negocios comparten la misma aplicación y la
 | Parte | Tecnología |
 |-------|------------|
 | Backend | Java 21, Spring Boot 4.1 (Web MVC, Security, Data JPA, Validation, Mail, Actuator) |
+| Frontend | React 19, TypeScript, Vite, Tailwind CSS, componentes Radix (estilo shadcn/ui), TanStack Query, React Hook Form + Zod, react-big-calendar |
 | Base de datos | MySQL 8.4 con migraciones Flyway (`src/main/resources/db/migration`) |
 | Seguridad | JWT (jjwt), BCrypt, límite de intentos (Bucket4j) |
 | Documentación de la API | OpenAPI / Swagger UI (springdoc) |
-| Tests | JUnit 5, Mockito, AssertJ, MockMvc y Testcontainers (MySQL real en Docker) |
+| Tests | Backend: JUnit 5, Mockito, AssertJ, MockMvc y Testcontainers (MySQL real en Docker). Frontend: Vitest y Testing Library; recorridos completos con Playwright |
 | Despliegue | Docker, Docker Compose, Caddy (HTTPS automático) |
 | Integración continua | GitHub Actions y Dependabot |
 
@@ -38,6 +39,14 @@ src/main/resources
 ├── application.properties       configuración de producción (segura por defecto)
 ├── application-dev.properties   perfil dev para trabajar en local
 └── db/migration, db/demo        migraciones de Flyway y datos de demostración (solo dev)
+
+frontend/src
+├── api/           cliente HTTP, tipos generados desde OpenAPI (schema.d.ts) y consultas (queries.ts)
+├── auth/          sesión (token en sessionStorage), contexto y protección de rutas
+├── components/    ui/ (botones, diálogos...), layout/ (menú y cabecera) y common/ (piezas reutilizables)
+├── features/      una carpeta por pantalla: agenda, clients, catalog, team, settings, profile, auth, public
+└── lib/           formato de fechas y dinero, y reglas de validación (las mismas que el backend)
+deploy/Caddyfile   servidor web de producción (HTTPS, la web y /api)
 ```
 
 ## Arrancar en local
@@ -57,6 +66,15 @@ docker compose up -d mysqldb
 DB_PORT=3307 SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
 ```
 
+Y el frontend (hace falta **Node 22 o superior**), en otra terminal:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+- Aplicación: http://localhost:5173 (las llamadas a `/api` las pasa Vite a la API)
 - API: http://localhost:8080
 - Swagger UI: http://localhost:8080/swagger-ui.html
 - Usuarios de demo (contraseña `12345678`): `admin@optima.com` (ADMIN del negocio *Demo* y EMPLOYEE de *Aura*) y `empleado@optima.com` (EMPLOYEE de *Demo*).
@@ -70,6 +88,15 @@ El perfil `dev` trae una clave JWT de desarrollo, la base de datos local, los da
 ```
 
 Hay tests unitarios y de integración. Los de integración arrancan un MySQL real con Testcontainers, así que **Docker tiene que estar en marcha**. GitHub Actions los ejecuta en cada push y pull request.
+
+En el frontend (`cd frontend`):
+
+| Comando | Qué hace |
+|---------|----------|
+| `npm test` | Tests unitarios y de componentes (Vitest) |
+| `npm run e2e` | Recorridos completos en un navegador (Playwright). Necesita la API arrancada con el perfil `dev`; la primera vez, `npx playwright install chromium` |
+| `npm run lint`, `npm run typecheck`, `npm run format` | Lint (oxlint), comprobación de tipos y formato (Prettier) |
+| `npm run gen:api` | Regenera `src/api/schema.d.ts` desde la API en marcha. Hay que hacerlo cada vez que cambie un endpoint o un DTO |
 
 ## Variables de entorno (producción)
 
@@ -114,3 +141,6 @@ Los empleados gestionan todas las citas y clientes porque en un local pequeño q
 ## Despliegue
 
 En producción se usa [`docker-compose.prod.yml`](docker-compose.prod.yml) en un servidor con Docker: Caddy (HTTPS y el frontend), la API y MySQL, con solo los puertos 80 y 443 abiertos. Los pasos están en [`plan.md`](plan.md), fase 8.
+
+- La imagen de la web ([`frontend/Dockerfile`](frontend/Dockerfile)) compila React con Node y lo sirve con Caddy ([`deploy/Caddyfile`](deploy/Caddyfile)), que además pide el certificado HTTPS y pasa `/api` a la API. Web y API comparten dominio, así que no hace falta CORS.
+- Para probar la imagen de producción en local basta con `DOMAIN=localhost` en el `.env` (Caddy usa entonces un certificado propio).

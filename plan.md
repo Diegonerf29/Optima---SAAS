@@ -217,23 +217,23 @@ Hazla **antes del frontend**: así la API ya no cambia mientras se construyen la
 
 Antes de empezar: fases 2 a 6 terminadas y Swagger al día.
 
-- [ ] 7.1 Crear `frontend/` (Vite + React + TypeScript), Tailwind, shadcn/ui, ESLint y Prettier; `VITE_API_URL`; tipos generados desde `/v3/api-docs`
-- [ ] 7.2 Base: cliente HTTP que añade el token, manejo de 401/403, rutas protegidas por rol, estructura (menú lateral + cabecera) y páginas de error
-- [ ] 7.3 Acceso: login, selección de negocio (se salta si solo hay uno), registro de negocio, verificación de email, "olvidé mi contraseña" y restablecerla
-- [ ] 7.4 Agenda: vista de día con una columna por empleado y vista de semana, crear cita con los huecos libres, editar, cambiar estado y cobrar
-- [ ] 7.5 Clientes: lista con búsqueda y paginación, ficha con su historial de citas
-- [ ] 7.6 Catálogo: categorías, servicios e impuestos
-- [ ] 7.7 Equipo: empleados e invitaciones, horarios y ausencias
-- [ ] 7.8 Configuración del negocio: datos, horario de apertura, cabinas y bloqueos
-- [ ] 7.9 Perfil: datos personales, cambiar contraseña y cerrar sesión
-- [ ] 7.10 Inicio: citas de hoy y pendientes de cobro (seguramente necesite un endpoint de resumen en el backend)
-- [ ] 7.11 Calidad: pensado para escritorio y usable en móvil, accesibilidad básica, tests de los formularios clave, 2-3 recorridos con Playwright y el frontend añadido a GitHub Actions
-- [ ] 7.12 Páginas públicas: portada sencilla, precios, aviso legal y privacidad (P7)
+- [x] 7.1 Crear `frontend/` (Vite + React + TypeScript), Tailwind, componentes estilo shadcn/ui sobre Radix, oxlint (en lugar de ESLint) y Prettier; `VITE_API_URL`; tipos generados desde `/v3/api-docs` (`npm run gen:api`)
+- [x] 7.2 Base: cliente HTTP que añade el token, manejo de 401/403, rutas protegidas por rol, estructura (menú lateral + cabecera) y páginas de error
+- [x] 7.3 Acceso: login, selección de negocio (se salta si solo hay uno), registro de negocio, verificación de email, "olvidé mi contraseña" y restablecerla
+- [x] 7.4 Agenda: vista de día con una columna por empleado y vista de semana, crear cita con los huecos libres, editar, cambiar estado y cobrar
+- [x] 7.5 Clientes: lista con búsqueda y paginación, ficha con su historial de citas
+- [x] 7.6 Catálogo: categorías, servicios e impuestos (un negocio nuevo ya trae IVA 21 % y la categoría General)
+- [x] 7.7 Equipo: empleados e invitaciones, horarios y ausencias (sin horario propio, un empleado trabaja todo el horario del local)
+- [x] 7.8 Configuración del negocio: datos, horario de apertura, cabinas y bloqueos
+- [x] 7.9 Perfil: datos personales, cambiar contraseña y cerrar sesión
+- [x] 7.10 Inicio: citas de hoy, siguiente cita, cobrado hoy y pendientes de cobro, y los primeros pasos para un negocio nuevo (no hizo falta un endpoint de resumen: sale de las citas del día)
+- [x] 7.11 Calidad: pensado para escritorio y usable en móvil, accesibilidad básica, tests con Vitest, 2 recorridos con Playwright y el frontend añadido a GitHub Actions (formato, lint, tipos, tests, build y e2e)
+- [x] 7.12 Páginas públicas: portada sencilla, precios, aviso legal y privacidad (P7). 👤 Los textos legales son plantillas con [CORCHETES]: hay que rellenarlos con los datos del titular
 
 ### Fase 8 — Despliegue
 
 - [ ] 8.1 👤 Contratar un VPS de Hostinger (KVM 1, centro de datos en la UE, plantilla Ubuntu con Docker) y comprar el dominio (D7, P10)
-- [ ] 8.2 `Caddyfile`: HTTPS, servir `frontend/dist`, redirigir `/api` y cabeceras de seguridad (`Content-Security-Policy`, HSTS, `Referrer-Policy`)
+- [x] 8.2 `Caddyfile`: HTTPS, servir `frontend/dist`, redirigir `/api` y cabeceras de seguridad (`Content-Security-Policy`, HSTS, `Referrer-Policy`) → `deploy/Caddyfile` y `frontend/Dockerfile`
 - [ ] 8.3 Servidor: Docker, cortafuegos (solo puertos 22, 80 y 443), SSH solo con clave y `.env` de producción
 - [ ] 8.4 👤 Proveedor de correo transaccional con plan gratuito (por ejemplo Brevo o Resend) conectado al dominio con los registros SPF, DKIM y DMARC (P5)
 - [ ] 8.5 Copias de seguridad: `mysqldump` diario guardado **fuera de Hostinger** (las copias del propio proveedor no sirven si se pierde la cuenta), y **probar a restaurar una** (P3)

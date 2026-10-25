@@ -49,6 +49,13 @@ Cada cambio que se aplica al código se apunta aquí y en la columna **Estado** 
 | 25/10/2026 | `83a1160` | Ausencias y horarios con una sola regla de solape, `getInBusiness` y `TextUtils.blankToNull` en lugar de copias (paso 6.4) | B8 ✅ |
 | 25/10/2026 | `b79433b` | La entidad del catálogo pasa a `Offering`, `JwtUtil` a `common.security.JwtService` y `{userId}` a `{membershipId}` (paso 6.5) | B9 ✅ |
 | 25/10/2026 | `749e585` | Estados de cita y roles como constantes, también en las consultas JPQL (paso 6.6) | B10 ✅ |
+| 25/10/2026 | `07087fe` | Filtro `clientId` en `GET /appointments` para el historial de la ficha del cliente (preparación del paso 7.5) | — |
+| 25/10/2026 | `6a3331b` | `@ParameterObject` en los `Pageable` y respuestas `application/json` en OpenAPI: el frontend genera sus tipos desde `/v3/api-docs` | — |
+| 25/10/2026 | `f04e2e2` | Un negocio nuevo ya trae el impuesto "IVA 21 %" y la categoría "General" (sin ellos no se podía crear ningún servicio) | — |
+| 25/10/2026 | `54386ef` | Un empleado sin horario propio trabaja todo el horario del local (antes no tenía ningún hueco y un negocio recién creado no podía dar citas) | — |
+| 25/10/2026 | `0ae00f1` | Frontend nuevo con React, Vite y TypeScript: todas las pantallas (pasos 7.1 a 7.10 y 7.12). Token en `sessionStorage`, 401 → vuelta al login, rutas por rol, sin `dangerouslySetInnerHTML`, y el token de los enlaces de email se quita de la URL al leerlo | B16 ✅ (con `5bdc9ff`) |
+| 25/10/2026 | `536d361`, `cf18060` | Tests del frontend (24 con Vitest) y dos recorridos completos con Playwright: alta de un negocio hasta cobrar su primera cita, y permisos de un empleado. Con los 143 del backend queda resuelto A4 (paso 7.11) | A4 ✅ |
+| 25/10/2026 | `5bdc9ff` | `frontend/Dockerfile` (Node para compilar, Caddy para servir) y `deploy/Caddyfile`: HTTPS, `/api` a la API, cabeceras HSTS, CSP, `Referrer-Policy: no-referrer` y `X-Frame-Options`. La CI comprueba el frontend, pasa los recorridos e2e y construye las dos imágenes; Dependabot vigila también npm (pasos 7.11 y 8.2) | B16 ✅ |
 
 **Estados:** ⏳ Pendiente · 🟡 En parte · ✅ Resuelto
 
@@ -95,7 +102,7 @@ Además hay 14 problemas de gravedad media (por ejemplo, **doble reserva posible
 | A1 | Secretos reales en el historial de Git | Configuración | 🔴 Alta | `.env-example`, `application.properties` (commits < `16335ce`) | ⏳ Pendiente |
 | A2 | Clave JWT con valor por defecto público | Autenticación | 🔴 Alta | `src/main/resources/application.properties:23` | ✅ Resuelto |
 | A3 | Alta de empleado reutiliza cuentas ajenas y filtra sus datos | Permisos / multi-tenant | 🔴 Alta | `modules/user/service/UserService.java:57` | ✅ Resuelto |
-| A4 | No existe ningún test automatizado | Tests | 🔴 Alta | `pom.xml`, falta `src/test` | 🟡 En parte |
+| A4 | No existe ningún test automatizado | Tests | 🔴 Alta | `pom.xml`, falta `src/test` | ✅ Resuelto |
 | M1 | Doble reserva posible con peticiones simultáneas | API / BD | 🟠 Media | `modules/appointment/service/AppointmentService.java:67` | ✅ Resuelto |
 | M2 | Con intervalo de 45 min la disponibilidad ofrece huecos que luego se rechazan | API | 🟠 Media | `AvailabilityService.java:325` / `AppointmentValidator.java:182` | ✅ Resuelto |
 | M3 | El límite de intentos se puede saltar con `X-Forwarded-For` | Autenticación | 🟠 Media | `common/security/RateLimitFilter.java:102` | ✅ Resuelto |
@@ -125,7 +132,7 @@ Además hay 14 problemas de gravedad media (por ejemplo, **doble reserva posible
 | B13 | Un negocio puede quedarse sin ningún administrador | Permisos | 🟢 Baja | `UserService.java:98` | ✅ Resuelto |
 | B14 | Filtros de seguridad registrados dos veces | Estructura | 🟢 Baja | `common/security/*Filter.java` | ✅ Resuelto |
 | B15 | Sin migraciones de BD ni validación del esquema | Base de datos | 🟢 Baja | `application.properties:12`, `schema_v20.sql` | ✅ Resuelto |
-| B16 | La tabla `password_resets` crece sin límite | Base de datos | 🟢 Baja | `PasswordResetService.java` | 🟡 En parte |
+| B16 | La tabla `password_resets` crece sin límite | Base de datos | 🟢 Baja | `PasswordResetService.java` | ✅ Resuelto |
 | B17 | Listados paginados sin orden por defecto | API | 🟢 Baja | repositorios `findByBusinessId…` | ✅ Resuelto |
 | B18 | Documentación desactualizada y sin integración continua | Documentación | 🟢 Baja | `README.md:121`, `pom.xml:16` | ✅ Resuelto |
 | B19 | Llamadas externas dentro de transacciones y datos personales en logs | API | 🟢 Baja | `BusinessService.java:69`, `GeocodingService.java:91` | ✅ Resuelto |
@@ -780,6 +787,8 @@ El último commit (`2f8566a`, *"elimina frontend original, empiezo de cero"*) bo
 4. Las comprobaciones de rol del frontend son **solo visuales**. La seguridad real está (y debe seguir estando) en el backend.
 5. Pedir a Caddy cabeceras de seguridad para el frontend: `Content-Security-Policy`, `Referrer-Policy: no-referrer` (ver B16) y HSTS.
 6. Configurar la URL de la API con una variable de entorno de Vite (`VITE_API_URL`) y actualizar `CORS_ALLOWED_ORIGINS` en el backend con el dominio real.
+
+**Estado (25/10/2026):** las seis se aplican en el frontend nuevo (`0ae00f1`) y en `deploy/Caddyfile` (`5bdc9ff`). Como la web y la API comparten dominio detrás de Caddy, en producción no hace falta CORS.
 
 ### Pagos
 No hay pasarela de pago ni datos de tarjeta, así que **no aplica PCI-DSS**. El "pago" es el indicador `isPaid` de cada cita. Sus problemas están en **M8** (control y registro del pago, precios recalculados) y **M7** (quién puede marcarlo).
