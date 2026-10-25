@@ -192,15 +192,15 @@ Objetivo: trabajar sobre una versión que recibe parches y saber al momento si u
 
 ### Fase 5 — Backend preparado para producción
 
-- [ ] 5.1 Perfiles: `dev` para local y valores seguros por defecto para producción. Credenciales de la BD por variables de entorno; Swagger y `show-sql` apagados fuera de `dev` (M10, B1, B2)
+- [x] 5.1 Perfiles: `dev` para local y valores seguros por defecto para producción. Credenciales de la BD por variables de entorno; Swagger y `show-sql` apagados fuera de `dev` (M10, B1, B2)
 - [x] 5.2 (hecho en la fase 2, antes de los cambios de esquema) Flyway: el esquema actual pasa a `V1__esquema_inicial.sql`, los datos de demo van aparte (solo `dev`) y `ddl-auto=validate` (B15, B10)
-- [ ] 5.3 Actuator con solo `/actuator/health` público (P1)
-- [ ] 5.4 `Dockerfile` en dos etapas: compila con Maven y ejecuta `java -jar` con un usuario sin privilegios (M10, P2)
-- [ ] 5.5 `docker-compose.yml` solo para desarrollo y `docker-compose.prod.yml` sin puertos de MySQL abiertos, usuario de BD con permisos mínimos y `TZ` (M10, M3)
-- [ ] 5.6 Logs sin datos personales, geocodificación fuera de las transacciones, apagado ordenado y cabeceras del proxy (`server.forward-headers-strategy`) (B19, P8)
-- [ ] 5.7 Quitar el registro doble de los filtros de seguridad (B14)
-- [ ] 5.8 Correo configurable por variables (host, puerto, usuario) para poder usar cualquier proveedor (P5)
-- [ ] 5.9 README nuevo (qué es, cómo arrancar en local, variables de entorno, cómo desplegar, tabla rol × acción); arreglar `pom.xml` y la colección de Postman (B18, P9)
+- [x] 5.3 Actuator con solo `/actuator/health` público (P1)
+- [x] 5.4 `Dockerfile` en dos etapas: compila con Maven y ejecuta `java -jar` con un usuario sin privilegios (M10, P2)
+- [x] 5.5 `docker-compose.yml` solo para desarrollo y `docker-compose.prod.yml` sin puertos de MySQL abiertos, usuario de BD con permisos mínimos y `TZ` (M10, M3)
+- [x] 5.6 Logs sin datos personales, geocodificación fuera de las transacciones, apagado ordenado y cabeceras del proxy (`server.forward-headers-strategy`) (B19, P8)
+- [x] 5.7 Quitar el registro doble de los filtros de seguridad (B14)
+- [x] 5.8 Correo configurable por variables (host, puerto, usuario) para poder usar cualquier proveedor (P5)
+- [x] 5.9 README nuevo (qué es, cómo arrancar en local, variables de entorno, cómo desplegar, tabla rol × acción); arreglar `pom.xml` y la colección de Postman (B18, P9)
 
 ### Fase 6 — Limpieza de código
 
