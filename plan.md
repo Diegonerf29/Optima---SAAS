@@ -234,11 +234,11 @@ Antes de empezar: fases 2 a 6 terminadas y Swagger al día.
 
 - [ ] 8.1 👤 Contratar un VPS de Hostinger (KVM 1, centro de datos en la UE, plantilla Ubuntu con Docker) y comprar el dominio (D7, P10)
 - [x] 8.2 `Caddyfile`: HTTPS, servir `frontend/dist`, redirigir `/api` y cabeceras de seguridad (`Content-Security-Policy`, HSTS, `Referrer-Policy`) → `deploy/Caddyfile` y `frontend/Dockerfile`
-- [ ] 8.3 Servidor: Docker, cortafuegos (solo puertos 22, 80 y 443), SSH solo con clave y `.env` de producción
-- [ ] 8.4 👤 Proveedor de correo transaccional con plan gratuito (por ejemplo Brevo o Resend) conectado al dominio con los registros SPF, DKIM y DMARC (P5)
-- [ ] 8.5 Copias de seguridad: `mysqldump` diario guardado **fuera de Hostinger** (las copias del propio proveedor no sirven si se pierde la cuenta), y **probar a restaurar una** (P3)
-- [ ] 8.6 Publicar versiones: GitHub Actions construye la imagen Docker; en el servidor, `docker compose pull && docker compose up -d`
-- [ ] 8.7 Monitorización mínima: un servicio gratuito que avise si `/actuator/health` deja de responder, y aviso de disco lleno
+- [ ] 8.3 👤 Servidor: Docker, cortafuegos (solo puertos 22, 80 y 443), SSH solo con clave y `.env` de producción → los comandos están en `deploy/README.md` (secciones 2 y 3)
+- [ ] 8.4 👤 Proveedor de correo transaccional con plan gratuito (por ejemplo Brevo o Resend) conectado al dominio con los registros SPF, DKIM y DMARC (P5) → `deploy/README.md`, sección 4
+- [x] 8.5 Copias de seguridad: `mysqldump` diario guardado **fuera de Hostinger** (las copias del propio proveedor no sirven si se pierde la cuenta), y **probar a restaurar una** (P3) → `deploy/backup.sh` y `deploy/restore.sh`. 👤 Al instalar: crear el remoto de rclone, el cron y hacer el simulacro de restauración
+- [x] 8.6 Publicar versiones: GitHub Actions construye la imagen Docker; en el servidor, `docker compose pull && docker compose up -d` → workflow `release.yml` (ghcr.io, al pasar la CI en `main`) y `deploy/update.sh`
+- [x] 8.7 Monitorización mínima: un servicio gratuito que avise si `/actuator/health` deja de responder, y aviso de disco lleno → UptimeRobot, `deploy/check-disk.sh` y avisos al móvil con ntfy. 👤 Crear el monitor y el tema de ntfy
 - [ ] 8.8 Entorno de demo separado de producción, con datos que se restauran cada noche (M13)
 
 ### Fase 9 — Pagos (Stripe)

@@ -56,6 +56,9 @@ Cada cambio que se aplica al código se apunta aquí y en la columna **Estado** 
 | 25/10/2026 | `0ae00f1` | Frontend nuevo con React, Vite y TypeScript: todas las pantallas (pasos 7.1 a 7.10 y 7.12). Token en `sessionStorage`, 401 → vuelta al login, rutas por rol, sin `dangerouslySetInnerHTML`, y el token de los enlaces de email se quita de la URL al leerlo | B16 ✅ (con `5bdc9ff`) |
 | 25/10/2026 | `536d361`, `cf18060` | Tests del frontend (24 con Vitest) y dos recorridos completos con Playwright: alta de un negocio hasta cobrar su primera cita, y permisos de un empleado. Con los 143 del backend queda resuelto A4 (paso 7.11) | A4 ✅ |
 | 25/10/2026 | `5bdc9ff` | `frontend/Dockerfile` (Node para compilar, Caddy para servir) y `deploy/Caddyfile`: HTTPS, `/api` a la API, cabeceras HSTS, CSP, `Referrer-Policy: no-referrer` y `X-Frame-Options`. La CI comprueba el frontend, pasa los recorridos e2e y construye las dos imágenes; Dependabot vigila también npm (pasos 7.11 y 8.2) | B16 ✅ |
+| 25/10/2026 | `d1ef32c` | Fase 7 apuntada en `plan.md`, `AUDITORIA.md` y README | — |
+| 25/10/2026 | `b64f915` | Scripts del servidor: copia de seguridad diaria con copia fuera del servidor (rclone), restauración, actualización con copia previa y aviso de disco lleno; guía paso a paso en `deploy/README.md` (pasos 8.3 a 8.5 y 8.7) | — (P3 del plan) |
+| 25/10/2026 | `d4aa199` | Las imágenes se publican en ghcr.io cuando la CI pasa en `main` (paso 8.6) | — |
 
 **Estados:** ⏳ Pendiente · 🟡 En parte · ✅ Resuelto
 
