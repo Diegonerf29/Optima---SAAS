@@ -28,6 +28,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -71,7 +72,12 @@ public class AppointmentService {
     /**
      * crea una cita nueva
      * guarda los servicios con su precio e impuesto actuales
+     *
+     * READ_COMMITTED (M1): con el nivel por defecto de MySQL (REPEATABLE READ) la comprobacion de
+     * solapes leia una "foto" tomada al empezar la transaccion y no veia la cita que otra peticion
+     * acababa de guardar mientras esta esperaba el bloqueo del empleado. Asi cada consulta ve lo ultimo confirmado
      */
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public AppointmentResponse createAppointment(Long businessId, CreateAppointmentRequest request) {
         Business business = findActiveBusiness(businessId);
         Client client = findActiveClient(businessId, request.clientId());
@@ -176,7 +182,8 @@ public class AppointmentService {
         return toResponse(appointmentRepository.save(appointment));
     }
 
-    /** actualiza los datos editables de una cita (no cambia cliente ni pago) */
+    /** actualiza los datos editables de una cita (no cambia cliente ni pago); READ_COMMITTED como al crear (M1) */
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public AppointmentResponse updateAppointment(Long businessId,
                                                  Long appointmentId,
                                                  UpdateAppointmentRequest request) {
