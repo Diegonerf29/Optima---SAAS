@@ -115,10 +115,21 @@ class AppointmentValidatorTest {
 
     @Test
     void empleadoQueNoTrabajaEseDia() {
+        // tiene horario propio, pero no ese dia
         when(scheduleRepository.findAllByMembershipIdAndDayOfWeek(anyLong(), anyInt()))
                 .thenReturn(List.of());
+        when(scheduleRepository.existsByMembershipId(1L)).thenReturn(true);
         assertThatThrownBy(() -> validator.validateEmployeeSchedule(1L, LUNES_10, LUNES_10.plusHours(1)))
                 .isInstanceOf(ResponseStatusException.class);
+    }
+
+    @Test
+    void empleadoSinHorarioPropioSigueElDelNegocio() {
+        when(scheduleRepository.findAllByMembershipIdAndDayOfWeek(anyLong(), anyInt()))
+                .thenReturn(List.of());
+        when(scheduleRepository.existsByMembershipId(1L)).thenReturn(false);
+        assertThatCode(() -> validator.validateEmployeeSchedule(1L, LUNES_10, LUNES_10.plusHours(1)))
+                .doesNotThrowAnyException();
     }
 
     @Test

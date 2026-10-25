@@ -138,6 +138,10 @@ public class AppointmentValidator {
         );
 
         if (schedules.isEmpty()) {
+            // sin horario propio trabaja todo el horario del negocio (eso ya lo comprueba validateBusinessHours)
+            if (!scheduleRepository.existsByMembershipId(membershipId)) {
+                return;
+            }
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "El empleado no trabaja el día seleccionado"

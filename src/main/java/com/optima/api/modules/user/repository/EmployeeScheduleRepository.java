@@ -3,6 +3,8 @@ package com.optima.api.modules.user.repository;
 import com.optima.api.modules.user.model.EmployeeSchedule;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
@@ -32,4 +34,11 @@ public interface EmployeeScheduleRepository extends JpaRepository<EmployeeSchedu
      */
     List<EmployeeSchedule> findAllByMembershipIdInAndDayOfWeek(Collection<Long> membershipIds,
                                                                Integer dayOfWeek);
+
+    /** true si el empleado tiene horario propio (algun tramo en la semana) */
+    boolean existsByMembershipId(Long membershipId);
+
+    /** de varias relaciones, las que tienen horario propio */
+    @Query("SELECT DISTINCT s.membership.id FROM EmployeeSchedule s WHERE s.membership.id IN :ids")
+    List<Long> findMembershipIdsWithSchedule(@Param("ids") Collection<Long> ids);
 }

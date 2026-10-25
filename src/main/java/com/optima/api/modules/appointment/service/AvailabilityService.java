@@ -31,8 +31,10 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /** calcula los huecos libres para una fecha y unos servicios */
@@ -126,6 +128,11 @@ public class AvailabilityService {
                 .map(Membership::getId)
                 .toList();
 
+        // quien no tiene horario propio trabaja todo el horario del negocio
+        Set<Long> withOwnSchedule = candidateIds.isEmpty()
+                ? Set.of()
+                : new HashSet<>(scheduleRepository.findMembershipIdsWithSchedule(candidateIds));
+
         Map<Long, List<EmployeeSchedule>> schedulesByEmp = candidateIds.isEmpty()
                 ? Map.of()
                 : scheduleRepository
@@ -144,9 +151,11 @@ public class AvailabilityService {
         for (Membership emp : candidates) {
             if (blockedEmployeeIds.contains(emp.getId())) continue;
 
+            boolean ownSchedule = withOwnSchedule.contains(emp.getId());
             List<EmployeeSchedule> ranges =
                     schedulesByEmp.getOrDefault(emp.getId(), List.of());
-            if (ranges.isEmpty()) continue;
+            // tiene horario propio pero ese dia no trabaja
+            if (ownSchedule && ranges.isEmpty()) continue;
 
             List<EmployeeAbsence> absences =
                     absencesByEmp.getOrDefault(emp.getId(), List.of());
@@ -155,13 +164,21 @@ public class AvailabilityService {
                     .filter(a -> a.getMembership().getId().equals(emp.getId()))
                     .toList();
 
-            for (EmployeeSchedule range : ranges) {
-                // asi tambien se respetan los cortes del horario del negocio
-                for (BusinessHour bh : openHours) {
-                    LocalDateTime dayStart = date.atTime(bh.getStartTime());
-                    LocalDateTime dayEnd = date.atTime(bh.getEndTime());
+            // asi tambien se respetan los cortes del horario del negocio
+            for (BusinessHour bh : openHours) {
+                LocalDateTime dayStart = date.atTime(bh.getStartTime());
+                LocalDateTime dayEnd = date.atTime(bh.getEndTime());
+                if (!ownSchedule) {
                     addSlotsForEmployeeRange(
-                            slots, date, range, dayStart, dayEnd, notBefore,
+                            slots, date, bh.getStartTime(), bh.getEndTime(), dayStart, dayEnd, notBefore,
+                            interval, totalDuration,
+                            emp, absences, empAppts,
+                            candidateBooths, blockedBoothIds, activeAppointments
+                    );
+                }
+                for (EmployeeSchedule range : ranges) {
+                    addSlotsForEmployeeRange(
+                            slots, date, range.getStartTime(), range.getEndTime(), dayStart, dayEnd, notBefore,
                             interval, totalDuration,
                             emp, absences, empAppts,
                             candidateBooths, blockedBoothIds, activeAppointments
@@ -213,7 +230,8 @@ public class AvailabilityService {
     private void addSlotsForEmployeeRange(
             List<AvailabilitySlotResponse> slots,
             LocalDate date,
-            EmployeeSchedule range,
+            LocalTime rangeStartTime,
+            LocalTime rangeEndTime,
             LocalDateTime dayStart,
             LocalDateTime dayEnd,
             LocalDateTime notBefore,
@@ -227,8 +245,8 @@ public class AvailabilityService {
             List<Appointment> allActiveAppointments
     ) {
         // se cruza el horario del empleado con el tramo del negocio
-        LocalDateTime rangeStart = max(date.atTime(range.getStartTime()), dayStart);
-        LocalDateTime rangeEnd   = min(date.atTime(range.getEndTime()),   dayEnd);
+        LocalDateTime rangeStart = max(date.atTime(rangeStartTime), dayStart);
+        LocalDateTime rangeEnd   = min(date.atTime(rangeEndTime),   dayEnd);
         if (notBefore != null) {
             rangeStart = max(rangeStart, notBefore);
         }
