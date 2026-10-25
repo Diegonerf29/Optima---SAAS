@@ -24,11 +24,6 @@ public class BusinessService {
     private final BusinessRepository businessRepository;
     private final GeocodingService geocodingService;
 
-    /** crea un negocio nuevo, valida unicidad y geocodifica */
-    public BusinessResponse create(CreateBusinessRequest request) {
-        return BusinessResponse.from(createEntity(request));
-    }
-
     /** crea el negocio y devuelve la entidad para usarla dentro del registro */
     public Business createEntity(CreateBusinessRequest request) {
         String slug = request.slug().trim().toLowerCase();

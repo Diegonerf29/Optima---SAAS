@@ -1,7 +1,6 @@
 package com.optima.api.modules.business.controller;
 
 import com.optima.api.modules.business.dto.response.BusinessResponse;
-import com.optima.api.modules.business.dto.request.CreateBusinessRequest;
 import com.optima.api.modules.business.dto.request.UpdateBusinessRequest;
 import com.optima.api.modules.business.service.BusinessService;
 import jakarta.validation.Valid;
@@ -12,7 +11,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-/** gestion del negocio negocio del propio usuario */
+/**
+ * gestion del negocio del propio usuario
+ * los negocios se crean con POST /api/auth/register, que crea tambien su primer ADMIN (M9)
+ */
 @RestController
 @RequestMapping("/api/businesses")
 @RequiredArgsConstructor
@@ -20,14 +22,6 @@ import org.springframework.web.bind.annotation.*;
 public class BusinessController {
 
     private final BusinessService businessService;
-
-    /** crea un negocio nuevo */
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('ADMIN')")
-    public BusinessResponse create(@Valid @RequestBody CreateBusinessRequest request) {
-        return businessService.create(request);
-    }
 
     /** obtiene los datos de un negocio */
     @GetMapping("/{id}")

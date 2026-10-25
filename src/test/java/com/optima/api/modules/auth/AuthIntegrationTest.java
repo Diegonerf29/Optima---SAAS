@@ -88,4 +88,16 @@ class AuthIntegrationTest extends IntegrationTest {
                         .content(toJson(body)))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void yaNoSePuedenCrearNegociosSinDuenoConPostBusinesses() throws Exception {
+        // regresion de M9: los negocios solo se crean con el registro
+        String token = tokenDeNegocio(mockMvc, ADMIN_DEMO, DEMO_PASSWORD, 1);
+        String u = unico();
+        mockMvc.perform(post("/api/businesses")
+                        .header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of("name", "Huerfano " + u, "slug", "huerfano-" + u, "email", "h-" + u + "@ejemplo.com"))))
+                .andExpect(status().isNotFound());
+    }
 }
