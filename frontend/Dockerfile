@@ -13,6 +13,6 @@ COPY frontend/ ./
 RUN npm run build
 
 # etapa 2: solo Caddy y los ficheros estaticos (sin Node ni el codigo fuente)
-FROM caddy:2.10-alpine
+FROM caddy:2.11-alpine
 COPY deploy/Caddyfile /etc/caddy/Caddyfile
 COPY --from=build /app/dist /srv

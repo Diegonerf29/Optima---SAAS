@@ -18,6 +18,17 @@ updates:
     groups:
       menores:
         update-types: [minor, patch]
+    # saltos de version mayor que se hacen a mano y con calma, no con un PR automatico:
+    # - typescript 7 es el compilador nuevo (escrito en Go); hay que esperar a que lo soporte todo el ecosistema
+    # - @types/node sigue la version de Node que se usa (24 LTS)
+    # - @hookform/resolvers 6 no encaja aun con react-hook-form 7
+    ignore:
+      - dependency-name: typescript
+        update-types: [version-update:semver-major]
+      - dependency-name: '@types/node'
+        update-types: [version-update:semver-major]
+      - dependency-name: '@hookform/resolvers'
+        update-types: [version-update:semver-major]
 
   - package-ecosystem: github-actions
     directory: /
@@ -31,3 +42,9 @@ updates:
     target-branch: develop
     schedule:
       interval: monthly
+    # Java y Node se quedan en sus versiones LTS (las mismas que la CI): 21 y 24
+    ignore:
+      - dependency-name: eclipse-temurin
+        update-types: [version-update:semver-major]
+      - dependency-name: node
+        update-types: [version-update:semver-major]
