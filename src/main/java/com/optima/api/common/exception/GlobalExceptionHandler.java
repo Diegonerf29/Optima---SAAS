@@ -44,11 +44,17 @@ public class GlobalExceptionHandler {
         return new ErrorResponse(400, HttpStatus.BAD_REQUEST.getReasonPhrase(), errors, Instant.now().toString());
     }
 
-    /** devuelve entrada invalida */
+    /**
+     * devuelve entrada invalida
+     * el mensaje de estas excepciones suele venir de librerias y es tecnico:
+     * se guarda en el log y al cliente le llega uno generico (B3).
+     * Los errores de negocio se lanzan con ResponseStatusException y si llevan su mensaje
+     */
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleIllegalArgument(IllegalArgumentException ex) {
-        return new ErrorResponse(400, HttpStatus.BAD_REQUEST.getReasonPhrase(), ex.getMessage(), Instant.now().toString());
+        log.warn("Peticion rechazada por argumento no valido: {}", ex.getMessage());
+        return new ErrorResponse(400, HttpStatus.BAD_REQUEST.getReasonPhrase(), "La petición contiene datos no válidos", Instant.now().toString());
     }
 
     /** maneja validaciones de parametros */

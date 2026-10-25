@@ -6,14 +6,17 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 /** consulta ausencias de todos los empleados de un negocio */
@@ -22,6 +25,9 @@ import java.util.List;
 @RequiredArgsConstructor
 @Validated
 public class BusinessAbsencesController {
+
+    /** unos tres meses */
+    private static final long MAX_RANGE_DAYS = 93;
 
     private final EmployeeAbsenceService absenceService;
 
@@ -38,6 +44,14 @@ public class BusinessAbsencesController {
             @RequestParam @NotNull
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
 
+        // un rango enorme obligaria a cargar miles de filas de golpe (B4)
+        if (to.isBefore(from)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La fecha 'to' no puede ser anterior a 'from'");
+        }
+        if (ChronoUnit.DAYS.between(from, to) > MAX_RANGE_DAYS) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "El rango de fechas no puede superar los " + MAX_RANGE_DAYS + " días");
+        }
         return absenceService.listByBusinessAndRange(
                 businessId,
                 from.atStartOfDay(),

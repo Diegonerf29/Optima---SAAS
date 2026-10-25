@@ -24,6 +24,8 @@ public record CreateServiceRequest(
         @Size(max = 150, message = "El nombre no puede exceder los 150 caracteres")
         String name,
 
+        @Size(max = 2000, message = "La descripción no puede superar los 2000 caracteres")
+
         String description,
 
         @NotNull(message = "El precio es obligatorio")
