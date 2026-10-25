@@ -1,6 +1,6 @@
 package com.optima.api.common.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.optima.api.common.exception.ErrorWriter;
 import com.optima.api.modules.business.model.Membership;
 import com.optima.api.modules.business.model.Role;
 import com.optima.api.modules.business.repository.MembershipRepository;
@@ -12,6 +12,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,7 +29,7 @@ class TenantGuardFilterTest {
     @BeforeEach
     void setUp() {
         membershipRepository = mock(MembershipRepository.class);
-        filter = new TenantGuardFilter(new ObjectMapper(), membershipRepository);
+        filter = new TenantGuardFilter(new ErrorWriter(new JsonMapper()), membershipRepository);
     }
 
     @AfterEach

@@ -1,25 +1,21 @@
 package com.optima.api.common.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.optima.api.common.exception.ErrorResponse;
+import com.optima.api.common.exception.ErrorWriter;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
-import io.github.bucket4j.Refill;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -37,22 +33,22 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     /** 10 intentos de inicio de sesion por minuto por cada ip */
     private static final Supplier<Bucket> LOGIN_BUCKET = () -> Bucket.builder()
-            .addLimit(Bandwidth.classic(10, Refill.intervally(10, Duration.ofMinutes(1))))
+            .addLimit(Bandwidth.builder().capacity(10).refillIntervally(10, Duration.ofMinutes(1)).build())
             .build();
 
     /** 20 registros por hora por cada ip */
     private static final Supplier<Bucket> REGISTER_BUCKET = () -> Bucket.builder()
-            .addLimit(Bandwidth.classic(20, Refill.intervally(20, Duration.ofHours(1))))
+            .addLimit(Bandwidth.builder().capacity(20).refillIntervally(20, Duration.ofHours(1)).build())
             .build();
 
     /** 10 solicitudes de "olvide mi contrasena" por hora por cada ip */
     private static final Supplier<Bucket> FORGOT_BUCKET = () -> Bucket.builder()
-            .addLimit(Bandwidth.classic(10, Refill.intervally(10, Duration.ofHours(1))))
+            .addLimit(Bandwidth.builder().capacity(10).refillIntervally(10, Duration.ofHours(1)).build())
             .build();
 
     /** 20 intentos de resetear contrasena por hora por cada ip */
     private static final Supplier<Bucket> RESET_BUCKET = () -> Bucket.builder()
-            .addLimit(Bandwidth.classic(20, Refill.intervally(20, Duration.ofHours(1))))
+            .addLimit(Bandwidth.builder().capacity(20).refillIntervally(20, Duration.ofHours(1)).build())
             .build();
 
     /** tope de ips guardadas por mapa para no agotar memoria */
@@ -63,7 +59,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final Map<String, Bucket> registerBuckets = new ConcurrentHashMap<>();
     private final Map<String, Bucket> forgotBuckets = new ConcurrentHashMap<>();
     private final Map<String, Bucket> resetBuckets = new ConcurrentHashMap<>();
-    private final ObjectMapper objectMapper;
+    private final ErrorWriter errorWriter;
 
     /** revisa si la peticion debe pasar por rate limit */
     @Override
@@ -127,10 +123,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     /** escribe la respuesta de too many requests */
     private void writeTooManyRequests(HttpServletResponse response, long retryAfterSeconds) throws IOException {
-        response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setHeader("Retry-After", String.valueOf(Math.max(1, retryAfterSeconds)));
-        ErrorResponse body = new ErrorResponse(429, HttpStatus.TOO_MANY_REQUESTS.getReasonPhrase(), "Demasiadas peticiones. Reintenta en " + retryAfterSeconds + " segundos.", Instant.now().toString());
-        objectMapper.writeValue(response.getOutputStream(), body);
+        long seconds = Math.max(1, retryAfterSeconds);
+        response.setHeader("Retry-After", String.valueOf(seconds));
+        errorWriter.write(response, HttpStatus.TOO_MANY_REQUESTS,
+                "Demasiadas peticiones. Reintenta en " + seconds + " segundos.");
     }
 }

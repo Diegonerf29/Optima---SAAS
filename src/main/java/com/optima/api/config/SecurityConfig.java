@@ -1,7 +1,6 @@
 package com.optima.api.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.optima.api.common.exception.ErrorResponse;
+import com.optima.api.common.exception.ErrorWriter;
 import com.optima.api.common.security.JwtAuthenticationFilter;
 import com.optima.api.common.security.RateLimitFilter;
 import com.optima.api.common.security.TenantGuardFilter;
@@ -11,7 +10,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -25,7 +23,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.time.Instant;
 import java.util.List;
 
 /** configura seguridad, rutas publicas y filtros */
@@ -38,9 +35,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final TenantGuardFilter tenantGuardFilter;
     private final RateLimitFilter rateLimitFilter;
-
-    /** serializador de errores en formato comun */
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ErrorWriter errorWriter;
 
     /**
      * prepara la cadena de filtros de seguridad
@@ -54,26 +49,12 @@ public class SecurityConfig {
             .sessionManagement(sm -> sm
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .exceptionHandling(eh -> eh
-                .authenticationEntryPoint((req, res, ex) -> {
-                    // si falla la autenticacion se devuelve el error en formato comun
-                    res.setStatus(HttpStatus.UNAUTHORIZED.value());
-                    res.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                    ErrorResponse body = new ErrorResponse(
-                            401, HttpStatus.UNAUTHORIZED.getReasonPhrase(),
-                            "Token requerido o invalido",
-                            Instant.now().toString());
-                    objectMapper.writeValue(res.getOutputStream(), body);
-                })
-                .accessDeniedHandler((req, res, ex) -> {
-                    // usuario autenticado sin permiso
-                    res.setStatus(HttpStatus.FORBIDDEN.value());
-                    res.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                    ErrorResponse body = new ErrorResponse(
-                            403, HttpStatus.FORBIDDEN.getReasonPhrase(),
-                            "No tienes permisos suficientes para esta operacion",
-                            Instant.now().toString());
-                    objectMapper.writeValue(res.getOutputStream(), body);
-                })
+                // si falla la autenticacion se devuelve el error en formato comun
+                .authenticationEntryPoint((req, res, ex) ->
+                        errorWriter.write(res, HttpStatus.UNAUTHORIZED, "Token requerido o invalido"))
+                // usuario autenticado sin permiso
+                .accessDeniedHandler((req, res, ex) ->
+                        errorWriter.write(res, HttpStatus.FORBIDDEN, "No tienes permisos suficientes para esta operacion"))
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/api/auth/token").permitAll()

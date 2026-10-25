@@ -1,12 +1,12 @@
 package com.optima.api.common.geocoding;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import tools.jackson.databind.JsonNode;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -76,8 +76,8 @@ public class GeocodingService {
 
             // del primer resultado se leen lat y lon
             JsonNode first = body.get(0);
-            String latStr = first.path("lat").asText(null);
-            String lonStr = first.path("lon").asText(null);
+            String latStr = first.path("lat").asString(null);
+            String lonStr = first.path("lon").asString(null);
 
             if (latStr == null || lonStr == null) {
                 return Optional.empty();

@@ -1,7 +1,6 @@
 package com.optima.api.common.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.optima.api.common.exception.ErrorResponse;
+import com.optima.api.common.exception.ErrorWriter;
 import com.optima.api.modules.business.model.Membership;
 import com.optima.api.modules.business.repository.MembershipRepository;
 import jakarta.servlet.FilterChain;
@@ -9,16 +8,15 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.lang.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.jspecify.annotations.NonNull;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -35,7 +33,7 @@ public class TenantGuardFilter extends OncePerRequestFilter {
     // este patron obtiene el id del negocio de la ruta
     private static final Pattern BUSINESS_PATH = Pattern.compile("^/api/businesses/([^/]+)(/.*)?$");
 
-    private final ObjectMapper objectMapper;
+    private final ErrorWriter errorWriter;
     private final MembershipRepository membershipRepository;
 
     /** compara el negocio de la ruta con el del token */
@@ -96,12 +94,6 @@ public class TenantGuardFilter extends OncePerRequestFilter {
 
     /** escribe el error en formato comun */
     private void writeError(HttpServletResponse response, HttpStatus status, String message) throws IOException {
-        response.setStatus(status.value());
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        ErrorResponse body = new ErrorResponse(
-                status.value(), status.getReasonPhrase(),
-                message,
-                Instant.now().toString());
-        objectMapper.writeValue(response.getOutputStream(), body);
+        errorWriter.write(response, status, message);
     }
 }
