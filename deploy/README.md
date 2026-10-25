@@ -154,7 +154,22 @@ Para restaurar **de verdad** en producción: `deploy/restore.sh backups/<copia>.
 
 **Volver atrás:** pon en `API_IMAGE`/`WEB_IMAGE` la etiqueta del commit anterior (por ejemplo `optima-api:5bdc9ff`) y ejecuta `deploy/update.sh`. Si la versión nueva ya había migrado la base de datos, restaura además la copia que hizo `update.sh` justo antes.
 
-## 7. Monitorización (paso 8.7)
+## 7. 👤 Cobrar con Stripe (fase 9)
+
+Mientras `BILLING_ENABLED=false` nadie paga ni se bloquea. Para empezar a cobrar:
+
+1. Crea la cuenta de [Stripe](https://dashboard.stripe.com) y trabaja primero en **modo de prueba** (claves `sk_test_...`).
+2. **Producto y precio:** *Catálogo de productos → Añadir producto*, "Optima", precio **recurrente mensual**. Copia el id del precio (`price_...`) y pon el mismo importe en `frontend/src/lib/plan.ts` (es lo que se anuncia en la portada).
+3. **Portal del cliente:** *Configuración → Billing → Portal del cliente*: activa cambiar la tarjeta, ver facturas y cancelar.
+4. **Webhook:** *Desarrolladores → Webhooks → Añadir endpoint* con la dirección `https://optima.tudominio.com/api/webhooks/stripe` y estos eventos: `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `customer.subscription.paused` y `customer.subscription.resumed`. Copia su secreto (`whsec_...`).
+5. En el `.env`: `BILLING_ENABLED=true`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` y `STRIPE_PRICE_ID`. Reinicia la API (`docker compose -f docker-compose.prod.yml up -d api`). Si falta alguna clave, la API no arranca y el log dice cuál.
+6. **Prueba (9.9)** con las tarjetas de prueba de Stripe: `4242 4242 4242 4242` (pago correcto) y `4000 0000 0000 0341` (se rechaza al cobrar). Comprueba en *Configuración → Suscripción* que el estado cambia, y cancela desde "Pagos y facturas". Con [Stripe CLI](https://docs.stripe.com/stripe-cli) puedes mandar avisos a tu ordenador: `stripe listen --forward-to localhost:8080/api/webhooks/stripe`.
+7. Cuando todo funcione, repite los pasos 2 a 5 en **modo real** (claves `sk_live_...`, otro precio y otro webhook).
+8. Facturas e IVA (9.10): revísalo con una gestoría. Stripe puede emitir las facturas y calcular el impuesto (Stripe Tax).
+
+**Cómo funciona:** al registrarse, cada negocio tiene 14 días de prueba sin tarjeta. "Suscribirme" abre la página de pago de Stripe (Optima nunca ve la tarjeta) y respeta los días de prueba que queden. Stripe avisa al webhook de cada cambio; Optima comprueba la firma del aviso y pregunta a Stripe el estado actual. Con la prueba terminada o la suscripción cancelada, el negocio solo puede ver su estado y pagar (sus datos se conservan). Si falla un cobro (`PAST_DUE`) se sigue entrando mientras Stripe reintenta.
+
+## 8. Monitorización (paso 8.7)
 
 - **¿Está caída?** Crea un monitor gratuito en [UptimeRobot](https://uptimerobot.com) de tipo *Keyword* contra `https://optima.tudominio.com/actuator/health` buscando `UP`. Avisa por email si deja de responder.
 - **Avisos al móvil** (copia fallida, disco lleno, actualización que no arranca): instala la app [ntfy](https://ntfy.sh), suscríbete a un tema con un nombre largo y difícil de adivinar y ponlo en el `.env`: `NOTIFY_URL=https://ntfy.sh/optima-un-tema-largo-y-secreto`.

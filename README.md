@@ -12,6 +12,7 @@ Es un SaaS **multi-tenant**: muchos negocios comparten la misma aplicación y la
 - **Clientes**, **catálogo** (servicios, categorías e impuestos; un negocio nuevo ya trae el IVA 21 % y la categoría General), **equipo** (empleados, horarios, ausencias) y **configuración del negocio** (horario, cabinas, zona horaria).
 - **Cobros**: quién cobró, cuándo y cómo (efectivo, tarjeta, Bizum); total con IVA calculado en el servidor.
 - **Emails a clientes**: confirmación, cambios, cancelación y recordatorio el día antes.
+- **Suscripción**: 14 días de prueba sin tarjeta y después un único plan mensual con Stripe (pago, portal de facturas y avisos firmados). Sin suscripción activa el negocio solo puede ver su estado y pagar.
 - **Cuentas**: registro de negocio, confirmación del email, invitaciones de empleados, recuperación de contraseña y cierre de sesión en todos los dispositivos.
 
 ## Tecnologías
@@ -111,6 +112,8 @@ Se definen en un fichero `.env` (plantilla comentada en [`.env-example`](.env-ex
 | `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM` | para enviar correos | Proveedor SMTP |
 | `DB_HOST`, `DB_PORT`, `DB_NAME` | no | Dónde está MySQL (por defecto `localhost:3306/optima_db`) |
 | `JWT_EXPIRATION` | no | Duración de la sesión en ms (por defecto 12 h) |
+| `BILLING_ENABLED`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID` | para cobrar | Suscripción con Stripe. Con `BILLING_ENABLED=false` (por defecto) no se cobra ni se bloquea a nadie |
+| `BACKUP_REMOTE`, `NOTIFY_URL` | recomendadas | Copia de seguridad fuera del servidor y avisos al móvil (ver [`deploy/README.md`](deploy/README.md)) |
 | `SWAGGER_ENABLED` | no | `true` para activar Swagger (apagado por defecto) |
 
 ## Qué puede hacer cada rol
@@ -128,6 +131,7 @@ Se definen en un fichero `.env` (plantilla comentada en [`.env-example`](.env-ex
 | Catálogo, impuestos, cabinas, horario del negocio y bloqueos | ✅ | Solo ver |
 | Empleados e invitaciones, sus horarios y ausencias | ✅ | Solo ver |
 | Datos del negocio, desactivarlo y reactivarlo | ✅ | ❌ |
+| Suscripción: pagar, tarjeta y facturas | ✅ | Solo ver su estado |
 
 Los empleados gestionan todas las citas y clientes porque en un local pequeño quien está en recepción atiende a todos; a cambio, cada cobro queda registrado con quién lo hizo. Un negocio siempre conserva al menos un ADMIN.
 

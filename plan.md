@@ -249,15 +249,15 @@ Hay dos tipos de pago y conviene no mezclarlos:
 
 Con Stripe Checkout y el Customer Portal, **los datos de la tarjeta nunca pasan por nuestro servidor**: los recoge Stripe en su propia página.
 
-- [ ] 9.1 👤 Cuenta de Stripe, productos y precios (en modo de pruebas)
-- [ ] 9.2 Migración Flyway: `stripe_customer_id`, `subscription_status`, `plan` y `trial_ends_at` en `businesses`
-- [ ] 9.3 Al registrarse: 14 días de prueba gratis, sin tarjeta
-- [ ] 9.4 `POST /api/businesses/{id}/billing/checkout`: crea una sesión de Stripe Checkout y devuelve su URL
-- [ ] 9.5 `POST /api/businesses/{id}/billing/portal`: abre el Customer Portal (cambiar tarjeta o plan, cancelar, ver facturas)
-- [ ] 9.6 `POST /api/webhooks/stripe`: público pero **comprobando la firma** de Stripe; actualiza `subscription_status` y guarda los eventos ya procesados para no aplicarlos dos veces
-- [ ] 9.7 Aplicar el estado: suscripción caducada → negocio bloqueado salvo la pantalla de pago (reutiliza M4). Con un único plan (D6) no hay límites que controlar
-- [ ] 9.8 Frontend: página de precios, pantalla "Suscripción" en configuración y aviso cuando la prueba está a punto de acabar
-- [ ] 9.9 Probar con las tarjetas de prueba y Stripe CLI: pago correcto, rechazado, cancelación y renovación
+- [ ] 9.1 👤 Cuenta de Stripe, productos y precios (en modo de pruebas) → pasos en `deploy/README.md`, sección 7. El precio anunciado está en `frontend/src/lib/plan.ts` (`[PRECIO]`)
+- [x] 9.2 Migración Flyway: `stripe_customer_id`, `subscription_status`, `plan` y `trial_ends_at` en `businesses` → `V8__suscripciones.sql` (sin columna `plan`: hay un único plan, D6; las fechas en UTC)
+- [x] 9.3 Al registrarse: 14 días de prueba gratis, sin tarjeta
+- [x] 9.4 `POST /api/businesses/{id}/billing/checkout`: crea una sesión de Stripe Checkout y devuelve su URL
+- [x] 9.5 `POST /api/businesses/{id}/billing/portal`: abre el Customer Portal (cambiar tarjeta o plan, cancelar, ver facturas)
+- [x] 9.6 `POST /api/webhooks/stripe`: público pero **comprobando la firma** de Stripe; actualiza `subscription_status` y guarda los eventos ya procesados para no aplicarlos dos veces (el estado se pregunta a Stripe, así da igual el orden de los avisos)
+- [x] 9.7 Aplicar el estado: suscripción caducada → negocio bloqueado salvo la pantalla de pago (reutiliza M4). Con un único plan (D6) no hay límites que controlar
+- [x] 9.8 Frontend: página de precios, pantalla "Suscripción" en configuración y aviso cuando la prueba está a punto de acabar
+- [ ] 9.9 👤 Probar con las tarjetas de prueba y Stripe CLI: pago correcto, rechazado, cancelación y renovación (los tests automáticos ya simulan Stripe y firman los avisos; falta probarlo contra Stripe de verdad, que no es accesible desde aquí)
 - [ ] 9.10 👤 Facturas e IVA: revisarlo con una gestoría (Stripe puede emitir las facturas y calcular impuestos con Stripe Tax)
 
 ### Fase 10 — Lanzamiento

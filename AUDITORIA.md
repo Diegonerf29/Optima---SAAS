@@ -59,6 +59,9 @@ Cada cambio que se aplica al código se apunta aquí y en la columna **Estado** 
 | 25/10/2026 | `d1ef32c` | Fase 7 apuntada en `plan.md`, `AUDITORIA.md` y README | — |
 | 25/10/2026 | `b64f915` | Scripts del servidor: copia de seguridad diaria con copia fuera del servidor (rclone), restauración, actualización con copia previa y aviso de disco lleno; guía paso a paso en `deploy/README.md` (pasos 8.3 a 8.5 y 8.7) | — (P3 del plan) |
 | 25/10/2026 | `d4aa199` | Las imágenes se publican en ghcr.io cuando la CI pasa en `main` (paso 8.6) | — |
+| 25/10/2026 | `8aee7ec` | Si falta una cabecera obligatoria la API responde 400 en lugar de 500 | — |
+| 25/10/2026 | `287340a` | Suscripción con Stripe (fase 9, migración V8): 14 días de prueba al registrarse, pago con Stripe Checkout, portal de facturas y webhook con la firma comprobada que guarda los avisos procesados. Sin suscripción el negocio solo puede verse y pagar (402), como en M4. Apagado por defecto (`BILLING_ENABLED`) | — (fase 9 del plan) |
+| 25/10/2026 | `17cb683` | Frontend de la suscripción: pestaña en Configuración, aviso de fin de prueba, pantalla de pago y precio en la portada | — |
 
 **Estados:** ⏳ Pendiente · 🟡 En parte · ✅ Resuelto
 
