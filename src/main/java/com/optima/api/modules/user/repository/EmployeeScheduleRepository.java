@@ -41,4 +41,7 @@ public interface EmployeeScheduleRepository extends JpaRepository<EmployeeSchedu
     /** de varias relaciones, las que tienen horario propio */
     @Query("SELECT DISTINCT s.membership.id FROM EmployeeSchedule s WHERE s.membership.id IN :ids")
     List<Long> findMembershipIdsWithSchedule(@Param("ids") Collection<Long> ids);
+
+    /** horarios de todo el equipo de un negocio (exportar datos, RGPD) */
+    List<EmployeeSchedule> findAllByMembershipBusinessIdOrderById(Long businessId);
 }

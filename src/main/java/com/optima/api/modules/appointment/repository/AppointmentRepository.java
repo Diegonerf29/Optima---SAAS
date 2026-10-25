@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -175,4 +176,9 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
               AND a.client.email IS NOT NULL
               AND a.status.name IN\s""" + AppointmentStatuses.REMINDABLE_JPQL)
     List<Appointment> findPendingReminders(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+
+    /** borra las notas de las citas de un cliente (pueden tener datos personales; RGPD) */
+    @Modifying
+    @Query("UPDATE Appointment a SET a.notes = NULL WHERE a.client.id = :clientId AND a.business.id = :businessId")
+    int clearNotesOfClient(@Param("clientId") Long clientId, @Param("businessId") Long businessId);
 }

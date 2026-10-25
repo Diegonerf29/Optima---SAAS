@@ -38,4 +38,7 @@ public interface OfferingRepository extends JpaRepository<Offering, Long> {
 
     /** cuenta los servicios activos que usan un impuesto */
     long countByTaxIdAndIsActiveTrue(Long taxId);
+
+    /** todos los del negocio, tambien los archivados (exportar datos, RGPD) */
+    List<Offering> findAllByBusinessIdOrderById(Long businessId);
 }

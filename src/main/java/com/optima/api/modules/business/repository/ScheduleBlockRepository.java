@@ -54,4 +54,7 @@ public interface ScheduleBlockRepository extends JpaRepository<ScheduleBlock, Lo
             @Param("businessId") Long businessId,
             @Param("date") LocalDate date
     );
+
+    /** todos los bloqueos del negocio (exportar datos, RGPD) */
+    List<ScheduleBlock> findAllByBusinessIdOrderByStartDateAsc(Long businessId);
 }

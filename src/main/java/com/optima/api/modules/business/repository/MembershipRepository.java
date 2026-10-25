@@ -78,4 +78,7 @@ public interface MembershipRepository extends JpaRepository<Membership, Long> {
         return findByIdAndBusinessId(membershipId, businessId)
                 .orElseThrow(() -> new NotFoundException("el empleado", membershipId));
     }
+
+    /** todos los del negocio, tambien los archivados (exportar datos, RGPD) */
+    List<Membership> findAllByBusinessIdOrderById(Long businessId);
 }

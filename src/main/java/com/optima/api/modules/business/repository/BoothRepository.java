@@ -37,4 +37,7 @@ public interface BoothRepository extends JpaRepository<Booth, Long> {
 
     /** para validar unicidad del nombre dentro del negocio */
     boolean existsByBusinessIdAndNameIgnoreCase(Long businessId, String name);
+
+    /** todos los del negocio, tambien los archivados (exportar datos, RGPD) */
+    List<Booth> findAllByBusinessIdOrderById(Long businessId);
 }

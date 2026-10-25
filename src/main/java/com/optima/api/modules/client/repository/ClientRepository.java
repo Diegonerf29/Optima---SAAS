@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /** consultas de clientes filtrados por negocio */
@@ -41,4 +42,7 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
      * busca un cliente dentro de un negocio concreto
      */
     Optional<Client> findByIdAndBusinessId(Long id, Long businessId);
+
+    /** todos los clientes del negocio, tambien los archivados (exportar datos, RGPD) */
+    List<Client> findAllByBusinessIdOrderById(Long businessId);
 }

@@ -98,13 +98,20 @@ public class TenantGuardFilter extends OncePerRequestFilter {
         chain.doFilter(request, response);
     }
 
-    /** rutas permitidas con el negocio desactivado: verlo y reactivarlo */
+    /** rutas permitidas con el negocio desactivado: verlo, reactivarlo, descargar sus datos y borrarlo */
     private boolean isAllowedWhileInactive(HttpServletRequest request, String subPath) {
         String method = request.getMethod();
         if (subPath == null || subPath.equals("/")) {
             return "GET".equalsIgnoreCase(method);
         }
-        return "PATCH".equalsIgnoreCase(method) && subPath.equals("/reactivate");
+        return ("PATCH".equalsIgnoreCase(method) && subPath.equals("/reactivate"))
+                || isDataRight(method, subPath);
+    }
+
+    /** descargar los datos y borrar el negocio se pueden hacer siempre (RGPD), aunque no se haya pagado */
+    private boolean isDataRight(String method, String subPath) {
+        return ("GET".equalsIgnoreCase(method) && subPath.equals("/export"))
+                || ("POST".equalsIgnoreCase(method) && subPath.equals("/erase"));
     }
 
     /** rutas permitidas sin suscripcion: ver el negocio y todo lo de pagos */
@@ -112,7 +119,8 @@ public class TenantGuardFilter extends OncePerRequestFilter {
         if (subPath == null || subPath.equals("/")) {
             return "GET".equalsIgnoreCase(request.getMethod());
         }
-        return subPath.equals("/billing") || subPath.startsWith("/billing/");
+        return subPath.equals("/billing") || subPath.startsWith("/billing/")
+                || isDataRight(request.getMethod(), subPath);
     }
 
     private void writeForbidden(HttpServletResponse response, String message) throws IOException {

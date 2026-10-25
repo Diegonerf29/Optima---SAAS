@@ -83,4 +83,7 @@ public interface EmployeeAbsenceRepository extends JpaRepository<EmployeeAbsence
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end
     );
+
+    /** ausencias de todo el equipo de un negocio (exportar datos, RGPD) */
+    List<EmployeeAbsence> findAllByMembershipBusinessIdOrderByStartDateTimeAsc(Long businessId);
 }

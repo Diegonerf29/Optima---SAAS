@@ -40,6 +40,17 @@ class TenantGuardFilterTest {
     }
 
     @Test
+    void conElNegocioDesactivadoSePuedenDescargarYBorrarSusDatos() throws Exception {
+        autenticar(1L, "ADMIN");
+        when(membershipRepository.findForSessionGuard(10L, 1L)).thenReturn(Optional.of(membresia(true, "ADMIN", false)));
+
+        assertThat(ejecutar("/api/businesses/1/export").getStatus()).isEqualTo(200);
+        assertThat(ejecutar("POST", "/api/businesses/1/erase").getStatus()).isEqualTo(200);
+        assertThat(ejecutar("/api/businesses/1/clients").getStatus()).isEqualTo(403);
+        assertThat(ejecutar("POST", "/api/businesses/1/export").getStatus()).isEqualTo(403);
+    }
+
+    @Test
     void sinSuscripcionSoloSeVeElNegocioYSusPagos() throws Exception {
         autenticar(1L, "ADMIN");
         when(membershipRepository.findForSessionGuard(10L, 1L)).thenReturn(Optional.of(membresia(true, "ADMIN")));

@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /** consultas de impuestos filtrados por negocio */
@@ -23,4 +24,7 @@ public interface TaxRepository extends JpaRepository<Tax, Long> {
 
     /** busca por id dentro del negocio */
     Optional<Tax> findByIdAndBusinessId(Long id, Long businessId);
+
+    /** todos los del negocio, tambien los archivados (exportar datos, RGPD) */
+    List<Tax> findAllByBusinessIdOrderById(Long businessId);
 }
