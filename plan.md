@@ -52,21 +52,36 @@ La auditoría busca fallos en el código que existe. Para que un SaaS funcione d
 | P9 | `pom.xml` y propiedades con datos que no son del proyecto | `url`/`scm` apuntan a `mirsugogu/tfg-backend`; el `User-Agent` de geocodificación lleva un email personal |
 | P10 | Dominio propio | Con `duckdns.org` el correo no llega bien y no da imagen de producto |
 
+### 1.3 Para quién es Optima (y qué cambia por eso)
+
+Optima es para **locales pequeños**: un solo local, pocos empleados y muchas veces **un único PC en recepción**. No es para cadenas ni empresas grandes. Esto simplifica muchas decisiones:
+
+| Consecuencia | Qué hacemos |
+|--------------|-------------|
+| Quien está en recepción apunta, mueve y cobra citas de cualquier compañero | Los empleados gestionan **todas** las citas y clientes (ver D1). En vez de prohibir, se **registra quién hizo cada cobro** (M8) |
+| El PC de recepción está encendido toda la jornada | La sesión dura una jornada (unas 12 h) en lugar de 4 h, y "cerrar sesión" anula el token de verdad (M5, paso 2.3) |
+| Si en recepción se deja abierta la cuenta del dueño, cualquiera puede tocar la configuración | En el README y en la ayuda de la app: crear una cuenta EMPLOYEE "Recepción" para ese PC; el dueño usa su cuenta ADMIN desde su móvil o su ordenador |
+| Casi todos los usuarios tienen un solo negocio | El frontend se salta la pantalla "elige negocio" cuando solo hay uno. El soporte de varios negocios por usuario se queda en el backend (ya existe y no estorba) |
+| Pantalla grande en recepción, pero el dueño mira la agenda desde el móvil | Frontend pensado primero para escritorio, pero usable en móvil |
+| Equipos de 1 a 5 personas | La vista principal de la agenda es **una columna por empleado** |
+| Pocos usuarios a la vez | Basta un servidor pequeño. Nada de Kubernetes, balanceadores ni microservicios |
+| Todos los empleados salen a Internet con la misma IP | El límite actual (10 inicios de sesión por minuto e IP) sobra para un local; se mantiene |
+
 ---
 
-## 2. Decisiones que necesito de ti 👤
+## 2. Decisiones
 
-Algunas correcciones dependen de cómo quieras que funcione el producto. Pongo mi recomendación: si no dices otra cosa, sigo con ella.
+✅ = decidida. El resto lleva mi recomendación: si no dices otra cosa, sigo con ella.
 
-| # | Pregunta | Afecta a | Recomendación |
-|---|----------|----------|---------------|
-| D1 | ¿Qué puede hacer un EMPLOYEE? | M7 | Ver la agenda de todos y crear citas, pero editar o cancelar **solo las suyas**. Cobros, archivar clientes y datos de los compañeros: solo ADMIN |
-| D2 | Al añadir un empleado cuyo email ya existe | A3 | Invitación por email que la persona acepta. Mientras no acepte, el negocio no ve sus datos |
+| # | Pregunta | Afecta a | Decisión / recomendación |
+|---|----------|----------|--------------------------|
+| D1 ✅ | ¿Qué puede hacer un EMPLOYEE? | M7 | Hoy ya **no** puede tocar nada de configuración (catálogo, cabinas, horarios, impuestos, bloqueos, equipo, datos del negocio): todo eso es solo ADMIN ✔️. Sí puede gestionar **todas** las citas y clientes, y se queda así (recepción). Solo cambia: **desmarcar** una cita como pagada y archivar/reactivar clientes pasan a ser solo ADMIN; se guarda quién cobró y cuándo; y en la lista de empleados un EMPLOYEE ve nombre y color, pero no el email ni el teléfono de sus compañeros |
+| D2 ✅ | Al añadir un empleado cuyo email ya existe | A3 | Invitación por email que la persona acepta. Mientras no acepte, el negocio no ve sus datos. Es un caso raro (alguien que ya usó Optima en otro local), así que se hace en su versión más sencilla |
 | D3 | ¿Qué pasa con un negocio desactivado? | M4 | Nadie entra salvo su ADMIN, y solo para reactivarlo. Servirá también para "suscripción impagada" (fase 9) |
 | D4 | Zona horaria | M14 | Columna `timezone` en cada negocio (por defecto `Europe/Madrid`) |
 | D5 | ¿Los clientes finales reservarán solos por internet? | Frontend, API | Sí, pero **después** del lanzamiento: primero el panel de gestión |
-| D6 | ¿Cómo cobra Optima a los negocios? | Fase 9 | Suscripción mensual por negocio, 14 días de prueba gratis, con Stripe |
-| D7 | Servidor y dominio | Fase 8 | Un único servidor (VPS) con Docker: seguir en AWS (Lightsail o EC2) o uno más barato (Hetzner). Comprar un dominio |
+| D6 | ¿Cómo cobra Optima a los negocios? | Fase 9 | **Un único plan** mensual por local, con 14 días de prueba gratis, con Stripe. Para locales pequeños no hacen falta niveles por número de empleados |
+| D7 ✅ | Servidor y dominio | Fase 8 | **VPS de Hostinger** (KVM 1 para empezar, KVM 2 si se queda corto), en un centro de datos de la UE, con el dominio comprado allí mismo. Nunca los planes de "hosting web" compartido: no ejecutan Java ni Docker |
 
 ---
 
@@ -89,7 +104,7 @@ Librerías (cada una resuelve un problema concreto):
 | Navegación | React Router | La estándar |
 | Llamadas a la API | `fetch` + TanStack Query | Guarda en caché, recarga y gestiona "cargando / error" sin repetirlo en cada pantalla |
 | Formularios | React Hook Form + Zod | Validar en el navegador con las mismas reglas que el backend |
-| Agenda | FullCalendar (vistas día/semana/mes gratuitas, filtrando por empleado) | Es la pantalla principal de una app de citas. Ojo: la vista "una columna por empleado" es de pago en FullCalendar; si la quieres gratis, `react-big-calendar` la incluye |
+| Agenda | react-big-calendar | Es la pantalla principal. Es gratuita (licencia MIT) e incluye la vista **una columna por empleado**, la más útil en un local pequeño (sección 1.3). FullCalendar es más vistosa, pero esa vista es de pago |
 | Fechas | date-fns | Sencilla |
 | Tests | Vitest + Testing Library; Playwright para 2-3 recorridos completos | Mismo ecosistema que Vite |
 
@@ -129,7 +144,7 @@ No es código, pero sin esto el resto no protege nada.
 - [ ] 0.2 Revocar la contraseña de aplicación de Gmail que está en el historial y crear otra (A1)
 - [ ] 0.3 Cambiar la contraseña del admin de demo en el servidor publicado (M13)
 - [ ] 0.4 En GitHub, *Settings → Code security*: activar *Secret scanning* y *Dependabot alerts* (A1, M11)
-- [ ] 0.5 Responder a las decisiones D1–D7 (sección 2)
+- [x] 0.5 Decidir D1, D2 y D7 (sección 2). D3–D6 siguen con mi recomendación mientras no digas otra cosa
 
 ### Fase 1 — Cimientos: versión con soporte, tests e integración continua
 
@@ -148,7 +163,7 @@ Objetivo: trabajar sobre una versión que recibe parches y saber al momento si u
 
 - [ ] 2.1 Alta de empleado con email existente → invitación que se acepta (A3, D2)
 - [ ] 2.2 Límite de intentos: IP real solo si viene del proxy, sin vaciar todos los contadores, y límite por email en el login (M3)
-- [ ] 2.3 Revocar sesiones: `token_version` en `users`, `POST /api/auth/logout` y pedir la contraseña para cambiar el email (M5)
+- [ ] 2.3 Revocar sesiones: `token_version` en `users`, `POST /api/auth/logout` y pedir la contraseña para cambiar el email. Con esto ya se puede alargar la sesión a una jornada (~12 h) para el PC de recepción (M5, sección 1.3)
 - [ ] 2.4 "Olvidé mi contraseña": correo en segundo plano (`@Async`), anular los enlaces anteriores y borrar los caducados (M6, B16)
 - [ ] 2.5 Negocio o usuario desactivado: comprobarlo en `TenantGuardFilter` y permitir la reactivación (M4, D3)
 - [ ] 2.6 Eliminar `POST /api/businesses`, que crea negocios sin dueño (M9)
@@ -169,7 +184,7 @@ Objetivo: trabajar sobre una versión que recibe parches y saber al momento si u
 
 ### Fase 4 — Reglas de negocio: roles y cobros
 
-- [ ] 4.1 Permisos por rol según D1 (M7)
+- [ ] 4.1 Permisos según D1: desmarcar pagos y archivar/reactivar clientes solo ADMIN; un EMPLOYEE no ve el email ni el teléfono de sus compañeros (M7)
 - [ ] 4.2 Cobro de citas: no marcar como pagadas las canceladas o no presentadas, guardar quién y cuándo cobró, no recalcular precios al editar y devolver el `total` calculado en el servidor (M8)
 - [ ] 4.3 Un negocio no puede quedarse sin ADMIN (B13); no archivar impuestos que usan servicios activos (B11)
 - [ ] 4.4 (Opcional) Correo de confirmación de cita al cliente y recordatorio el día antes (P6)
@@ -203,24 +218,24 @@ Antes de empezar: fases 2 a 6 terminadas y Swagger al día.
 
 - [ ] 7.1 Crear `frontend/` (Vite + React + TypeScript), Tailwind, shadcn/ui, ESLint y Prettier; `VITE_API_URL`; tipos generados desde `/v3/api-docs`
 - [ ] 7.2 Base: cliente HTTP que añade el token, manejo de 401/403, rutas protegidas por rol, estructura (menú lateral + cabecera) y páginas de error
-- [ ] 7.3 Acceso: login, selección de negocio, registro de negocio, verificación de email, "olvidé mi contraseña" y restablecerla
-- [ ] 7.4 Agenda: calendario día/semana por empleado, crear cita con los huecos libres, editar, cambiar estado y cobrar
+- [ ] 7.3 Acceso: login, selección de negocio (se salta si solo hay uno), registro de negocio, verificación de email, "olvidé mi contraseña" y restablecerla
+- [ ] 7.4 Agenda: vista de día con una columna por empleado y vista de semana, crear cita con los huecos libres, editar, cambiar estado y cobrar
 - [ ] 7.5 Clientes: lista con búsqueda y paginación, ficha con su historial de citas
 - [ ] 7.6 Catálogo: categorías, servicios e impuestos
 - [ ] 7.7 Equipo: empleados e invitaciones, horarios y ausencias
 - [ ] 7.8 Configuración del negocio: datos, horario de apertura, cabinas y bloqueos
 - [ ] 7.9 Perfil: datos personales, cambiar contraseña y cerrar sesión
 - [ ] 7.10 Inicio: citas de hoy y pendientes de cobro (seguramente necesite un endpoint de resumen en el backend)
-- [ ] 7.11 Calidad: adaptado a móvil, accesibilidad básica, tests de los formularios clave, 2-3 recorridos con Playwright y el frontend añadido a GitHub Actions
+- [ ] 7.11 Calidad: pensado para escritorio y usable en móvil, accesibilidad básica, tests de los formularios clave, 2-3 recorridos con Playwright y el frontend añadido a GitHub Actions
 - [ ] 7.12 Páginas públicas: portada sencilla, precios, aviso legal y privacidad (P7)
 
 ### Fase 8 — Despliegue
 
-- [ ] 8.1 👤 Comprar el dominio y contratar el servidor (D7, P10)
+- [ ] 8.1 👤 Contratar un VPS de Hostinger (KVM 1, centro de datos en la UE, plantilla Ubuntu con Docker) y comprar el dominio (D7, P10)
 - [ ] 8.2 `Caddyfile`: HTTPS, servir `frontend/dist`, redirigir `/api` y cabeceras de seguridad (`Content-Security-Policy`, HSTS, `Referrer-Policy`)
 - [ ] 8.3 Servidor: Docker, cortafuegos (solo puertos 22, 80 y 443), SSH solo con clave y `.env` de producción
-- [ ] 8.4 👤 Proveedor de correo con el dominio (registros SPF, DKIM y DMARC) (P5)
-- [ ] 8.5 Copias de seguridad: `mysqldump` diario guardado fuera del servidor, y **probar a restaurar una** (P3)
+- [ ] 8.4 👤 Proveedor de correo transaccional con plan gratuito (por ejemplo Brevo o Resend) conectado al dominio con los registros SPF, DKIM y DMARC (P5)
+- [ ] 8.5 Copias de seguridad: `mysqldump` diario guardado **fuera de Hostinger** (las copias del propio proveedor no sirven si se pierde la cuenta), y **probar a restaurar una** (P3)
 - [ ] 8.6 Publicar versiones: GitHub Actions construye la imagen Docker; en el servidor, `docker compose pull && docker compose up -d`
 - [ ] 8.7 Monitorización mínima: un servicio gratuito que avise si `/actuator/health` deja de responder, y aviso de disco lleno
 - [ ] 8.8 Entorno de demo separado de producción, con datos que se restauran cada noche (M13)
@@ -239,7 +254,7 @@ Con Stripe Checkout y el Customer Portal, **los datos de la tarjeta nunca pasan 
 - [ ] 9.4 `POST /api/businesses/{id}/billing/checkout`: crea una sesión de Stripe Checkout y devuelve su URL
 - [ ] 9.5 `POST /api/businesses/{id}/billing/portal`: abre el Customer Portal (cambiar tarjeta o plan, cancelar, ver facturas)
 - [ ] 9.6 `POST /api/webhooks/stripe`: público pero **comprobando la firma** de Stripe; actualiza `subscription_status` y guarda los eventos ya procesados para no aplicarlos dos veces
-- [ ] 9.7 Aplicar el estado: suscripción caducada → negocio bloqueado salvo la pantalla de pago (reutiliza M4) y límites por plan (por ejemplo, número de empleados)
+- [ ] 9.7 Aplicar el estado: suscripción caducada → negocio bloqueado salvo la pantalla de pago (reutiliza M4). Con un único plan (D6) no hay límites que controlar
 - [ ] 9.8 Frontend: página de precios, pantalla "Suscripción" en configuración y aviso cuando la prueba está a punto de acabar
 - [ ] 9.9 Probar con las tarjetas de prueba y Stripe CLI: pago correcto, rechazado, cancelación y renovación
 - [ ] 9.10 👤 Facturas e IVA: revisarlo con una gestoría (Stripe puede emitir las facturas y calcular impuestos con Stripe Tax)
