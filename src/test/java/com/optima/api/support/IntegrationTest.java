@@ -7,11 +7,10 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.mysql.MySQLContainer;
-import org.testcontainers.utility.MountableFile;
 
 /**
  * base de los tests de integracion
- * arranca un MySQL real en Docker con el esquema y los datos de demo
+ * arranca un MySQL real en Docker; Flyway crea las tablas y carga los datos de demo
  * el contenedor se comparte entre todas las clases de test
  */
 @SpringBootTest
@@ -21,10 +20,7 @@ public abstract class IntegrationTest {
 
     @ServiceConnection
     protected static final MySQLContainer MYSQL = new MySQLContainer("mysql:8.4")
-            .withDatabaseName("optima_db")
-            .withCopyFileToContainer(
-                    MountableFile.forHostPath("docs/schema_v20.sql"),
-                    "/docker-entrypoint-initdb.d/schema.sql");
+            .withDatabaseName("optima_db");
 
     static {
         MYSQL.start();
