@@ -25,12 +25,15 @@ public class GeocodingService {
 
     private final RestClient restClient;
     private final String userAgent;
+    private final boolean enabled;
 
     /** crea el cliente con tiempo de espera */
     public GeocodingService(
             @Value("${app.geocoding.user-agent}") String userAgent,
-            @Value("${app.geocoding.timeout-ms:5000}") long timeoutMs) {
+            @Value("${app.geocoding.timeout-ms:5000}") long timeoutMs,
+            @Value("${app.geocoding.enabled:true}") boolean enabled) {
         this.userAgent = userAgent;
+        this.enabled = enabled;
 
         // se fijan tiempos de conexion y lectura
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
@@ -45,6 +48,10 @@ public class GeocodingService {
 
     /** intenta obtener coordenadas y si no puede devuelve vacio */
     public Optional<Coordinates> geocode(String addressLine, String city, String postalCode, String country) {
+        // en los tests no se llama a servicios externos
+        if (!enabled) {
+            return Optional.empty();
+        }
         // sin pais la busqueda suele dar malos resultados
         if (country == null || country.isBlank()) {
             return Optional.empty();
