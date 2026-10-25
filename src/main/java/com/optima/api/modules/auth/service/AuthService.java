@@ -96,13 +96,14 @@ public class AuthService {
             String token = jwtUtil.generateTenantToken(
                     user.getEmail(),
                     user.getId(),
+                    user.getTokenVersion(),
                     only.getBusiness().getId(),
                     only.getRole().getName()
             );
             return TokenResponse.tenant(token, pendingInvitations);
         }
 
-        String token = jwtUtil.generateIdentityToken(user.getEmail(), user.getId());
+        String token = jwtUtil.generateIdentityToken(user.getEmail(), user.getId(), user.getTokenVersion());
         List<MembershipSummaryResponse> summaries = activeMemberships.stream()
                 .map(MembershipSummaryResponse::from)
                 .toList();
@@ -138,6 +139,7 @@ public class AuthService {
         String token = jwtUtil.generateTenantToken(
                 user.getEmail(),
                 user.getId(),
+                user.getTokenVersion(),
                 membership.getBusiness().getId(),
                 membership.getRole().getName()
         );
@@ -179,6 +181,7 @@ public class AuthService {
         String token = jwtUtil.generateTenantToken(
                 user.getEmail(),
                 user.getId(),
+                user.getTokenVersion(),
                 business.getId(),
                 adminRole.getName()
         );
@@ -194,5 +197,11 @@ public class AuthService {
         );
 
         return TokenResponse.tenant(token);
+    }
+
+    /** cierra la sesion en todos los dispositivos: los tokens emitidos dejan de valer */
+    @Transactional
+    public void logoutEverywhere(Long userId) {
+        userRepository.findById(userId).ifPresent(User::revokeTokens);
     }
 }

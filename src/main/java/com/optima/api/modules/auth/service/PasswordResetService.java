@@ -121,6 +121,8 @@ public class PasswordResetService {
         }
 
         user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        // las sesiones abiertas con la contraseña anterior se cierran
+        user.revokeTokens();
         userRepository.save(user);
 
         reset.setUsedAt(LocalDateTime.now());

@@ -227,10 +227,18 @@ public class UserService {
                         "No se encontró el usuario con ID: " + userId));
 
         String email = request.email().trim().toLowerCase();
-        if (!user.getEmail().equalsIgnoreCase(email)
-                && userRepository.existsByEmailIgnoreCase(email)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Ya existe un usuario con ese email");
+        boolean emailChanges = !user.getEmail().equalsIgnoreCase(email);
+        if (emailChanges) {
+            // con un token robado no se puede cambiar el email y luego pedir "olvide mi contraseña" (M5)
+            if (request.currentPassword() == null
+                    || !passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Para cambiar el email debes indicar tu contraseña actual correcta");
+            }
+            if (userRepository.existsByEmailIgnoreCase(email)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Ya existe un usuario con ese email");
+            }
         }
 
         user.setFullName(request.fullName().trim());
@@ -273,6 +281,8 @@ public class UserService {
         }
 
         u.setPasswordHash(passwordEncoder.encode(newPassword));
+        // cierra las demas sesiones: si alguien tenia un token robado, deja de valer
+        u.revokeTokens();
         userRepository.save(u);
     }
 

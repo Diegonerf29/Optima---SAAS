@@ -1,6 +1,8 @@
 package com.optima.api.common.security;
 
 import com.optima.api.common.utils.JwtUtil;
+import com.optima.api.modules.user.repository.UserRepository;
+import com.optima.api.modules.user.repository.UserSessionState;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -17,6 +19,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * revisa la clave de acceso de cada peticion
@@ -30,6 +33,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final JwtUtil jwtUtil;
+    private final UserRepository userRepository;
 
     /** extrae el token JWT y prepara el usuario autenticado */
     @Override
@@ -59,6 +63,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 throw new JwtException("Claims requeridos ausentes en el JWT");
             }
 
+            // el token debe ser de la version actual del usuario y el usuario debe seguir activo (M5)
+            Object versionRaw = claims.get(JwtUtil.VERSION_CLAIM);
+            if (!(versionRaw instanceof Number version) || !isCurrentSession(userId, version.intValue())) {
+                throw new JwtException("Sesion revocada");
+            }
+
             // businessId y role solo aparecen en el token de negocio
             Number bidClaim = (Number) claims.get("businessId");
             Long businessId = bidClaim != null ? bidClaim.longValue() : null;
@@ -77,5 +87,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         chain.doFilter(request, response);
+    }
+
+    /** comprueba en la base de datos que el token no se ha revocado */
+    private boolean isCurrentSession(Long userId, int tokenVersion) {
+        Optional<UserSessionState> state = userRepository.findSessionState(userId);
+        return state.isPresent()
+                && Boolean.TRUE.equals(state.get().isActive())
+                && state.get().tokenVersion() == tokenVersion;
     }
 }

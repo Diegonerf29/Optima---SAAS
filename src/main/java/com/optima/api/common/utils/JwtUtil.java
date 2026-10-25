@@ -52,10 +52,14 @@ public class JwtUtil {
         this.secretKey = Keys.hmacShaKeyFor(secretString.getBytes(StandardCharsets.UTF_8));
     }
 
+    /** nombre del claim con la version de token del usuario */
+    public static final String VERSION_CLAIM = "ver";
+
     /** genera el codigo cuando ya hay negocio y rol */
-    public String generateTenantToken(String email, Long userId, Long businessId, String role) {
+    public String generateTenantToken(String email, Long userId, int tokenVersion, Long businessId, String role) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
+        claims.put(VERSION_CLAIM, tokenVersion);
         claims.put("businessId", businessId);
         claims.put("role", role);
         return Jwts.builder()
@@ -68,9 +72,10 @@ public class JwtUtil {
     }
 
     /** genera el codigo basico cuando aun no hay negocio */
-    public String generateIdentityToken(String email, Long userId) {
+    public String generateIdentityToken(String email, Long userId, int tokenVersion) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
+        claims.put(VERSION_CLAIM, tokenVersion);
         return Jwts.builder()
                 .claims(claims)
                 .subject(email)

@@ -58,6 +58,16 @@ public class AuthController {
     }
 
     /**
+     * cierra la sesion en todos los dispositivos del usuario
+     * para cerrar solo la del navegador actual basta con que el frontend olvide el token
+     */
+    @PostMapping("/logout-all")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void logoutAll(@AuthenticationPrincipal AuthPrincipal principal) {
+        authService.logoutEverywhere(principal.userId());
+    }
+
+    /**
      * inicia el proceso para restablecer la contrasena
      */
     @PostMapping("/forgot-password")

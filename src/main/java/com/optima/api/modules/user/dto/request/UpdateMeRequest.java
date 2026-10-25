@@ -24,5 +24,9 @@ public record UpdateMeRequest(
                 regexp = "^$|^[0-9+\\s()-]{6,20}$",
                 message = "El teléfono solo admite dígitos y los símbolos + - ( ) y espacios (6-20 caracteres)"
         )
-        String phone
+        String phone,
+
+        // obligatoria solo si cambia el email
+        @Size(max = 200, message = "La contraseña no puede superar los 200 caracteres")
+        String currentPassword
 ) {}
