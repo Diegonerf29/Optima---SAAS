@@ -8,6 +8,7 @@ import com.optima.api.modules.auth.service.EmailVerificationService;
 import com.optima.api.modules.business.model.Business;
 import com.optima.api.modules.business.model.Membership;
 import com.optima.api.modules.business.model.Role;
+import com.optima.api.modules.business.model.Roles;
 import com.optima.api.modules.business.repository.BusinessRepository;
 import com.optima.api.modules.business.repository.MembershipRepository;
 import com.optima.api.modules.business.repository.RoleRepository;
@@ -166,8 +167,8 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException("el rol", request.roleId()));
 
         // quitar el rol al ultimo ADMIN dejaria el negocio sin nadie que lo gestione (B13)
-        boolean losesAdmin = "ADMIN".equals(m.getRole().getName()) && !"ADMIN".equals(role.getName());
-        if (losesAdmin && membershipRepository.countByBusinessIdAndIsActiveTrueAndRoleName(businessId, "ADMIN") <= 1) {
+        boolean losesAdmin = Roles.ADMIN.equals(m.getRole().getName()) && !Roles.ADMIN.equals(role.getName());
+        if (losesAdmin && membershipRepository.countByBusinessIdAndIsActiveTrueAndRoleName(businessId, Roles.ADMIN) <= 1) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "El negocio debe tener al menos un administrador");
         }

@@ -1,5 +1,6 @@
 package com.optima.api.modules.appointment.service;
 
+import com.optima.api.modules.appointment.model.AppointmentStatuses;
 import com.optima.api.modules.appointment.repository.AppointmentRepository;
 import com.optima.api.modules.business.model.BusinessHour;
 import com.optima.api.modules.business.model.ScheduleBlock;
@@ -33,9 +34,9 @@ public class AppointmentValidator {
 
     /** transiciones de estado permitidas para una cita */
     private static final Map<String, Set<String>> VALID_TRANSITIONS = Map.of(
-            "PENDING", Set.of("CONFIRMED", "CANCELLED"),
-            "CONFIRMED", Set.of("IN_PROGRESS", "CANCELLED", "NO_SHOW"),
-            "IN_PROGRESS", Set.of("COMPLETED", "CANCELLED")
+            AppointmentStatuses.PENDING, Set.of(AppointmentStatuses.CONFIRMED, AppointmentStatuses.CANCELLED),
+            AppointmentStatuses.CONFIRMED, Set.of(AppointmentStatuses.IN_PROGRESS, AppointmentStatuses.CANCELLED, AppointmentStatuses.NO_SHOW),
+            AppointmentStatuses.IN_PROGRESS, Set.of(AppointmentStatuses.COMPLETED, AppointmentStatuses.CANCELLED)
     );
 
     /** comprueba si el empleado ya tiene otra cita en ese rango */

@@ -1,6 +1,7 @@
 package com.optima.api.modules.appointment.repository;
 
 import com.optima.api.modules.appointment.model.Appointment;
+import com.optima.api.modules.appointment.model.AppointmentStatuses;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -56,8 +57,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             WHERE a.membership.id = :membershipId
               AND a.startDateTime < :endDateTime
               AND a.endDateTime > :startDateTime
-              AND a.status.name IN ('PENDING', 'CONFIRMED', 'IN_PROGRESS')
-            """)
+              AND a.status.name IN\s""" + AppointmentStatuses.ACTIVE_JPQL)
     boolean existsOverlappingAppointment(
             @Param("membershipId") Long membershipId,
             @Param("startDateTime") LocalDateTime startDateTime,
@@ -71,8 +71,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
               AND a.id <> :excludeId
               AND a.startDateTime < :endDateTime
               AND a.endDateTime > :startDateTime
-              AND a.status.name IN ('PENDING', 'CONFIRMED', 'IN_PROGRESS')
-            """)
+              AND a.status.name IN\s""" + AppointmentStatuses.ACTIVE_JPQL)
     boolean existsOverlappingAppointmentExcluding(
             @Param("membershipId") Long membershipId,
             @Param("startDateTime") LocalDateTime startDateTime,
@@ -86,8 +85,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             WHERE a.booth.id = :boothId
               AND a.startDateTime < :endDateTime
               AND a.endDateTime > :startDateTime
-              AND a.status.name IN ('PENDING', 'CONFIRMED', 'IN_PROGRESS')
-            """)
+              AND a.status.name IN\s""" + AppointmentStatuses.ACTIVE_JPQL)
     boolean existsOverlappingBoothAppointment(
             @Param("boothId") Long boothId,
             @Param("startDateTime") LocalDateTime startDateTime,
@@ -101,8 +99,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
               AND a.id <> :excludeId
               AND a.startDateTime < :endDateTime
               AND a.endDateTime > :startDateTime
-              AND a.status.name IN ('PENDING', 'CONFIRMED', 'IN_PROGRESS')
-            """)
+              AND a.status.name IN\s""" + AppointmentStatuses.ACTIVE_JPQL)
     boolean existsOverlappingBoothAppointmentExcluding(
             @Param("boothId") Long boothId,
             @Param("startDateTime") LocalDateTime startDateTime,
@@ -116,8 +113,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             WHERE a.business.id = :businessId
               AND a.startDateTime >= :dayStart
               AND a.startDateTime <  :dayEnd
-              AND a.status.name IN ('PENDING', 'CONFIRMED', 'IN_PROGRESS')
-            """)
+              AND a.status.name IN\s""" + AppointmentStatuses.ACTIVE_JPQL)
     List<Appointment> findActiveByBusinessAndDay(
             @Param("businessId") Long businessId,
             @Param("dayStart") LocalDateTime dayStart,
@@ -130,8 +126,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             WHERE a.client.id = :clientId
               AND a.business.id = :businessId
               AND a.endDateTime > :now
-              AND a.status.name IN ('PENDING', 'CONFIRMED', 'IN_PROGRESS')
-            """)
+              AND a.status.name IN\s""" + AppointmentStatuses.ACTIVE_JPQL)
     long countActiveByClientAndBusiness(
             @Param("clientId") Long clientId,
             @Param("businessId") Long businessId,
@@ -144,8 +139,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             WHERE a.booth.id = :boothId
               AND a.business.id = :businessId
               AND a.endDateTime > :now
-              AND a.status.name IN ('PENDING', 'CONFIRMED', 'IN_PROGRESS')
-            """)
+              AND a.status.name IN\s""" + AppointmentStatuses.ACTIVE_JPQL)
     long countActiveByBoothAndBusiness(
             @Param("boothId") Long boothId,
             @Param("businessId") Long businessId,
@@ -158,8 +152,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             WHERE a.membership.id = :membershipId
               AND a.business.id = :businessId
               AND a.endDateTime > :now
-              AND a.status.name IN ('PENDING', 'CONFIRMED', 'IN_PROGRESS')
-            """)
+              AND a.status.name IN\s""" + AppointmentStatuses.ACTIVE_JPQL)
     long countActiveByMembershipAndBusiness(
             @Param("membershipId") Long membershipId,
             @Param("businessId") Long businessId,
@@ -176,9 +169,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             WHERE a.reminderSentAt IS NULL
               AND a.startDateTime >= :from
               AND a.startDateTime <  :to
-              AND a.status.name IN ('PENDING', 'CONFIRMED')
               AND a.business.sendClientEmails = true
               AND a.client.email IS NOT NULL
-            """)
+              AND a.status.name IN\s""" + AppointmentStatuses.REMINDABLE_JPQL)
     List<Appointment> findPendingReminders(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
 }

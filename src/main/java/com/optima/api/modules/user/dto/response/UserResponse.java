@@ -1,6 +1,7 @@
 package com.optima.api.modules.user.dto.response;
 
 import com.optima.api.modules.business.model.Membership;
+import com.optima.api.modules.business.model.Roles;
 import com.optima.api.modules.user.model.User;
 
 import java.time.LocalDateTime;
@@ -59,6 +60,6 @@ public record UserResponse(
 
     /** el ADMIN ve todo; un EMPLOYEE solo ve el contacto de su propia ficha */
     public UserResponse visibleTo(Long callerUserId, String callerRole) {
-        return "ADMIN".equals(callerRole) || userId.equals(callerUserId) ? this : withoutContact();
+        return Roles.ADMIN.equals(callerRole) || userId.equals(callerUserId) ? this : withoutContact();
     }
 }

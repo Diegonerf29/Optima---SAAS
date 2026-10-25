@@ -9,6 +9,7 @@ import com.optima.api.modules.appointment.dto.request.UpdatePaymentRequest;
 import com.optima.api.modules.appointment.dto.response.AppointmentResponse;
 import com.optima.api.modules.appointment.model.Appointment;
 import com.optima.api.modules.appointment.model.AppointmentStatus;
+import com.optima.api.modules.appointment.model.AppointmentStatuses;
 import com.optima.api.modules.appointment.model.BookedService;
 import com.optima.api.modules.appointment.notification.AppointmentEvent;
 import com.optima.api.modules.appointment.repository.AppointmentRepository;
@@ -18,6 +19,7 @@ import com.optima.api.modules.business.model.Booth;
 import com.optima.api.modules.business.model.Business;
 import com.optima.api.modules.business.model.BusinessHour;
 import com.optima.api.modules.business.model.Membership;
+import com.optima.api.modules.business.model.Roles;
 import com.optima.api.modules.business.repository.BoothRepository;
 import com.optima.api.modules.business.repository.BusinessRepository;
 import com.optima.api.modules.business.repository.MembershipRepository;
@@ -60,10 +62,10 @@ public class AppointmentService {
             Set.of("id", "startDateTime", "endDateTime", "createdAt", "isPaid");
 
     /** estados que no permiten editar la cita */
-    private static final Set<String> NON_EDITABLE_STATUSES = Set.of("COMPLETED");
+    private static final Set<String> NON_EDITABLE_STATUSES = Set.of(AppointmentStatuses.COMPLETED);
 
     /** estados que vuelven a pendiente al editarse */
-    private static final Set<String> RESET_TO_PENDING_ON_EDIT = Set.of("CANCELLED", "NO_SHOW");
+    private static final Set<String> RESET_TO_PENDING_ON_EDIT = Set.of(AppointmentStatuses.CANCELLED, AppointmentStatuses.NO_SHOW);
 
     private final AppointmentRepository appointmentRepository;
     private final AppointmentStatusRepository statusRepository;
@@ -105,7 +107,7 @@ public class AppointmentService {
         appointment.setMembership(membership);
         appointment.setBooth(booth);  // queda sin valor si la cita no usa cabina
         // toda cita nueva empieza en pendiente
-        appointment.setStatus(findStatus("PENDING"));
+        appointment.setStatus(findStatus(AppointmentStatuses.PENDING));
         appointment.setStartDateTime(start);
         appointment.setEndDateTime(end);
         appointment.setNotes(request.notes());
@@ -192,7 +194,7 @@ public class AppointmentService {
         // si la transicion es valida se guarda el cambio
         appointment.setStatus(newStatus);
         Appointment saved = appointmentRepository.save(appointment);
-        if ("CANCELLED".equals(newStatus.getName())) {
+        if (AppointmentStatuses.CANCELLED.equals(newStatus.getName())) {
             events.publishEvent(new AppointmentEvent(saved.getId(), AppointmentEvent.Type.CANCELLED));
         }
         return toResponse(saved);
@@ -229,7 +231,7 @@ public class AppointmentService {
                                    appointment.getBooth() != null ? appointment.getBooth().getId() : null)
                 || !serviceIdsOf(services).equals(bookedServiceIds(appointment));
         // una cita que ya ha empezado no se mueve ni cambia de servicios (B12)
-        if (scheduleChanges && "IN_PROGRESS".equals(currentStatus)) {
+        if (scheduleChanges && AppointmentStatuses.IN_PROGRESS.equals(currentStatus)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Una cita en curso solo permite cambiar las notas");
         }
@@ -250,7 +252,7 @@ public class AppointmentService {
 
         // reagendar una cita cancelada la devuelve al flujo normal desde pendiente
         if (RESET_TO_PENDING_ON_EDIT.contains(currentStatus)) {
-            appointment.setStatus(findStatus("PENDING"));
+            appointment.setStatus(findStatus(AppointmentStatuses.PENDING));
         }
         appointment.setMembership(membership);
         appointment.setBooth(booth);
@@ -291,7 +293,7 @@ public class AppointmentService {
                 return toResponse(appointment);
             }
             String status = appointment.getStatus().getName();
-            if ("CANCELLED".equals(status) || "NO_SHOW".equals(status)) {
+            if (AppointmentStatuses.CANCELLED.equals(status) || AppointmentStatuses.NO_SHOW.equals(status)) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         "No se puede cobrar una cita cancelada o a la que el cliente no vino");
             }
@@ -305,7 +307,7 @@ public class AppointmentService {
             if (!alreadyPaid) {
                 return toResponse(appointment);
             }
-            if (!"ADMIN".equals(caller.role())) {
+            if (!Roles.ADMIN.equals(caller.role())) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                         "Solo un administrador puede deshacer un cobro");
             }

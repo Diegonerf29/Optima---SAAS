@@ -9,6 +9,7 @@ import com.optima.api.modules.auth.dto.response.TokenResponse;
 import com.optima.api.modules.business.model.Business;
 import com.optima.api.modules.business.model.Membership;
 import com.optima.api.modules.business.model.Role;
+import com.optima.api.modules.business.model.Roles;
 import com.optima.api.modules.business.repository.MembershipRepository;
 import com.optima.api.modules.business.repository.RoleRepository;
 import com.optima.api.modules.business.service.BusinessService;
@@ -152,7 +153,7 @@ public class AuthService {
                     "Ya existe un usuario con ese email");
         }
 
-        Role adminRole = roleRepository.findByName("ADMIN")
+        Role adminRole = roleRepository.findByName(Roles.ADMIN)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.INTERNAL_SERVER_ERROR,
                         "Error de configuración: no se encontró el rol ADMIN en la base de datos."));

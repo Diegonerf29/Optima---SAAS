@@ -1,6 +1,7 @@
 package com.optima.api.modules.auth.dto.response;
 
 import com.optima.api.modules.business.model.Membership;
+import com.optima.api.modules.business.model.Roles;
 
 /**
  * resumen de una pertenencia del usuario a un negocio
@@ -16,7 +17,7 @@ public record MembershipSummaryResponse(
     /** un negocio desactivado solo cuenta para sus administradores (pueden reactivarlo) */
     public static boolean isUsable(Membership m) {
         return Boolean.TRUE.equals(m.getIsActive())
-                && (Boolean.TRUE.equals(m.getBusiness().getIsActive()) || "ADMIN".equals(m.getRole().getName()));
+                && (Boolean.TRUE.equals(m.getBusiness().getIsActive()) || Roles.ADMIN.equals(m.getRole().getName()));
     }
 
     public static MembershipSummaryResponse from(Membership m) {
