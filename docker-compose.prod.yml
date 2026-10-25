@@ -1,0 +1,69 @@
+# entorno de PRODUCCION en el servidor (VPS): web (Caddy con HTTPS y el frontend) + API + MySQL
+# uso, en el servidor:
+#   cp .env-example .env    # y rellenarlo
+#   docker compose -f docker-compose.prod.yml up -d --build
+# solo se abren a Internet los puertos 80 y 443 (Caddy). MySQL y la API solo se ven
+# dentro de la red interna de Docker.
+services:
+  mysqldb:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-optima_db}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Falta MYSQL_ROOT_PASSWORD en .env}
+      # usuario de la aplicacion: solo tiene permisos sobre su base de datos
+      MYSQL_USER: ${DB_USERNAME:?Falta DB_USERNAME en .env}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Falta DB_PASSWORD en .env}
+      TZ: Europe/Madrid
+    # sin "ports": no se puede llegar a la base de datos desde fuera del servidor
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u$$MYSQL_USER -p$$MYSQL_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    networks: [interna]
+
+  api:
+    # imagen publicada por GitHub Actions; si no existe se construye aqui con el Dockerfile
+    image: ${API_IMAGE:-optima-api:latest}
+    build: .
+    restart: unless-stopped
+    depends_on:
+      mysqldb:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      DB_HOST: mysqldb
+      DB_PORT: 3306
+      TZ: Europe/Madrid
+    networks: [interna]
+
+  web:
+    # Caddy: certificado HTTPS automatico, sirve el frontend y redirige /api a la API
+    image: ${WEB_IMAGE:-optima-web:latest}
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    restart: unless-stopped
+    depends_on: [api]
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?Falta DOMAIN en .env}
+    volumes:
+      # certificados: si se pierden, Caddy los vuelve a pedir
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [interna]
+
+volumes:
+  db_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  interna:

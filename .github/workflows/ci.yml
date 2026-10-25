@@ -23,3 +23,14 @@ jobs:
       # los tests de integracion arrancan MySQL con Testcontainers (Docker ya viene en el runner)
       - name: Compilar y pasar los tests
         run: ./mvnw -B verify
+
+  docker:
+    name: Imagen Docker de la API
+    runs-on: ubuntu-latest
+    needs: backend
+    steps:
+      - uses: actions/checkout@v7
+
+      # comprueba que el Dockerfile sigue construyendo (en la fase 8 ademas se publica)
+      - name: Construir la imagen
+        run: docker build -t optima-api:ci .
