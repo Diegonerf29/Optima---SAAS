@@ -15,6 +15,7 @@ Cada cambio que se aplica al código se apunta aquí y en la columna **Estado** 
 | 25/10/2026 | `a641114` | La clave JWT ya no tiene valor por defecto. La clave de desarrollo pasa a `application-dev.properties` y `JwtUtil` la rechaza fuera del perfil `dev` | A2 ✅ |
 | 25/10/2026 | `e208a28` | Se elimina `README.md` (daba por hechas cosas falsas y publicaba la URL de producción con credenciales de demo) | M10, M13 🟡, B18 🟡 |
 | 25/10/2026 | `ac38ebf` | Todo el trabajo pasa a `develop`. Se sube un `CLAUDE.md` compartido para que todas las sesiones de IA trabajen en esa rama y apunten aquí sus cambios | — |
+| 25/10/2026 | `712c5db` | Nuevo `plan.md`: ordena en fases todos los hallazgos de este informe, añade lo que falta para producción (P1–P10), el frontend y los pagos. `CLAUDE.md` pide seguirlo | — |
 
 **Estados:** ⏳ Pendiente · 🟡 En parte · ✅ Resuelto
 
