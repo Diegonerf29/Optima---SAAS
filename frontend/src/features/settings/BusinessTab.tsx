@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Controller, useForm } from 'react-hook-form'
 import { toast } from 'sonner'
+import { Download } from 'lucide-react'
 import { z } from 'zod'
 
 import { api, errorMessage, unwrap } from '@/api/client'
@@ -16,6 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { useBusinessExport } from '@/features/privacy/useBusinessExport'
 import { codigoPostalOpcional, email, requerido, telefonoOpcional, vacioANull } from '@/lib/validation'
 
 const ZONAS = [
@@ -92,6 +94,8 @@ function Formulario({ negocio }: { negocio: Business }) {
     },
     onError: (e) => toast.error(errorMessage(e)),
   })
+
+  const exportar = useBusinessExport()
 
   const desactivar = useMutation({
     mutationFn: () => unwrap(api.DELETE('/api/businesses/{id}', { params: { path: { id: businessId } } })),
@@ -211,6 +215,21 @@ function Formulario({ negocio }: { negocio: Business }) {
           </Button>
         </div>
       </form>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Tus datos</CardTitle>
+          <CardDescription>
+            Descarga en un fichero todo lo que Optima guarda de tu negocio: equipo, catálogo, clientes y citas. Es tuyo y te lo puedes
+            llevar cuando quieras.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" disabled={exportar.isPending} onClick={() => exportar.mutate()}>
+            <Download /> {exportar.isPending ? 'Preparando…' : 'Descargar todos los datos'}
+          </Button>
+        </CardContent>
+      </Card>
 
       {negocio.isActive && (
         <Card className="border-destructive/40">

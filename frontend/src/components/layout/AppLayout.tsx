@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { CalendarDays, Home, LogOut, Mail, Menu, Scissors, Settings, ShieldOff, UserCog, UserRound, Users } from 'lucide-react'
+import { CalendarDays, Download, Home, LogOut, Mail, Menu, Scissors, Settings, ShieldOff, UserCog, UserRound, Users } from 'lucide-react'
 import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router'
 import { toast } from 'sonner'
@@ -22,6 +22,8 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { SubscriptionBlocked } from '@/features/billing/SubscriptionBlocked'
+import { EraseBusinessDialog } from '@/features/privacy/EraseBusinessDialog'
+import { useBusinessExport } from '@/features/privacy/useBusinessExport'
 import { TrialBanner } from '@/features/billing/TrialBanner'
 import { iniciales } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -127,9 +129,10 @@ function AvisoEmail() {
   )
 }
 
-/** negocio desactivado: solo un ADMIN llega aqui y puede reactivarlo */
-function NegocioDesactivado() {
+/** negocio desactivado: solo un ADMIN llega aqui y puede reactivarlo, descargar sus datos o borrarlo */
+function NegocioDesactivado({ nombre }: { nombre?: string }) {
   const { businessId } = useTenant()
+  const exportar = useBusinessExport()
   const queryClient = useQueryClient()
   const reactivar = useMutation({
     mutationFn: () => unwrap(api.PATCH('/api/businesses/{id}/reactivate', { params: { path: { id: businessId } } })),
@@ -149,6 +152,13 @@ function NegocioDesactivado() {
       <Button className="mt-6" disabled={reactivar.isPending} onClick={() => reactivar.mutate()}>
         Reactivar negocio
       </Button>
+      <div className="mt-10 grid justify-center gap-2 border-t pt-6">
+        <p className="text-sm text-muted-foreground">¿Te vas de Optima?</p>
+        <Button variant="outline" disabled={exportar.isPending} onClick={() => exportar.mutate()}>
+          <Download /> Descargar todos los datos
+        </Button>
+        <EraseBusinessDialog businessName={nombre} />
+      </div>
     </div>
   )
 }
@@ -158,7 +168,7 @@ function Contenido() {
   const business = useBusiness()
   const billing = useBilling()
   if (business.isPending || billing.isPending) return <Loading />
-  if (business.data?.isActive === false) return <NegocioDesactivado />
+  if (business.data?.isActive === false) return <NegocioDesactivado nombre={business.data.name} />
   const b = billing.data
   if (b?.enabled && !b.hasAccess) return <SubscriptionBlocked trialEnded={b.status === 'TRIALING'} />
   return (

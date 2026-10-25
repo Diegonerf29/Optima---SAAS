@@ -1,6 +1,7 @@
 import { BellRing, CalendarDays, Check, Euro, Smartphone, Users } from 'lucide-react'
-import { Link } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { PublicLayout } from '@/features/public/PublicLayout'
@@ -35,8 +36,14 @@ const VENTAJAS = [
 ]
 
 export default function LandingPage() {
+  const [params] = useSearchParams()
   return (
     <PublicLayout>
+      {params.get('negocio-borrado') === '1' && (
+        <Alert className="mx-auto mt-6 max-w-3xl">
+          <AlertDescription>Tu negocio y todos sus datos se han borrado. Gracias por haber usado Optima.</AlertDescription>
+        </Alert>
+      )}
       <section className="mx-auto max-w-6xl px-4 py-16 text-center sm:py-24">
         <h1 className="mx-auto max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl">La agenda de tu local, sin complicaciones</h1>
         <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">

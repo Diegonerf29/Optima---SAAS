@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AppointmentDialog, type AppointmentDraft } from '@/features/agenda/AppointmentDialog'
 import { AppointmentSheet } from '@/features/agenda/AppointmentSheet'
+import { ClientPrivacyCard } from '@/features/privacy/ClientPrivacyCard'
 import { dinero, fecha, hora, STATUS_LABEL, STATUS_VARIANT, toApiDate } from '@/lib/format'
 
 import { ClientFormDialog } from './ClientFormDialog'
@@ -98,39 +99,42 @@ export default function ClientDetailPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_2fr]">
-        <Card className="h-fit">
-          <CardHeader>
-            <CardTitle>Datos</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-3 text-sm">
-            <p className="flex items-center gap-2">
-              <Phone className="size-4 text-muted-foreground" />
-              {c.phone ? (
-                <a href={`tel:${c.phone}`} className="hover:underline">
-                  {c.phone}
-                </a>
-              ) : (
-                <span className="text-muted-foreground">Sin teléfono</span>
-              )}
-            </p>
-            <p className="flex items-center gap-2 break-all">
-              <Mail className="size-4 shrink-0 text-muted-foreground" />
-              {c.email ? (
-                <a href={`mailto:${c.email}`} className="hover:underline">
-                  {c.email}
-                </a>
-              ) : (
-                <span className="text-muted-foreground">Sin email (no recibirá avisos)</span>
-              )}
-            </p>
-            {c.notes && (
-              <p className="flex items-start gap-2">
-                <StickyNote className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                <span className="whitespace-pre-line">{c.notes}</span>
+        <div className="grid h-fit gap-6">
+          <Card className="h-fit">
+            <CardHeader>
+              <CardTitle>Datos</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-3 text-sm">
+              <p className="flex items-center gap-2">
+                <Phone className="size-4 text-muted-foreground" />
+                {c.phone ? (
+                  <a href={`tel:${c.phone}`} className="hover:underline">
+                    {c.phone}
+                  </a>
+                ) : (
+                  <span className="text-muted-foreground">Sin teléfono</span>
+                )}
               </p>
-            )}
-          </CardContent>
-        </Card>
+              <p className="flex items-center gap-2 break-all">
+                <Mail className="size-4 shrink-0 text-muted-foreground" />
+                {c.email ? (
+                  <a href={`mailto:${c.email}`} className="hover:underline">
+                    {c.email}
+                  </a>
+                ) : (
+                  <span className="text-muted-foreground">Sin email (no recibirá avisos)</span>
+                )}
+              </p>
+              {c.notes && (
+                <p className="flex items-start gap-2">
+                  <StickyNote className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                  <span className="whitespace-pre-line">{c.notes}</span>
+                </p>
+              )}
+            </CardContent>
+          </Card>
+          {isAdmin && c.fullName !== 'Cliente borrado' && <ClientPrivacyCard client={c} />}
+        </div>
 
         <Card>
           <CardHeader>
