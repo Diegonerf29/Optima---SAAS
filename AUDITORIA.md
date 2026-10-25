@@ -616,7 +616,7 @@ private void validarHorario(Long businessId, Long membershipId, Long boothId, Lo
 - **Área:** Configuración / Autenticación
 - **Archivos:** `README.md:7` (URL de producción), `README.md:139-140` (`admin@optima.com` / `12345678`); `docs/schema_v20.sql` (semilla); validaciones `@Size(min = 8)`
 - **Gravedad:** 🟠 Media
-- **Estado:** 🟡 En parte. Con el README eliminado (`e208a28`), el repositorio ya no publica la URL de producción junto a las credenciales de demo. Pero siguen en el historial de Git (`git show e208a28^:README.md`), así que la contraseña del admin de demo en producción hay que cambiarla igualmente. Los pasos 1 y 3 siguen pendientes.
+- **Estado:** 🟡 En parte. Con el README eliminado (`e208a28`), el repositorio ya no publica la URL de producción junto a las credenciales de demo. El paso 3 está hecho (`@Password`, `70f0e29`) y la configuración de producción ya no carga los datos de demo: solo el perfil `dev` y los tests (`7493c2f`). Queda un paso manual: las credenciales antiguas siguen en el historial de Git (`git show e208a28^:README.md`), así que en el despliegue antiguo (`optima-aws.duckdns.org`) hay que cambiar la contraseña del admin de demo o apagarlo. El entorno de demo separado (paso 1) es el paso 8.8 del plan.
 
 **¿Qué pasa?**
 El README invita a probar en `optima-aws.duckdns.org` y publica la contraseña del ADMIN de demo. Si esa semilla está cargada allí, **cualquier visitante es administrador**: puede cambiar la contraseña del admin (`PUT /api/me/password`) y dejar fuera al tribunal, borrar datos o usar el fallo A3. La única regla de contraseñas es "mínimo 8 caracteres", así que se aceptan `12345678` o `aaaaaaaa`.

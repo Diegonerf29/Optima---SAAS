@@ -137,6 +137,15 @@ Se definen en un fichero `.env` (plantilla comentada en [`.env-example`](.env-ex
 
 Los empleados gestionan todas las citas y clientes porque en un local pequeño quien está en recepción atiende a todos; a cambio, cada cobro queda registrado con quién lo hizo. Un negocio siempre conserva al menos un ADMIN.
 
+### El PC de recepción
+
+Cada local puede elegir (decisión D8 de [`plan.md`](plan.md)); la aplicación admite las dos formas sin cambiar nada:
+
+- **Una cuenta "Recepción" compartida**: se crea un empleado (rol EMPLOYEE) con un email del local y se deja la sesión abierta en ese PC (dura una jornada). Los cobros quedan a nombre de "Recepción".
+- **Una cuenta por persona**: cada empleado entra con la suya y los cobros quedan a su nombre. Es más trazable, pero hay que cerrar sesión al cambiar de persona.
+
+En los dos casos, **el dueño usa su cuenta ADMIN desde su móvil u ordenador**, no en el PC de recepción: así nadie más puede tocar la configuración, el equipo ni los pagos.
+
 ## API
 
 - La documentación completa está en Swagger UI (perfil `dev`) y en formato OpenAPI en `/v3/api-docs`, que se puede importar directamente en Postman.
