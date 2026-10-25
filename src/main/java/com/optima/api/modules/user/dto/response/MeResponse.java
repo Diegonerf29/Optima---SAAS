@@ -12,6 +12,7 @@ public record MeResponse(
         String fullName,
         String email,
         String phone,
+        Boolean emailVerified,
         Boolean isActive,
         LocalDateTime createdAt,
         LocalDateTime deactivatedAt
@@ -22,6 +23,7 @@ public record MeResponse(
                 u.getFullName(),
                 u.getEmail(),
                 u.getPhone(),
+                u.hasVerifiedEmail(),
                 u.getIsActive(),
                 u.getCreatedAt(),
                 u.getDeactivatedAt()

@@ -31,9 +31,10 @@ public class UserController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
-    public UserResponse create(@PathVariable @Positive Long businessId,
+    public UserResponse create(@AuthenticationPrincipal AuthPrincipal principal,
+                               @PathVariable @Positive Long businessId,
                                @Valid @RequestBody CreateUserRequest request) {
-        return userService.create(businessId, request);
+        return userService.create(businessId, request, principal.userId());
     }
 
     /**

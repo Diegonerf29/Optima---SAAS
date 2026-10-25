@@ -3,6 +3,7 @@ package com.optima.api.modules.user.service;
 import com.optima.api.common.mail.MailService;
 import com.optima.api.modules.appointment.repository.AppointmentRepository;
 import com.optima.api.modules.auth.dto.response.MembershipSummaryResponse;
+import com.optima.api.modules.auth.service.EmailVerificationService;
 import com.optima.api.modules.business.model.Business;
 import com.optima.api.modules.business.model.Membership;
 import com.optima.api.modules.business.model.Role;
@@ -43,13 +44,14 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final AppointmentRepository appointmentRepository;
     private final MailService mailService;
+    private final EmailVerificationService emailVerificationService;
 
     /** direccion del frontend para el enlace de la invitacion */
     @Value("${app.frontend.url:http://localhost:5173}")
     private String frontendUrl;
 
-    /** crea un empleado dentro del negocio */
-    public UserResponse create(Long businessId, CreateUserRequest request) {
+    /** crea un empleado dentro del negocio; callerUserId es el ADMIN que lo da de alta */
+    public UserResponse create(Long businessId, CreateUserRequest request, Long callerUserId) {
         Business business = businessRepository.findById(businessId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
@@ -65,6 +67,13 @@ public class UserService {
         // si el email ya tiene cuenta no se vincula directamente: se le invita (A3)
         Optional<User> existing = userRepository.findByEmailIgnoreCase(email);
         if (existing.isPresent()) {
+            // invitar envia un correo a otra persona: solo con el email propio confirmado (P4)
+            User caller = userRepository.findById(callerUserId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token invalido"));
+            if (!caller.hasVerifiedEmail()) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "Ese email ya tiene cuenta en Optima. Para invitarle, primero confirma tu propio email");
+            }
             return invite(business, role, existing.get());
         }
 
@@ -244,6 +253,11 @@ public class UserService {
         user.setFullName(request.fullName().trim());
         user.setEmail(email);
         user.setPhone(request.phone());
+        if (emailChanges) {
+            // el email nuevo hay que confirmarlo otra vez (P4)
+            user.setEmailVerifiedAt(null);
+            emailVerificationService.sendVerification(user);
+        }
         return MeResponse.from(userRepository.save(user));
     }
 

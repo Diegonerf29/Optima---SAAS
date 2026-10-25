@@ -5,8 +5,10 @@ import com.optima.api.modules.auth.dto.request.ForgotPasswordRequest;
 import com.optima.api.modules.auth.dto.request.LoginRequest;
 import com.optima.api.modules.auth.dto.request.RegisterRequest;
 import com.optima.api.modules.auth.dto.request.ResetPasswordRequest;
+import com.optima.api.modules.auth.dto.request.VerifyEmailRequest;
 import com.optima.api.modules.auth.dto.response.TokenResponse;
 import com.optima.api.modules.auth.service.AuthService;
+import com.optima.api.modules.auth.service.EmailVerificationService;
 import com.optima.api.modules.auth.service.PasswordResetService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -30,6 +32,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final PasswordResetService passwordResetService;
+    private final EmailVerificationService emailVerificationService;
 
     /**
      * registra un nuevo negocio junto con su usuario administrador
@@ -83,5 +86,23 @@ public class AuthController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         passwordResetService.consumeReset(request);
+    }
+
+    /**
+     * confirma el email con el codigo recibido por correo
+     */
+    @PostMapping("/verify-email")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
+        emailVerificationService.verify(request);
+    }
+
+    /**
+     * vuelve a enviar el enlace de confirmacion al usuario autenticado
+     */
+    @PostMapping("/verify-email/resend")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void resendVerification(@AuthenticationPrincipal AuthPrincipal principal) {
+        emailVerificationService.resend(principal.userId());
     }
 }

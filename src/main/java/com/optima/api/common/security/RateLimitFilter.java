@@ -54,6 +54,14 @@ public class RateLimitFilter extends OncePerRequestFilter {
             .addLimit(Bandwidth.builder().capacity(20).refillIntervally(20, Duration.ofHours(1)).build())
             .build();
 
+    /** 20 intentos de confirmar email y 5 reenvios del enlace por hora por cada ip */
+    private static final Supplier<Bucket> VERIFY_BUCKET = () -> Bucket.builder()
+            .addLimit(Bandwidth.builder().capacity(20).refillIntervally(20, Duration.ofHours(1)).build())
+            .build();
+    private static final Supplier<Bucket> RESEND_BUCKET = () -> Bucket.builder()
+            .addLimit(Bandwidth.builder().capacity(5).refillIntervally(5, Duration.ofHours(1)).build())
+            .build();
+
     /** tope de ips guardadas por mapa para no agotar memoria */
     private static final int MAX_TRACKED_IPS = 10_000;
 
@@ -62,6 +70,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final Map<String, Bucket> registerBuckets = Collections.synchronizedMap(new BoundedCache<>(MAX_TRACKED_IPS));
     private final Map<String, Bucket> forgotBuckets = Collections.synchronizedMap(new BoundedCache<>(MAX_TRACKED_IPS));
     private final Map<String, Bucket> resetBuckets = Collections.synchronizedMap(new BoundedCache<>(MAX_TRACKED_IPS));
+    private final Map<String, Bucket> verifyBuckets = Collections.synchronizedMap(new BoundedCache<>(MAX_TRACKED_IPS));
+    private final Map<String, Bucket> resendBuckets = Collections.synchronizedMap(new BoundedCache<>(MAX_TRACKED_IPS));
 
     private final ErrorWriter errorWriter;
     private final boolean enabled;
@@ -117,6 +127,12 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
         if ("/api/auth/reset-password".equals(uri)) {
             return bucketFor(resetBuckets, ip, RESET_BUCKET);
+        }
+        if ("/api/auth/verify-email".equals(uri)) {
+            return bucketFor(verifyBuckets, ip, VERIFY_BUCKET);
+        }
+        if ("/api/auth/verify-email/resend".equals(uri)) {
+            return bucketFor(resendBuckets, ip, RESEND_BUCKET);
         }
         return null;
     }

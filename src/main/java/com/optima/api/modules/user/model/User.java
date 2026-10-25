@@ -45,6 +45,10 @@ public class User {
     @Column(name = "token_version", nullable = false)
     private Integer tokenVersion = 0;
 
+    /** momento en que confirmo su email; vacio si aun no lo ha confirmado */
+    @Column(name = "email_verified_at")
+    private LocalDateTime emailVerifiedAt;
+
     /** indica si la identidad puede iniciar sesion */
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
@@ -66,5 +70,10 @@ public class User {
     /** invalida todos los tokens emitidos hasta ahora */
     public void revokeTokens() {
         this.tokenVersion = this.tokenVersion + 1;
+    }
+
+    /** true si ya confirmo su email */
+    public boolean hasVerifiedEmail() {
+        return emailVerifiedAt != null;
     }
 }

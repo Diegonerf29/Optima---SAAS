@@ -41,6 +41,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final MailService mailService;
     private final LoginAttemptService loginAttemptService;
+    private final EmailVerificationService emailVerificationService;
 
     /**
      * comprueba el inicio de sesion y devuelve el codigo que corresponda
@@ -181,13 +182,16 @@ public class AuthService {
                 adminRole.getName()
         );
 
+        // bienvenida y enlace para confirmar el email en un solo correo (P4)
+        String verifyLink = emailVerificationService.createLink(user);
         mailService.sendSimpleEmail(
                 user.getEmail(),
-                "Bienvenido a Optima",
+                "Bienvenido a Optima: confirma tu email",
                 "Hola " + user.getFullName() + ",\n\n"
                         + "Tu negocio \"" + business.getName() + "\" ha sido creado correctamente "
-                        + "en Optima. Ya puedes iniciar sesión y empezar a gestionar tu agenda.\n\n"
-                        + "Slug del negocio: " + business.getSlug() + "\n\n"
+                        + "en Optima. Ya puedes empezar a gestionar tu agenda.\n\n"
+                        + "Confirma tu email abriendo este enlace (válido durante 48 horas):\n\n"
+                        + "    " + verifyLink + "\n\n"
                         + "Un saludo,\nEl equipo de Optima"
         );
 
