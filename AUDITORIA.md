@@ -30,6 +30,12 @@ Cada cambio que se aplica al código se apunta aquí y en la columna **Estado** 
 | 25/10/2026 | `e05c12c` | Se elimina `POST /api/businesses` (paso 2.6) | M9 ✅ |
 | 25/10/2026 | `d2b3018` | Verificación del email al registrarse y al cambiarlo; sin email confirmado no se puede invitar a otras cuentas (paso 2.7) | — (P4 del plan) |
 | 25/10/2026 | `80bc7d7` | Mensaje genérico para `IllegalArgumentException` y límites de tamaño en notas, descripciones, listas de servicios, login y rango de ausencias (paso 2.8) | B3 ✅, B4 ✅ |
+| 25/10/2026 | `a9a1046` | Tests de citas (12 casos) y refactor de `AppointmentService`: crear y editar comparten pasos, servicios sin repetidos en una consulta (compartido con la disponibilidad), `NotFoundException` (paso 3.1) | M12 ✅, B6 🟡 |
+| 25/10/2026 | `02be474` | Crear y editar cita con `READ_COMMITTED`. Test con dos reservas simultáneas: antes 15 de 15 rondas con doble reserva, después 0 (paso 3.2) | M1 ✅ |
+| 25/10/2026 | `57dab2b` | `SlotGrid`: la misma regla de huecos (contados desde la apertura de cada tramo) en disponibilidad y validación. Probado con intervalos de 15, 30, 45 y 60 (paso 3.3) | M2 ✅ |
+| 25/10/2026 | `f07bd9f` | Zona horaria por negocio (`timezone`, migración V5) y `BusinessClock` para "ahora" y "hoy"; sin huecos pasados, sin mover citas al pasado y citas en curso solo con cambio de notas (pasos 3.4 y 3.5) | M14 ✅, B12 ✅ |
+| 25/10/2026 | `9095e55` | Bloqueos de BD responden 409 y la búsqueda de clientes escapa `%` y `_` (paso 3.6) | B20 ✅ |
+| 25/10/2026 | `7d176b7` | Orden por defecto en todos los listados paginados (paso 3.7) | B17 ✅ |
 
 **Estados:** ⏳ Pendiente · 🟡 En parte · ✅ Resuelto
 
@@ -77,8 +83,8 @@ Además hay 14 problemas de gravedad media (por ejemplo, **doble reserva posible
 | A2 | Clave JWT con valor por defecto público | Autenticación | 🔴 Alta | `src/main/resources/application.properties:23` | ✅ Resuelto |
 | A3 | Alta de empleado reutiliza cuentas ajenas y filtra sus datos | Permisos / multi-tenant | 🔴 Alta | `modules/user/service/UserService.java:57` | ✅ Resuelto |
 | A4 | No existe ningún test automatizado | Tests | 🔴 Alta | `pom.xml`, falta `src/test` | 🟡 En parte |
-| M1 | Doble reserva posible con peticiones simultáneas | API / BD | 🟠 Media | `modules/appointment/service/AppointmentService.java:67` | ⏳ Pendiente |
-| M2 | Con intervalo de 45 min la disponibilidad ofrece huecos que luego se rechazan | API | 🟠 Media | `AvailabilityService.java:325` / `AppointmentValidator.java:182` | ⏳ Pendiente |
+| M1 | Doble reserva posible con peticiones simultáneas | API / BD | 🟠 Media | `modules/appointment/service/AppointmentService.java:67` | ✅ Resuelto |
+| M2 | Con intervalo de 45 min la disponibilidad ofrece huecos que luego se rechazan | API | 🟠 Media | `AvailabilityService.java:325` / `AppointmentValidator.java:182` | ✅ Resuelto |
 | M3 | El límite de intentos se puede saltar con `X-Forwarded-For` | Autenticación | 🟠 Media | `common/security/RateLimitFilter.java:102` | 🟡 En parte |
 | M4 | Negocio desactivado: los tokens siguen funcionando y no se puede reactivar | Permisos | 🟠 Media | `common/security/TenantGuardFilter.java:72` | ✅ Resuelto |
 | M5 | Los tokens no se invalidan al cambiar contraseña; email cambiable sin contraseña | Autenticación | 🟠 Media | `modules/user/service/UserService.java:163` | ✅ Resuelto |
@@ -88,29 +94,29 @@ Además hay 14 problemas de gravedad media (por ejemplo, **doble reserva posible
 | M9 | `POST /api/businesses` crea negocios huérfanos | API / permisos | 🟠 Media | `modules/business/controller/BusinessController.java:25` | ✅ Resuelto |
 | M10 | Base de datos y Docker con configuración insegura para producción | Configuración / BD | 🟠 Media | `docker-compose.yml`, `docs/schema_v20.sql:902` | ⏳ Pendiente |
 | M11 | Dependencias desactualizadas con vulnerabilidades conocidas | Dependencias | 🟠 Media | `pom.xml:8` | ✅ Resuelto |
-| M12 | `AppointmentService` duplica ~120 líneas entre crear y editar | Código repetido | 🟠 Media | `AppointmentService.java:117` y `:432` | ⏳ Pendiente |
+| M12 | `AppointmentService` duplica ~120 líneas entre crear y editar | Código repetido | 🟠 Media | `AppointmentService.java:117` y `:432` | ✅ Resuelto |
 | M13 | Credenciales de demo publicadas junto a la URL de producción | Configuración | 🟠 Media | `README.md:7`, `README.md:139` | 🟡 En parte |
-| M14 | Fechas comparadas con el reloj del servidor (UTC) y no con la hora del negocio | API | 🟠 Media | `CreateAppointmentRequest.java:29` | ⏳ Pendiente |
+| M14 | Fechas comparadas con el reloj del servidor (UTC) y no con la hora del negocio | API | 🟠 Media | `CreateAppointmentRequest.java:29` | ✅ Resuelto |
 | B1 | Swagger público y activado por defecto | Configuración | 🟢 Baja | `application.properties:50` | ⏳ Pendiente |
 | B2 | `show-sql=true` por defecto | Configuración | 🟢 Baja | `application.properties:13` | ⏳ Pendiente |
 | B3 | Se devuelven al cliente mensajes internos de `IllegalArgumentException` | API | 🟢 Baja | `GlobalExceptionHandler.java:48` | ✅ Resuelto |
 | B4 | Faltan límites de tamaño en textos y listas | API | 🟢 Baja | varios DTOs | ✅ Resuelto |
 | B5 | Código que escribe errores JSON repetido en 4 sitios | Código repetido | 🟢 Baja | `SecurityConfig.java:57`, filtros | ✅ Resuelto |
-| B6 | "No se encontró…" y `findOrThrow` repetidos en todos los servicios | Código repetido | 🟢 Baja | todos los `*Service.java` | ⏳ Pendiente |
+| B6 | "No se encontró…" y `findOrThrow` repetidos en todos los servicios | Código repetido | 🟢 Baja | todos los `*Service.java` | 🟡 En parte |
 | B7 | DTOs `Create*`/`Update*` idénticos y expresiones regulares copiadas | Código repetido | 🟢 Baja | `dto/request/*` | ⏳ Pendiente |
 | B8 | Lógica duplicada en ausencias y horarios de empleados | Código repetido | 🟢 Baja | `EmployeeAbsenceService.java:48` | ⏳ Pendiente |
 | B9 | Nombres engañosos (`{userId}` es un id de membresía, etc.) | Estructura | 🟢 Baja | `EmployeeAbsenceController.java:19` | ⏳ Pendiente |
 | B10 | Estados y roles como texto suelto; IDs fijos en el SQL | Estructura / BD | 🟢 Baja | `schema_v20.sql:185` | 🟡 En parte |
 | B11 | Un impuesto se puede archivar aunque lo usen servicios activos | API | 🟢 Baja | `TaxService.java:88` | ⏳ Pendiente |
-| B12 | Huecos pasados en disponibilidad y edición de citas hacia el pasado | API | 🟢 Baja | `UpdateAppointmentRequest.java:23` | ⏳ Pendiente |
+| B12 | Huecos pasados en disponibilidad y edición de citas hacia el pasado | API | 🟢 Baja | `UpdateAppointmentRequest.java:23` | ✅ Resuelto |
 | B13 | Un negocio puede quedarse sin ningún administrador | Permisos | 🟢 Baja | `UserService.java:98` | ⏳ Pendiente |
 | B14 | Filtros de seguridad registrados dos veces | Estructura | 🟢 Baja | `common/security/*Filter.java` | ⏳ Pendiente |
 | B15 | Sin migraciones de BD ni validación del esquema | Base de datos | 🟢 Baja | `application.properties:12`, `schema_v20.sql` | ✅ Resuelto |
 | B16 | La tabla `password_resets` crece sin límite | Base de datos | 🟢 Baja | `PasswordResetService.java` | 🟡 En parte |
-| B17 | Listados paginados sin orden por defecto | API | 🟢 Baja | repositorios `findByBusinessId…` | ⏳ Pendiente |
+| B17 | Listados paginados sin orden por defecto | API | 🟢 Baja | repositorios `findByBusinessId…` | ✅ Resuelto |
 | B18 | Documentación desactualizada y sin integración continua | Documentación | 🟢 Baja | `README.md:121`, `pom.xml:16` | 🟡 En parte |
 | B19 | Llamadas externas dentro de transacciones y datos personales en logs | API | 🟢 Baja | `BusinessService.java:69`, `GeocodingService.java:91` | 🟡 En parte |
-| B20 | Búsqueda de clientes sin escapar `%` y `_`; bloqueos de BD → 500 | API | 🟢 Baja | `ClientRepository.java:30` | ⏳ Pendiente |
+| B20 | Búsqueda de clientes sin escapar `%` y `_`; bloqueos de BD → 500 | API | 🟢 Baja | `ClientRepository.java:30` | ✅ Resuelto |
 | — | Frontend no presente en el repositorio | Frontend | Informativo | `README.md:121` | — |
 | — | Pagos: solo existe un indicador `isPaid` | Pagos | Informativo | ver M8 | — |
 

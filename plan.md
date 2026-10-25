@@ -175,13 +175,13 @@ Objetivo: trabajar sobre una versión que recibe parches y saber al momento si u
 
 ### Fase 3 — Citas y agenda (el corazón del producto)
 
-- [ ] 3.1 Tests de `createAppointment` y `updateAppointment` y, con ellos en verde, extraer el código repetido: cargar servicios en una sola consulta, quitar duplicados de `serviceIds`, un único control de conflictos (M12). Va primero porque los pasos 3.2 y 4.2 tocan este mismo código
-- [ ] 3.2 Doble reserva bajo concurrencia: `READ_COMMITTED` y test con dos hilos (M1)
-- [ ] 3.3 Intervalo de 45 minutos: la misma regla en disponibilidad y en validación, y test "todo hueco ofrecido se puede reservar" (M2)
-- [ ] 3.4 Fechas con la zona horaria del negocio (M14, D4)
-- [ ] 3.5 Sin huecos ya pasados; no mover citas al pasado ni editar las que están `IN_PROGRESS` (B12)
-- [ ] 3.6 Bloqueos de la BD → 409 en lugar de 500; búsqueda de clientes escapando `%` y `_` (B20)
-- [ ] 3.7 Orden por defecto en los listados paginados (B17)
+- [x] 3.1 Tests de `createAppointment` y `updateAppointment` y, con ellos en verde, extraer el código repetido: cargar servicios en una sola consulta, quitar duplicados de `serviceIds`, un único control de conflictos (M12). Va primero porque los pasos 3.2 y 4.2 tocan este mismo código
+- [x] 3.2 Doble reserva bajo concurrencia: `READ_COMMITTED` y test con dos hilos (M1)
+- [x] 3.3 Intervalo de 45 minutos: la misma regla en disponibilidad y en validación, y test "todo hueco ofrecido se puede reservar" (M2)
+- [x] 3.4 Fechas con la zona horaria del negocio (M14, D4)
+- [x] 3.5 Sin huecos ya pasados; no mover citas al pasado ni editar las que están `IN_PROGRESS` (B12)
+- [x] 3.6 Bloqueos de la BD → 409 en lugar de 500; búsqueda de clientes escapando `%` y `_` (B20)
+- [x] 3.7 Orden por defecto en los listados paginados (B17)
 
 ### Fase 4 — Reglas de negocio: roles y cobros
 
