@@ -77,10 +77,10 @@ public class AuthService {
         loginAttemptService.recordSuccess(email);
 
         // solo se tienen en cuenta relaciones y negocios activos
+        // un negocio desactivado sigue apareciendo a sus ADMIN para que puedan reactivarlo (M4)
         List<Membership> activeMemberships = membershipRepository.findAllByUserId(user.getId())
                 .stream()
-                .filter(Membership::getIsActive)
-                .filter(m -> Boolean.TRUE.equals(m.getBusiness().getIsActive()))
+                .filter(MembershipSummaryResponse::isUsable)
                 .toList();
 
         long pendingInvitations = membershipRepository.countByUserIdAndInvitationPendingTrue(user.getId());
@@ -125,13 +125,8 @@ public class AuthService {
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.FORBIDDEN, "No tienes acceso a ese negocio"));
 
-        if (!membership.getIsActive()) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "No tienes acceso a ese negocio");
-        }
-
-        // aunque exista la relacion el negocio tambien tiene que seguir activo
-        if (!Boolean.TRUE.equals(membership.getBusiness().getIsActive())) {
+        // la relacion tiene que estar activa y el negocio tambien, salvo para un ADMIN que va a reactivarlo
+        if (!MembershipSummaryResponse.isUsable(membership)) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN, "No tienes acceso a ese negocio");
         }

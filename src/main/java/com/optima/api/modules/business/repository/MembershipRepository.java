@@ -59,8 +59,8 @@ public interface MembershipRepository extends JpaRepository<Membership, Long> {
      */
     boolean existsByUserIdAndBusinessIdAndIsActiveTrue(Long userId, Long businessId);
 
-    /** recupera la relacion usada para validar la sesion */
-    @EntityGraph(attributePaths = {"role"})
+    /** recupera la relacion usada para validar la sesion, con el rol y el negocio */
+    @EntityGraph(attributePaths = {"role", "business"})
     @Query("SELECT m FROM Membership m WHERE m.user.id = :userId AND m.business.id = :businessId")
     Optional<Membership> findForSessionGuard(@Param("userId") Long userId,
                                              @Param("businessId") Long businessId);

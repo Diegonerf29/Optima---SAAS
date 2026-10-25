@@ -250,10 +250,9 @@ public class UserService {
     /** lista los negocios activos del usuario */
     @Transactional(readOnly = true)
     public List<MembershipSummaryResponse> listMyBusinesses(Long userId) {
-        // igual que en el login solo cuentan relaciones y negocios activos
+        // igual que en el login: relaciones activas, y negocios desactivados solo para sus ADMIN
         return membershipRepository.findAllByUserId(userId).stream()
-                .filter(Membership::getIsActive)
-                .filter(m -> Boolean.TRUE.equals(m.getBusiness().getIsActive()))
+                .filter(MembershipSummaryResponse::isUsable)
                 .map(MembershipSummaryResponse::from)
                 .toList();
     }

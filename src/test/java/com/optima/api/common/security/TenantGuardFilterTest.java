@@ -1,6 +1,7 @@
 package com.optima.api.common.security;
 
 import com.optima.api.common.exception.ErrorWriter;
+import com.optima.api.modules.business.model.Business;
 import com.optima.api.modules.business.model.Membership;
 import com.optima.api.modules.business.model.Role;
 import com.optima.api.modules.business.repository.MembershipRepository;
@@ -113,8 +114,33 @@ class TenantGuardFilterTest {
         assertThat(res.getStatus()).isEqualTo(200);
     }
 
+    // negocio desactivado (M4)
+
+    @Test
+    void negocioDesactivadoBloqueaElRestoDeRutas() throws Exception {
+        autenticar(1L, "ADMIN");
+        when(membershipRepository.findForSessionGuard(10L, 1L)).thenReturn(Optional.of(membresia(true, "ADMIN", false)));
+
+        assertThat(ejecutar("/api/businesses/1/clients").getStatus()).isEqualTo(403);
+        assertThat(ejecutar("POST", "/api/businesses/1/appointments").getStatus()).isEqualTo(403);
+    }
+
+    @Test
+    void negocioDesactivadoSePuedeVerYReactivar() throws Exception {
+        autenticar(1L, "ADMIN");
+        when(membershipRepository.findForSessionGuard(10L, 1L)).thenReturn(Optional.of(membresia(true, "ADMIN", false)));
+
+        assertThat(ejecutar("/api/businesses/1").getStatus()).isEqualTo(200);
+        assertThat(ejecutar("PATCH", "/api/businesses/1/reactivate").getStatus()).isEqualTo(200);
+        assertThat(ejecutar("PUT", "/api/businesses/1").getStatus()).isEqualTo(403);
+    }
+
     private MockHttpServletResponse ejecutar(String uri) throws Exception {
-        MockHttpServletRequest req = new MockHttpServletRequest("GET", uri);
+        return ejecutar("GET", uri);
+    }
+
+    private MockHttpServletResponse ejecutar(String method, String uri) throws Exception {
+        MockHttpServletRequest req = new MockHttpServletRequest(method, uri);
         MockHttpServletResponse res = new MockHttpServletResponse();
         filter.doFilter(req, res, new MockFilterChain());
         return res;
@@ -127,11 +153,18 @@ class TenantGuardFilterTest {
     }
 
     private static Membership membresia(boolean activa, String rol) {
+        return membresia(activa, rol, true);
+    }
+
+    private static Membership membresia(boolean activa, String rol, boolean negocioActivo) {
         Role role = new Role();
         role.setName(rol);
+        Business business = new Business();
+        business.setIsActive(negocioActivo);
         Membership m = new Membership();
         m.setIsActive(activa);
         m.setRole(role);
+        m.setBusiness(business);
         return m;
     }
 }

@@ -78,10 +78,25 @@ public class TenantGuardFilter extends OncePerRequestFilter {
                     writeUnauthorized(response, "Tu sesión está obsoleta porque tu rol ha cambiado. Vuelve a iniciar sesión.");
                     return;
                 }
+                // con el negocio desactivado solo se puede consultar y reactivar (M4)
+                boolean businessActive = Boolean.TRUE.equals(membershipOpt.get().getBusiness().getIsActive());
+                if (!businessActive && !isAllowedWhileInactive(request, m.group(2))) {
+                    writeForbidden(response, "El negocio está desactivado. Un administrador puede reactivarlo.");
+                    return;
+                }
             }
         }
 
         chain.doFilter(request, response);
+    }
+
+    /** rutas permitidas con el negocio desactivado: verlo y reactivarlo */
+    private boolean isAllowedWhileInactive(HttpServletRequest request, String subPath) {
+        String method = request.getMethod();
+        if (subPath == null || subPath.equals("/")) {
+            return "GET".equalsIgnoreCase(method);
+        }
+        return "PATCH".equalsIgnoreCase(method) && subPath.equals("/reactivate");
     }
 
     private void writeForbidden(HttpServletResponse response, String message) throws IOException {
