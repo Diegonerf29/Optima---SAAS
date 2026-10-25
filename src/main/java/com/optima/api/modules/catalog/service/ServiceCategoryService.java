@@ -6,7 +6,7 @@ import com.optima.api.modules.business.repository.BusinessRepository;
 import com.optima.api.modules.catalog.dto.request.CategoryRequest;
 import com.optima.api.modules.catalog.dto.response.ServiceCategoryResponse;
 import com.optima.api.modules.catalog.model.ServiceCategory;
-import com.optima.api.modules.catalog.repository.BusinessServiceRepository;
+import com.optima.api.modules.catalog.repository.OfferingRepository;
 import com.optima.api.modules.catalog.repository.ServiceCategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -26,7 +26,7 @@ public class ServiceCategoryService {
 
     private final ServiceCategoryRepository categoryRepository;
     private final BusinessRepository businessRepository;
-    private final BusinessServiceRepository businessServiceRepository;
+    private final OfferingRepository offeringRepository;
 
     /** crea una categoria nueva */
     public ServiceCategoryResponse createCategory(Long businessId, CategoryRequest request) {
@@ -91,7 +91,7 @@ public class ServiceCategoryService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "La categoría ya está desactivada");
         }
-        long activeServices = businessServiceRepository.countByCategoryIdAndIsActiveTrue(id);
+        long activeServices = offeringRepository.countByCategoryIdAndIsActiveTrue(id);
         if (activeServices > 0) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "No se puede archivar la categoría: tiene " + activeServices

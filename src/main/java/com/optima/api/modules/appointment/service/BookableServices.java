@@ -1,8 +1,8 @@
 package com.optima.api.modules.appointment.service;
 
 import com.optima.api.common.exception.NotFoundException;
-import com.optima.api.modules.catalog.model.BusinessService;
-import com.optima.api.modules.catalog.repository.BusinessServiceRepository;
+import com.optima.api.modules.catalog.model.Offering;
+import com.optima.api.modules.catalog.repository.OfferingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -24,24 +24,24 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class BookableServices {
 
-    private final BusinessServiceRepository serviceRepository;
+    private final OfferingRepository serviceRepository;
 
     /**
      * devuelve los servicios activos del negocio en el orden pedido y sin repetidos
      * con una sola consulta a la base de datos
      */
-    public List<BusinessService> load(Long businessId, List<Long> serviceIds) {
+    public List<Offering> load(Long businessId, List<Long> serviceIds) {
         if (serviceIds == null || serviceIds.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe indicar al menos un servicio");
         }
         // un servicio repetido cuenta una sola vez
         Set<Long> uniqueIds = new LinkedHashSet<>(serviceIds);
-        Map<Long, BusinessService> found = serviceRepository.findAllByIdInAndBusinessId(uniqueIds, businessId).stream()
-                .collect(Collectors.toMap(BusinessService::getId, Function.identity()));
+        Map<Long, Offering> found = serviceRepository.findAllByIdInAndBusinessId(uniqueIds, businessId).stream()
+                .collect(Collectors.toMap(Offering::getId, Function.identity()));
 
-        List<BusinessService> services = new ArrayList<>();
+        List<Offering> services = new ArrayList<>();
         for (Long id : uniqueIds) {
-            BusinessService service = found.get(id);
+            Offering service = found.get(id);
             if (service == null) {
                 throw new NotFoundException("el servicio", id);
             }
@@ -55,7 +55,7 @@ public class BookableServices {
     }
 
     /** suma la duracion de los servicios en minutos */
-    public static int totalMinutes(List<BusinessService> services) {
-        return services.stream().mapToInt(BusinessService::getDurationMinutes).sum();
+    public static int totalMinutes(List<Offering> services) {
+        return services.stream().mapToInt(Offering::getDurationMinutes).sum();
     }
 }

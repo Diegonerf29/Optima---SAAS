@@ -15,7 +15,7 @@ import java.util.List;
 
 /** rutas del horario semanal de un empleado */
 @RestController
-@RequestMapping("/api/businesses/{businessId}/users/{userId}/schedules")
+@RequestMapping("/api/businesses/{businessId}/users/{membershipId}/schedules")
 @RequiredArgsConstructor
 @Validated
 public class EmployeeScheduleController {
@@ -29,9 +29,9 @@ public class EmployeeScheduleController {
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
     public EmployeeScheduleResponse create(@PathVariable @Positive Long businessId,
-                                           @PathVariable @Positive Long userId,
+                                           @PathVariable @Positive Long membershipId,
                                            @Valid @RequestBody EmployeeScheduleRequest request) {
-        return scheduleService.create(businessId, userId, request);
+        return scheduleService.create(businessId, membershipId, request);
     }
 
     /**
@@ -39,8 +39,8 @@ public class EmployeeScheduleController {
      */
     @GetMapping
     public List<EmployeeScheduleResponse> listByEmployee(@PathVariable @Positive Long businessId,
-                                                         @PathVariable @Positive Long userId) {
-        return scheduleService.listByEmployee(businessId, userId);
+                                                         @PathVariable @Positive Long membershipId) {
+        return scheduleService.listByEmployee(businessId, membershipId);
     }
 
     /**
@@ -48,9 +48,9 @@ public class EmployeeScheduleController {
      */
     @GetMapping("/{id}")
     public EmployeeScheduleResponse getById(@PathVariable @Positive Long businessId,
-                                            @PathVariable @Positive Long userId,
+                                            @PathVariable @Positive Long membershipId,
                                             @PathVariable @Positive Long id) {
-        return scheduleService.getById(businessId, userId, id);
+        return scheduleService.getById(businessId, membershipId, id);
     }
 
     /**
@@ -59,10 +59,10 @@ public class EmployeeScheduleController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public EmployeeScheduleResponse update(@PathVariable @Positive Long businessId,
-                                           @PathVariable @Positive Long userId,
+                                           @PathVariable @Positive Long membershipId,
                                            @PathVariable @Positive Long id,
                                            @Valid @RequestBody EmployeeScheduleRequest request) {
-        return scheduleService.update(businessId, userId, id, request);
+        return scheduleService.update(businessId, membershipId, id, request);
     }
 
     /**
@@ -72,8 +72,8 @@ public class EmployeeScheduleController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('ADMIN')")
     public void delete(@PathVariable @Positive Long businessId,
-                       @PathVariable @Positive Long userId,
+                       @PathVariable @Positive Long membershipId,
                        @PathVariable @Positive Long id) {
-        scheduleService.delete(businessId, userId, id);
+        scheduleService.delete(businessId, membershipId, id);
     }
 }

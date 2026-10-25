@@ -1,12 +1,12 @@
 package com.optima.api.modules.catalog.dto.response;
 
-import com.optima.api.modules.catalog.model.BusinessService;
+import com.optima.api.modules.catalog.model.Offering;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /** datos de un servicio del catalogo */
-public record BusinessServiceResponse(
+public record OfferingResponse(
         Long id,
         Long businessId,
         Long categoryId,
@@ -21,8 +21,8 @@ public record BusinessServiceResponse(
         LocalDateTime createdAt,
         LocalDateTime deactivatedAt
 ) {
-    public static BusinessServiceResponse from(BusinessService service) {
-        return new BusinessServiceResponse(
+    public static OfferingResponse from(Offering service) {
+        return new OfferingResponse(
                 service.getId(),
                 service.getBusiness().getId(),
                 service.getCategory().getId(),

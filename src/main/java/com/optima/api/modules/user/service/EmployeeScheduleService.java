@@ -28,11 +28,11 @@ public class EmployeeScheduleService {
     /**
      * crea un tramo del horario semanal de un empleado
      */
-    public EmployeeScheduleResponse create(Long businessId, Long userId, EmployeeScheduleRequest request) {
-        Membership membership = membershipRepository.getInBusiness(userId, businessId);
+    public EmployeeScheduleResponse create(Long businessId, Long membershipId, EmployeeScheduleRequest request) {
+        Membership membership = membershipRepository.getInBusiness(membershipId, businessId);
         validateHours(request.startTime(), request.endTime());
 
-        validateNoOverlap(userId, request.dayOfWeek(), request.startTime(), request.endTime(), null);
+        validateNoOverlap(membershipId, request.dayOfWeek(), request.startTime(), request.endTime(), null);
 
         EmployeeSchedule s = new EmployeeSchedule();
         s.setMembership(membership);
@@ -47,10 +47,10 @@ public class EmployeeScheduleService {
      * lista todos los tramos del horario semanal de un empleado
      */
     @Transactional(readOnly = true)
-    public List<EmployeeScheduleResponse> listByEmployee(Long businessId, Long userId) {
-        membershipRepository.getInBusiness(userId, businessId);
+    public List<EmployeeScheduleResponse> listByEmployee(Long businessId, Long membershipId) {
+        membershipRepository.getInBusiness(membershipId, businessId);
         return scheduleRepository
-                .findAllByMembershipIdOrderByDayOfWeekAscStartTimeAsc(userId)
+                .findAllByMembershipIdOrderByDayOfWeekAscStartTimeAsc(membershipId)
                 .stream().map(EmployeeScheduleResponse::from).toList();
     }
 
@@ -58,20 +58,20 @@ public class EmployeeScheduleService {
      * obtiene un tramo concreto del horario
      */
     @Transactional(readOnly = true)
-    public EmployeeScheduleResponse getById(Long businessId, Long userId, Long id) {
-        membershipRepository.getInBusiness(userId, businessId);
-        return EmployeeScheduleResponse.from(findOrThrow(userId, id));
+    public EmployeeScheduleResponse getById(Long businessId, Long membershipId, Long id) {
+        membershipRepository.getInBusiness(membershipId, businessId);
+        return EmployeeScheduleResponse.from(findOrThrow(membershipId, id));
     }
 
     /**
      * actualiza dia y horas de un tramo existente
      */
-    public EmployeeScheduleResponse update(Long businessId, Long userId, Long id, EmployeeScheduleRequest request) {
-        membershipRepository.getInBusiness(userId, businessId);
+    public EmployeeScheduleResponse update(Long businessId, Long membershipId, Long id, EmployeeScheduleRequest request) {
+        membershipRepository.getInBusiness(membershipId, businessId);
         validateHours(request.startTime(), request.endTime());
 
-        EmployeeSchedule s = findOrThrow(userId, id);
-        validateNoOverlap(userId, request.dayOfWeek(), request.startTime(), request.endTime(), id);
+        EmployeeSchedule s = findOrThrow(membershipId, id);
+        validateNoOverlap(membershipId, request.dayOfWeek(), request.startTime(), request.endTime(), id);
 
         s.setDayOfWeek(request.dayOfWeek());
         s.setStartTime(request.startTime());
@@ -83,9 +83,9 @@ public class EmployeeScheduleService {
     /**
      * elimina un tramo del horario
      */
-    public void delete(Long businessId, Long userId, Long id) {
-        membershipRepository.getInBusiness(userId, businessId);
-        EmployeeSchedule s = findOrThrow(userId, id);
+    public void delete(Long businessId, Long membershipId, Long id) {
+        membershipRepository.getInBusiness(membershipId, businessId);
+        EmployeeSchedule s = findOrThrow(membershipId, id);
         scheduleRepository.delete(s);
     }
 

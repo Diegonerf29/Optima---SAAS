@@ -1,6 +1,5 @@
 package com.optima.api.common.security;
 
-import com.optima.api.common.utils.JwtUtil;
 import com.optima.api.modules.user.repository.UserRepository;
 import com.optima.api.modules.user.repository.UserSessionState;
 import io.jsonwebtoken.Claims;
@@ -32,7 +31,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String AUTH_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
 
-    private final JwtUtil jwtUtil;
+    private final JwtService jwtService;
     private final UserRepository userRepository;
 
     /** extrae el token JWT y prepara el usuario autenticado */
@@ -52,7 +51,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // se quita el prefijo bearer
         String token = header.substring(BEARER_PREFIX.length());
         try {
-            Claims claims = jwtUtil.parseAndValidate(token);
+            Claims claims = jwtService.parseAndValidate(token);
 
             // email y userid son obligatorios
             String email = claims.getSubject();
@@ -64,7 +63,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             // el token debe ser de la version actual del usuario y el usuario debe seguir activo (M5)
-            Object versionRaw = claims.get(JwtUtil.VERSION_CLAIM);
+            Object versionRaw = claims.get(JwtService.VERSION_CLAIM);
             if (!(versionRaw instanceof Number version) || !isCurrentSession(userId, version.intValue())) {
                 throw new JwtException("Sesion revocada");
             }

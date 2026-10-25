@@ -1,7 +1,7 @@
 package com.optima.api.modules.auth.service;
 
 import com.optima.api.common.mail.MailService;
-import com.optima.api.common.utils.JwtUtil;
+import com.optima.api.common.security.JwtService;
 import com.optima.api.modules.auth.dto.request.LoginRequest;
 import com.optima.api.modules.auth.dto.request.RegisterRequest;
 import com.optima.api.modules.auth.dto.response.MembershipSummaryResponse;
@@ -33,7 +33,7 @@ public class AuthService {
     /** huella usada para igualar tiempos cuando el email no existe */
     private static final String DUMMY_BCRYPT_HASH = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
 
-    private final JwtUtil jwtUtil;
+    private final JwtService jwtService;
     private final UserRepository userRepository;
     private final MembershipRepository membershipRepository;
     private final RoleRepository roleRepository;
@@ -94,7 +94,7 @@ public class AuthService {
 
         if (activeMemberships.size() == 1) {
             Membership only = activeMemberships.get(0);
-            String token = jwtUtil.generateTenantToken(
+            String token = jwtService.generateTenantToken(
                     user.getEmail(),
                     user.getId(),
                     user.getTokenVersion(),
@@ -104,7 +104,7 @@ public class AuthService {
             return TokenResponse.tenant(token, pendingInvitations);
         }
 
-        String token = jwtUtil.generateIdentityToken(user.getEmail(), user.getId(), user.getTokenVersion());
+        String token = jwtService.generateIdentityToken(user.getEmail(), user.getId(), user.getTokenVersion());
         List<MembershipSummaryResponse> summaries = activeMemberships.stream()
                 .map(MembershipSummaryResponse::from)
                 .toList();
@@ -132,7 +132,7 @@ public class AuthService {
                     HttpStatus.FORBIDDEN, "No tienes acceso a ese negocio");
         }
 
-        String token = jwtUtil.generateTenantToken(
+        String token = jwtService.generateTenantToken(
                 user.getEmail(),
                 user.getId(),
                 user.getTokenVersion(),
@@ -174,7 +174,7 @@ public class AuthService {
         membership.setIsActive(true);
         membershipRepository.save(membership);
 
-        String token = jwtUtil.generateTenantToken(
+        String token = jwtService.generateTenantToken(
                 user.getEmail(),
                 user.getId(),
                 user.getTokenVersion(),

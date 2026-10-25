@@ -1,4 +1,4 @@
-package com.optima.api.common.utils;
+package com.optima.api.common.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -21,7 +21,7 @@ import javax.crypto.SecretKey;
  */
 @Component
 @RequiredArgsConstructor
-public class JwtUtil {
+public class JwtService {
 
     /** clave publica de application-dev.properties, solo valida en el perfil dev */
     private static final String DEV_SECRET = "dev-secret-solo-para-local-no-usar-en-produccion-0123456789";

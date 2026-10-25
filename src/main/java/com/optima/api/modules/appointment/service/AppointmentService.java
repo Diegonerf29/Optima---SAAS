@@ -22,7 +22,7 @@ import com.optima.api.modules.business.repository.BoothRepository;
 import com.optima.api.modules.business.repository.BusinessRepository;
 import com.optima.api.modules.business.repository.MembershipRepository;
 import com.optima.api.modules.business.service.BusinessClock;
-import com.optima.api.modules.catalog.model.BusinessService;
+import com.optima.api.modules.catalog.model.Offering;
 import com.optima.api.modules.client.model.Client;
 import com.optima.api.modules.client.repository.ClientRepository;
 import lombok.RequiredArgsConstructor;
@@ -95,7 +95,7 @@ public class AppointmentService {
 
         LocalDateTime start = request.startDateTime();
         validateNotInPast(business, start);
-        List<BusinessService> services = bookableServices.load(businessId, request.serviceIds());
+        List<Offering> services = bookableServices.load(businessId, request.serviceIds());
         LocalDateTime end = start.plusMinutes(BookableServices.totalMinutes(services));
         validateSlot(business, membership, booth, start, end, null);
 
@@ -218,7 +218,7 @@ public class AppointmentService {
         Membership membership = lockActiveEmployee(businessId, request.membershipId());
         Booth booth = request.boothId() != null ? lockActiveBooth(businessId, request.boothId()) : null;
 
-        List<BusinessService> services = bookableServices.load(businessId, request.serviceIds());
+        List<Offering> services = bookableServices.load(businessId, request.serviceIds());
         LocalDateTime start = request.startDateTime();
         LocalDateTime end = start.plusMinutes(BookableServices.totalMinutes(services));
 
@@ -319,8 +319,8 @@ public class AppointmentService {
 
     // pasos comunes de crear y editar
 
-    private static Set<Long> serviceIdsOf(List<BusinessService> services) {
-        return services.stream().map(BusinessService::getId).collect(Collectors.toSet());
+    private static Set<Long> serviceIdsOf(List<Offering> services) {
+        return services.stream().map(Offering::getId).collect(Collectors.toSet());
     }
 
     private Set<Long> bookedServiceIds(Appointment appointment) {
@@ -388,7 +388,7 @@ public class AppointmentService {
      * congela precio e impuesto de cada servicio en el momento de reservar
      * si el servicio ya estaba en la cita (previous) se mantiene el precio que tenia
      */
-    private List<BookedService> saveBookedServices(Appointment appointment, List<BusinessService> services,
+    private List<BookedService> saveBookedServices(Appointment appointment, List<Offering> services,
                                                    Map<Long, BookedService> previous) {
         List<BookedService> booked = services.stream().map(service -> {
             BookedService before = previous.get(service.getId());

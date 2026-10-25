@@ -12,8 +12,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * servicio ofrecido por un negocio
- * nombre separado del servicio interno
+ * servicio que ofrece el negocio (corte, tinte...) con su precio, duracion e impuesto
+ * se llama Offering y no BusinessService para no confundirlo con los @Service de Spring (B9)
  */
 @Entity
 @Table(name = "services")
@@ -21,7 +21,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class BusinessService {
+public class Offering {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

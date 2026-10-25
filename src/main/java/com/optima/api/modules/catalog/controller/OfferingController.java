@@ -1,8 +1,8 @@
 package com.optima.api.modules.catalog.controller;
 
 import com.optima.api.modules.catalog.dto.request.ServiceRequest;
-import com.optima.api.modules.catalog.dto.response.BusinessServiceResponse;
-import com.optima.api.modules.catalog.service.BusinessServiceService;
+import com.optima.api.modules.catalog.dto.response.OfferingResponse;
+import com.optima.api.modules.catalog.service.OfferingService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
@@ -19,41 +19,41 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/businesses/{businessId}/services")
 @RequiredArgsConstructor
 @Validated
-public class BusinessServiceController {
+public class OfferingController {
 
-    private final BusinessServiceService businessServiceService;
+    private final OfferingService offeringService;
 
     /** crea un servicio del catalogo */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
-    public BusinessServiceResponse createService(@PathVariable @Positive Long businessId,
+    public OfferingResponse createService(@PathVariable @Positive Long businessId,
                                          @Valid @RequestBody ServiceRequest request) {
-        return businessServiceService.createService(businessId, request);
+        return offeringService.createService(businessId, request);
     }
 
     /** lista de servicios del negocio */
     @GetMapping
-    public Page<BusinessServiceResponse> getServicesByBusiness(@PathVariable @Positive Long businessId,
+    public Page<OfferingResponse> getServicesByBusiness(@PathVariable @Positive Long businessId,
                                                        @RequestParam(defaultValue = "true") boolean active,
                                                        @PageableDefault(sort = "name") Pageable pageable) {
-        return businessServiceService.getActiveServicesByBusiness(businessId, active, pageable);
+        return offeringService.getActiveServicesByBusiness(businessId, active, pageable);
     }
 
     /** obtiene un servicio del negocio */
     @GetMapping("/{id}")
-    public BusinessServiceResponse getServiceById(@PathVariable @Positive Long businessId,
+    public OfferingResponse getServiceById(@PathVariable @Positive Long businessId,
                                           @PathVariable @Positive Long id) {
-        return businessServiceService.getServiceById(businessId, id);
+        return offeringService.getServiceById(businessId, id);
     }
 
     /** actualiza un servicio del catalogo */
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public BusinessServiceResponse updateService(@PathVariable @Positive Long businessId,
+    public OfferingResponse updateService(@PathVariable @Positive Long businessId,
                                          @PathVariable @Positive Long id,
                                          @Valid @RequestBody ServiceRequest request) {
-        return businessServiceService.updateService(businessId, id, request);
+        return offeringService.updateService(businessId, id, request);
     }
 
     /** desactiva un servicio del catalogo */
@@ -61,14 +61,14 @@ public class BusinessServiceController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('ADMIN')")
     public void deactivateService(@PathVariable @Positive Long businessId, @PathVariable @Positive Long id) {
-        businessServiceService.deactivateService(businessId, id);
+        offeringService.deactivateService(businessId, id);
     }
 
     /** reactiva un servicio desactivado */
     @PatchMapping("/{id}/reactivate")
     @PreAuthorize("hasRole('ADMIN')")
-    public BusinessServiceResponse reactivateService(@PathVariable @Positive Long businessId,
+    public OfferingResponse reactivateService(@PathVariable @Positive Long businessId,
                                                      @PathVariable @Positive Long id) {
-        return businessServiceService.reactivateService(businessId, id);
+        return offeringService.reactivateService(businessId, id);
     }
 }

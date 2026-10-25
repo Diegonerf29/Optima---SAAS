@@ -6,10 +6,10 @@ import com.optima.api.modules.business.model.Tax;
 import com.optima.api.modules.business.repository.BusinessRepository;
 import com.optima.api.modules.business.repository.TaxRepository;
 import com.optima.api.modules.catalog.dto.request.ServiceRequest;
-import com.optima.api.modules.catalog.dto.response.BusinessServiceResponse;
-import com.optima.api.modules.catalog.model.BusinessService;
+import com.optima.api.modules.catalog.dto.response.OfferingResponse;
+import com.optima.api.modules.catalog.model.Offering;
 import com.optima.api.modules.catalog.model.ServiceCategory;
-import com.optima.api.modules.catalog.repository.BusinessServiceRepository;
+import com.optima.api.modules.catalog.repository.OfferingRepository;
 import com.optima.api.modules.catalog.repository.ServiceCategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,15 +25,15 @@ import java.time.LocalDateTime;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class BusinessServiceService {
+public class OfferingService {
 
-    private final BusinessServiceRepository serviceRepository;
+    private final OfferingRepository serviceRepository;
     private final BusinessRepository businessRepository;
     private final ServiceCategoryRepository categoryRepository;
     private final TaxRepository taxRepository;
 
     /** crea un servicio nuevo dentro del negocio */
-    public BusinessServiceResponse createService(Long businessId, ServiceRequest request) {
+    public OfferingResponse createService(Long businessId, ServiceRequest request) {
 
         String name = request.name().trim();
 
@@ -66,7 +66,7 @@ public class BusinessServiceService {
                     "El impuesto con ID: " + request.taxId() + " está desactivado");
         }
 
-        BusinessService newService = new BusinessService();
+        Offering newService = new Offering();
         newService.setBusiness(business);
         newService.setCategory(category);
         newService.setTax(tax);
@@ -75,27 +75,27 @@ public class BusinessServiceService {
         newService.setPrice(request.price());
         newService.setDurationMinutes(request.durationMinutes());
 
-        return BusinessServiceResponse.from(serviceRepository.save(newService));
+        return OfferingResponse.from(serviceRepository.save(newService));
     }
 
     /** lista los servicios segun queramos activos o archivados */
     @Transactional(readOnly = true)
-    public Page<BusinessServiceResponse> getActiveServicesByBusiness(Long businessId, boolean active, Pageable pageable) {
-        Page<BusinessService> page = active
+    public Page<OfferingResponse> getActiveServicesByBusiness(Long businessId, boolean active, Pageable pageable) {
+        Page<Offering> page = active
                 ? serviceRepository.findByBusinessIdAndIsActiveTrue(businessId, pageable)
                 : serviceRepository.findByBusinessIdAndIsActiveFalse(businessId, pageable);
-        return page.map(BusinessServiceResponse::from);
+        return page.map(OfferingResponse::from);
     }
 
     /** devuelve un servicio concreto */
     @Transactional(readOnly = true)
-    public BusinessServiceResponse getServiceById(Long businessId, Long id) {
-        return BusinessServiceResponse.from(findOrThrow(businessId, id));
+    public OfferingResponse getServiceById(Long businessId, Long id) {
+        return OfferingResponse.from(findOrThrow(businessId, id));
     }
 
     /** se actualiza los datos editables */
-    public BusinessServiceResponse updateService(Long businessId, Long id, ServiceRequest request) {
-        BusinessService service = findOrThrow(businessId, id);
+    public OfferingResponse updateService(Long businessId, Long id, ServiceRequest request) {
+        Offering service = findOrThrow(businessId, id);
 
         // solo miramos duplicados si de verdad cambia el nombre
         String newName = request.name().trim();
@@ -132,12 +132,12 @@ public class BusinessServiceService {
         service.setPrice(request.price());
         service.setDurationMinutes(request.durationMinutes());
 
-        return BusinessServiceResponse.from(serviceRepository.save(service));
+        return OfferingResponse.from(serviceRepository.save(service));
     }
 
     /** archiva sin borrar */
     public void deactivateService(Long businessId, Long id) {
-        BusinessService service = findOrThrow(businessId, id);
+        Offering service = findOrThrow(businessId, id);
         if (!service.getIsActive()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "El servicio ya está desactivado");
@@ -148,8 +148,8 @@ public class BusinessServiceService {
     }
 
     /** reactiva un servicio archivado si su categoria e impuesto siguen bien */
-    public BusinessServiceResponse reactivateService(Long businessId, Long id) {
-        BusinessService service = findOrThrow(businessId, id);
+    public OfferingResponse reactivateService(Long businessId, Long id) {
+        Offering service = findOrThrow(businessId, id);
         if (service.getIsActive()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "El servicio ya está activo");
@@ -170,11 +170,11 @@ public class BusinessServiceService {
         }
         service.setIsActive(true);
         service.setDeactivatedAt(null);
-        return BusinessServiceResponse.from(serviceRepository.save(service));
+        return OfferingResponse.from(serviceRepository.save(service));
     }
 
     /** busca el servicio dentro del negocio y si no lanza error */
-    private BusinessService findOrThrow(Long businessId, Long id) {
+    private Offering findOrThrow(Long businessId, Long id) {
         return serviceRepository.findByIdAndBusinessId(id, businessId)
                 .orElseThrow(() -> new NotFoundException("el servicio", id));
     }

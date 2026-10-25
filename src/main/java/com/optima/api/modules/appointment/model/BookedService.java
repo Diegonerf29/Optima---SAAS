@@ -1,6 +1,6 @@
 package com.optima.api.modules.appointment.model;
 
-import com.optima.api.modules.catalog.model.BusinessService;
+import com.optima.api.modules.catalog.model.Offering;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -34,7 +34,7 @@ public class BookedService {
     /** servicio que se reservo */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_service", nullable = false)
-    private BusinessService service;
+    private Offering service;
 
     /** precio usado al reservar */
     @Column(name = "applied_price", nullable = false, precision = 10, scale = 2)

@@ -6,7 +6,7 @@ import com.optima.api.modules.business.dto.response.TaxResponse;
 import com.optima.api.modules.business.model.Tax;
 import com.optima.api.modules.business.repository.BusinessRepository;
 import com.optima.api.modules.business.repository.TaxRepository;
-import com.optima.api.modules.catalog.repository.BusinessServiceRepository;
+import com.optima.api.modules.catalog.repository.OfferingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,7 +25,7 @@ public class TaxService {
 
     private final TaxRepository taxRepository;
     private final BusinessRepository businessRepository;
-    private final BusinessServiceRepository businessServiceRepository;
+    private final OfferingRepository offeringRepository;
 
     /**
      * crea un impuesto nuevo del negocio
@@ -95,7 +95,7 @@ public class TaxService {
                 "El impuesto ya está desactivado");
         }
         // igual que con las categorias: no se archiva si lo usan servicios activos (B11)
-        long activeServices = businessServiceRepository.countByTaxIdAndIsActiveTrue(id);
+        long activeServices = offeringRepository.countByTaxIdAndIsActiveTrue(id);
         if (activeServices > 0) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                 "No se puede archivar el impuesto: lo usan " + activeServices

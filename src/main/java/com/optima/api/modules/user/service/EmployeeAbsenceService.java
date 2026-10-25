@@ -42,11 +42,11 @@ public class EmployeeAbsenceService {
     /**
      * crea una ausencia para un empleado del negocio
      */
-    public EmployeeAbsenceResponse create(Long businessId, Long userId, EmployeeAbsenceRequest request) {
-        Membership membership = membershipRepository.getInBusiness(userId, businessId);
+    public EmployeeAbsenceResponse create(Long businessId, Long membershipId, EmployeeAbsenceRequest request) {
+        Membership membership = membershipRepository.getInBusiness(membershipId, businessId);
         validateRange(request.startDateTime(), request.endDateTime());
 
-        validateNoOverlap(userId, request.startDateTime(), request.endDateTime(), null);
+        validateNoOverlap(membershipId, request.startDateTime(), request.endDateTime(), null);
 
         EmployeeAbsence a = new EmployeeAbsence();
         a.setMembership(membership);
@@ -61,9 +61,9 @@ public class EmployeeAbsenceService {
      * lista de ausencias del empleado
      */
     @Transactional(readOnly = true)
-    public Page<EmployeeAbsenceResponse> listByEmployee(Long businessId, Long userId, Pageable pageable) {
-        membershipRepository.getInBusiness(userId, businessId);
-        return absenceRepository.findByMembershipIdOrderByStartDateTimeAsc(userId, pageable)
+    public Page<EmployeeAbsenceResponse> listByEmployee(Long businessId, Long membershipId, Pageable pageable) {
+        membershipRepository.getInBusiness(membershipId, businessId);
+        return absenceRepository.findByMembershipIdOrderByStartDateTimeAsc(membershipId, pageable)
                 .map(EmployeeAbsenceResponse::from);
     }
 
@@ -71,20 +71,20 @@ public class EmployeeAbsenceService {
      * obtiene una ausencia concreta del empleado
      */
     @Transactional(readOnly = true)
-    public EmployeeAbsenceResponse getById(Long businessId, Long userId, Long id) {
-        membershipRepository.getInBusiness(userId, businessId);
-        return EmployeeAbsenceResponse.from(findOrThrow(userId, id));
+    public EmployeeAbsenceResponse getById(Long businessId, Long membershipId, Long id) {
+        membershipRepository.getInBusiness(membershipId, businessId);
+        return EmployeeAbsenceResponse.from(findOrThrow(membershipId, id));
     }
 
     /**
      * actualiza el rango y motivo de una ausencia existente
      */
-    public EmployeeAbsenceResponse update(Long businessId, Long userId, Long id, EmployeeAbsenceRequest request) {
-        membershipRepository.getInBusiness(userId, businessId);
+    public EmployeeAbsenceResponse update(Long businessId, Long membershipId, Long id, EmployeeAbsenceRequest request) {
+        membershipRepository.getInBusiness(membershipId, businessId);
         validateRange(request.startDateTime(), request.endDateTime());
 
-        EmployeeAbsence a = findOrThrow(userId, id);
-        validateNoOverlap(userId, request.startDateTime(), request.endDateTime(), id);
+        EmployeeAbsence a = findOrThrow(membershipId, id);
+        validateNoOverlap(membershipId, request.startDateTime(), request.endDateTime(), id);
 
         a.setStartDateTime(request.startDateTime());
         a.setEndDateTime(request.endDateTime());
@@ -96,9 +96,9 @@ public class EmployeeAbsenceService {
     /**
      * elimina una ausencia
      */
-    public void delete(Long businessId, Long userId, Long id) {
-        membershipRepository.getInBusiness(userId, businessId);
-        EmployeeAbsence a = findOrThrow(userId, id);
+    public void delete(Long businessId, Long membershipId, Long id) {
+        membershipRepository.getInBusiness(membershipId, businessId);
+        EmployeeAbsence a = findOrThrow(membershipId, id);
         absenceRepository.delete(a);
     }
 

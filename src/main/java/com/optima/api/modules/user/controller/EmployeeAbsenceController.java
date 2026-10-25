@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 /** rutas para ausencias puntuales de empleados */
 @RestController
-@RequestMapping("/api/businesses/{businessId}/users/{userId}/absences")
+@RequestMapping("/api/businesses/{businessId}/users/{membershipId}/absences")
 @RequiredArgsConstructor
 @Validated
 public class EmployeeAbsenceController {
@@ -30,9 +30,9 @@ public class EmployeeAbsenceController {
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
     public EmployeeAbsenceResponse create(@PathVariable @Positive Long businessId,
-                                          @PathVariable @Positive Long userId,
+                                          @PathVariable @Positive Long membershipId,
                                           @Valid @RequestBody EmployeeAbsenceRequest request) {
-        return absenceService.create(businessId, userId, request);
+        return absenceService.create(businessId, membershipId, request);
     }
 
     /**
@@ -40,9 +40,9 @@ public class EmployeeAbsenceController {
      */
     @GetMapping
     public Page<EmployeeAbsenceResponse> listByEmployee(@PathVariable @Positive Long businessId,
-                                                        @PathVariable @Positive Long userId,
+                                                        @PathVariable @Positive Long membershipId,
                                                         @PageableDefault(sort = {"startDateTime", "id"}) Pageable pageable) {
-        return absenceService.listByEmployee(businessId, userId, pageable);
+        return absenceService.listByEmployee(businessId, membershipId, pageable);
     }
 
     /**
@@ -50,9 +50,9 @@ public class EmployeeAbsenceController {
      */
     @GetMapping("/{id}")
     public EmployeeAbsenceResponse getById(@PathVariable @Positive Long businessId,
-                                           @PathVariable @Positive Long userId,
+                                           @PathVariable @Positive Long membershipId,
                                            @PathVariable @Positive Long id) {
-        return absenceService.getById(businessId, userId, id);
+        return absenceService.getById(businessId, membershipId, id);
     }
 
     /**
@@ -61,10 +61,10 @@ public class EmployeeAbsenceController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public EmployeeAbsenceResponse update(@PathVariable @Positive Long businessId,
-                                          @PathVariable @Positive Long userId,
+                                          @PathVariable @Positive Long membershipId,
                                           @PathVariable @Positive Long id,
                                           @Valid @RequestBody EmployeeAbsenceRequest request) {
-        return absenceService.update(businessId, userId, id, request);
+        return absenceService.update(businessId, membershipId, id, request);
     }
 
     /**
@@ -74,8 +74,8 @@ public class EmployeeAbsenceController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('ADMIN')")
     public void delete(@PathVariable @Positive Long businessId,
-                       @PathVariable @Positive Long userId,
+                       @PathVariable @Positive Long membershipId,
                        @PathVariable @Positive Long id) {
-        absenceService.delete(businessId, userId, id);
+        absenceService.delete(businessId, membershipId, id);
     }
 }
