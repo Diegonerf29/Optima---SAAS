@@ -4,6 +4,7 @@ import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { PublicLayout } from '@/features/public/PublicLayout'
+import { PLAN } from '@/lib/plan'
 
 const VENTAJAS = [
   {
@@ -70,6 +71,10 @@ export default function LandingPage() {
       <section className="mx-auto max-w-3xl px-4 py-16 text-center">
         <h2 className="text-2xl font-semibold">Un precio sencillo</h2>
         <p className="mt-2 text-muted-foreground">Un único plan con todo incluido para tu local.</p>
+        <p className="mt-6">
+          <span className="text-4xl font-bold">{PLAN.precio}</span> <span className="text-muted-foreground">{PLAN.periodo}</span>
+        </p>
+        <p className="text-sm text-muted-foreground">Los primeros {PLAN.diasPrueba} días, gratis y sin tarjeta. Cancela cuando quieras.</p>
         <ul className="mx-auto mt-6 grid max-w-sm gap-2 text-left text-sm">
           {[
             'Agenda y clientes ilimitados',

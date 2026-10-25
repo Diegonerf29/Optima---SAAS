@@ -1,7 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 
 import { api, unwrap } from '@/api/client'
-import type { Appointment } from '@/api/types'
+import type { Appointment, Billing } from '@/api/types'
 import { useTenant } from '@/auth/context'
 
 /*
@@ -160,6 +160,19 @@ export function useBusinessAbsences(from: string, to: string) {
   return useQuery({
     queryKey: [...keys.all(businessId, 'absences'), { from, to }],
     queryFn: () => unwrap(api.GET('/api/businesses/{businessId}/absences', { params: { path: { businessId }, query: { from, to } } })),
+  })
+}
+
+/**
+ * suscripcion del negocio (fase 9): prueba gratis, pagada, caducada...
+ * repetirCada: cada cuanto volver a preguntar (por ejemplo, mientras se espera la confirmacion de un pago)
+ */
+export function useBilling(repetirCada?: (billing: Billing | undefined) => number | false) {
+  const { businessId } = useTenant()
+  return useQuery({
+    queryKey: keys.all(businessId, 'billing'),
+    queryFn: () => unwrap(api.GET('/api/businesses/{businessId}/billing', { params: { path: { businessId } } })),
+    refetchInterval: repetirCada ? (query) => repetirCada(query.state.data) : undefined,
   })
 }
 

@@ -5,7 +5,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router'
 import { toast } from 'sonner'
 
 import { api, errorMessage, unwrap } from '@/api/client'
-import { keys, useBusiness, useMe } from '@/api/queries'
+import { keys, useBilling, useBusiness, useMe } from '@/api/queries'
 import { useAuth, useTenant } from '@/auth/context'
 import { Loading } from '@/components/common/States'
 import { Logo } from '@/components/layout/Logo'
@@ -21,6 +21,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+import { SubscriptionBlocked } from '@/features/billing/SubscriptionBlocked'
+import { TrialBanner } from '@/features/billing/TrialBanner'
 import { iniciales } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
@@ -151,6 +153,22 @@ function NegocioDesactivado() {
   )
 }
 
+/** contenido de la pagina segun el estado del negocio y de su suscripcion */
+function Contenido() {
+  const business = useBusiness()
+  const billing = useBilling()
+  if (business.isPending || billing.isPending) return <Loading />
+  if (business.data?.isActive === false) return <NegocioDesactivado />
+  const b = billing.data
+  if (b?.enabled && !b.hasAccess) return <SubscriptionBlocked trialEnded={b.status === 'TRIALING'} />
+  return (
+    <>
+      {b && <TrialBanner billing={b} />}
+      <Outlet />
+    </>
+  )
+}
+
 export default function AppLayout() {
   const business = useBusiness()
   const [menuAbierto, setMenuAbierto] = useState(false)
@@ -186,7 +204,7 @@ export default function AppLayout() {
 
         <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
           <AvisoEmail />
-          {business.isPending ? <Loading /> : business.data?.isActive === false ? <NegocioDesactivado /> : <Outlet />}
+          <Contenido />
         </main>
       </div>
     </div>

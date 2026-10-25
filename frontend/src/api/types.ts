@@ -22,6 +22,7 @@ export type Appointment = S['AppointmentResponse']
 export type Availability = S['AvailabilityResponse']
 export type AvailabilitySlot = S['AvailabilitySlotResponse']
 export type Role = S['RoleResponse']
+export type Billing = S['BillingResponse']
 
 /** pagina de resultados: {content, page: {size, number, totalElements, totalPages}} */
 export type Page<T> = { content?: T[]; page?: S['PageMetadata'] }
