@@ -36,6 +36,9 @@ Cada cambio que se aplica al código se apunta aquí y en la columna **Estado** 
 | 25/10/2026 | `f07bd9f` | Zona horaria por negocio (`timezone`, migración V5) y `BusinessClock` para "ahora" y "hoy"; sin huecos pasados, sin mover citas al pasado y citas en curso solo con cambio de notas (pasos 3.4 y 3.5) | M14 ✅, B12 ✅ |
 | 25/10/2026 | `9095e55` | Bloqueos de BD responden 409 y la búsqueda de clientes escapa `%` y `_` (paso 3.6) | B20 ✅ |
 | 25/10/2026 | `7d176b7` | Orden por defecto en todos los listados paginados (paso 3.7) | B17 ✅ |
+| 25/10/2026 | `f0220d6` | Permisos según D1 (solo ADMIN deshace cobros y archiva clientes; un EMPLOYEE no ve el contacto de sus compañeros) y registro de cobros: quién, cuándo y forma de pago, sin cobrar canceladas, sin recalcular precios al editar y con `total`/`taxAmount`/`subtotal` calculados en el servidor (pasos 4.1 y 4.2, migración V6) | M7 ✅, M8 ✅ |
+| 25/10/2026 | `51a1ed6` | El negocio siempre conserva un ADMIN y no se archivan impuestos usados por servicios activos (paso 4.3) | B13 ✅, B11 ✅ |
+| 25/10/2026 | `5682e25` | Emails al cliente: confirmación, cambio de hora, cancelación y recordatorio 24 h antes, tras confirmar la transacción y desactivables por negocio (paso 4.4, migración V7) | — (P6 del plan) |
 
 **Estados:** ⏳ Pendiente · 🟡 En parte · ✅ Resuelto
 
@@ -89,8 +92,8 @@ Además hay 14 problemas de gravedad media (por ejemplo, **doble reserva posible
 | M4 | Negocio desactivado: los tokens siguen funcionando y no se puede reactivar | Permisos | 🟠 Media | `common/security/TenantGuardFilter.java:72` | ✅ Resuelto |
 | M5 | Los tokens no se invalidan al cambiar contraseña; email cambiable sin contraseña | Autenticación | 🟠 Media | `modules/user/service/UserService.java:163` | ✅ Resuelto |
 | M6 | "Olvidé mi contraseña" permite enumerar cuentas por tiempo y deja tokens viejos válidos | Autenticación | 🟠 Media | `modules/auth/service/PasswordResetService.java:53` | ✅ Resuelto |
-| M7 | Un empleado puede modificar cualquier cita, pagos y clientes | Permisos | 🟠 Media | `AppointmentController.java:72`, `ClientController.java:58` | ⏳ Pendiente |
-| M8 | El estado de pago no tiene control ni registro y editar recalcula precios | Pagos | 🟠 Media | `AppointmentService.java:550` | ⏳ Pendiente |
+| M7 | Un empleado puede modificar cualquier cita, pagos y clientes | Permisos | 🟠 Media | `AppointmentController.java:72`, `ClientController.java:58` | ✅ Resuelto |
+| M8 | El estado de pago no tiene control ni registro y editar recalcula precios | Pagos | 🟠 Media | `AppointmentService.java:550` | ✅ Resuelto |
 | M9 | `POST /api/businesses` crea negocios huérfanos | API / permisos | 🟠 Media | `modules/business/controller/BusinessController.java:25` | ✅ Resuelto |
 | M10 | Base de datos y Docker con configuración insegura para producción | Configuración / BD | 🟠 Media | `docker-compose.yml`, `docs/schema_v20.sql:902` | ⏳ Pendiente |
 | M11 | Dependencias desactualizadas con vulnerabilidades conocidas | Dependencias | 🟠 Media | `pom.xml:8` | ✅ Resuelto |
@@ -107,9 +110,9 @@ Además hay 14 problemas de gravedad media (por ejemplo, **doble reserva posible
 | B8 | Lógica duplicada en ausencias y horarios de empleados | Código repetido | 🟢 Baja | `EmployeeAbsenceService.java:48` | ⏳ Pendiente |
 | B9 | Nombres engañosos (`{userId}` es un id de membresía, etc.) | Estructura | 🟢 Baja | `EmployeeAbsenceController.java:19` | ⏳ Pendiente |
 | B10 | Estados y roles como texto suelto; IDs fijos en el SQL | Estructura / BD | 🟢 Baja | `schema_v20.sql:185` | 🟡 En parte |
-| B11 | Un impuesto se puede archivar aunque lo usen servicios activos | API | 🟢 Baja | `TaxService.java:88` | ⏳ Pendiente |
+| B11 | Un impuesto se puede archivar aunque lo usen servicios activos | API | 🟢 Baja | `TaxService.java:88` | ✅ Resuelto |
 | B12 | Huecos pasados en disponibilidad y edición de citas hacia el pasado | API | 🟢 Baja | `UpdateAppointmentRequest.java:23` | ✅ Resuelto |
-| B13 | Un negocio puede quedarse sin ningún administrador | Permisos | 🟢 Baja | `UserService.java:98` | ⏳ Pendiente |
+| B13 | Un negocio puede quedarse sin ningún administrador | Permisos | 🟢 Baja | `UserService.java:98` | ✅ Resuelto |
 | B14 | Filtros de seguridad registrados dos veces | Estructura | 🟢 Baja | `common/security/*Filter.java` | ⏳ Pendiente |
 | B15 | Sin migraciones de BD ni validación del esquema | Base de datos | 🟢 Baja | `application.properties:12`, `schema_v20.sql` | ✅ Resuelto |
 | B16 | La tabla `password_resets` crece sin límite | Base de datos | 🟢 Baja | `PasswordResetService.java` | 🟡 En parte |

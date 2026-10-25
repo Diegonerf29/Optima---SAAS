@@ -185,10 +185,10 @@ Objetivo: trabajar sobre una versión que recibe parches y saber al momento si u
 
 ### Fase 4 — Reglas de negocio: roles y cobros
 
-- [ ] 4.1 Permisos según D1: desmarcar pagos y archivar/reactivar clientes solo ADMIN; un EMPLOYEE no ve el email ni el teléfono de sus compañeros (M7)
-- [ ] 4.2 Cobro de citas: no marcar como pagadas las canceladas o no presentadas, guardar quién y cuándo cobró, no recalcular precios al editar y devolver el `total` calculado en el servidor (M8)
-- [ ] 4.3 Un negocio no puede quedarse sin ADMIN (B13); no archivar impuestos que usan servicios activos (B11)
-- [ ] 4.4 (Opcional) Correo de confirmación de cita al cliente y recordatorio el día antes (P6)
+- [x] 4.1 Permisos según D1: desmarcar pagos y archivar/reactivar clientes solo ADMIN; un EMPLOYEE no ve el email ni el teléfono de sus compañeros (M7)
+- [x] 4.2 Cobro de citas: no marcar como pagadas las canceladas o no presentadas, guardar quién y cuándo cobró, no recalcular precios al editar y devolver el `total` calculado en el servidor (M8)
+- [x] 4.3 Un negocio no puede quedarse sin ADMIN (B13); no archivar impuestos que usan servicios activos (B11)
+- [x] 4.4 (Opcional) Correo de confirmación de cita al cliente y recordatorio el día antes (P6)
 
 ### Fase 5 — Backend preparado para producción
 
