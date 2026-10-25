@@ -1,0 +1,43 @@
+# publica las imagenes Docker en GitHub (ghcr.io) cuando la CI pasa en main (paso 8.6)
+# en el servidor se actualiza con deploy/update.sh, que descarga estas imagenes
+name: Publicar imagenes
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  # tambien se puede lanzar a mano desde la pestaña Actions
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publicar:
+    # solo si la CI ha terminado bien (o si se lanza a mano)
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    env:
+      # el nombre de las imagenes tiene que ir en minusculas
+      API: ghcr.io/diegonerf29/optima-api
+      WEB: ghcr.io/diegonerf29/optima-web
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # exactamente el commit que ha pasado la CI
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Entrar en ghcr.io
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      # cada imagen sale con dos etiquetas: latest y el commit (para poder volver a una version concreta)
+      - name: Construir y publicar
+        run: |
+          VERSION=$(git rev-parse --short HEAD)
+          docker build -t "$API:latest" -t "$API:$VERSION" .
+          docker build -f frontend/Dockerfile -t "$WEB:latest" -t "$WEB:$VERSION" .
+          docker push --all-tags "$API"
+          docker push --all-tags "$WEB"
+          echo "Publicada la version $VERSION" >> "$GITHUB_STEP_SUMMARY"
