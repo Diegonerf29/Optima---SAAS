@@ -29,18 +29,10 @@ public class EmployeeScheduleService {
      * crea un tramo del horario semanal de un empleado
      */
     public EmployeeScheduleResponse create(Long businessId, Long userId, EmployeeScheduleRequest request) {
-        Membership membership = ensureMembershipOfBusiness(businessId, userId);
+        Membership membership = membershipRepository.getInBusiness(userId, businessId);
         validateHours(request.startTime(), request.endTime());
 
-        List<EmployeeSchedule> existingSchedules = scheduleRepository
-                .findAllByMembershipIdAndDayOfWeek(userId, request.dayOfWeek());
-        for (EmployeeSchedule existing : existingSchedules) {
-            if (request.startTime().isBefore(existing.getEndTime())
-                    && request.endTime().isAfter(existing.getStartTime())) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT,
-                        "El empleado ya tiene un tramo en ese horario para ese día");
-            }
-        }
+        validateNoOverlap(userId, request.dayOfWeek(), request.startTime(), request.endTime(), null);
 
         EmployeeSchedule s = new EmployeeSchedule();
         s.setMembership(membership);
@@ -56,7 +48,7 @@ public class EmployeeScheduleService {
      */
     @Transactional(readOnly = true)
     public List<EmployeeScheduleResponse> listByEmployee(Long businessId, Long userId) {
-        ensureMembershipOfBusiness(businessId, userId);
+        membershipRepository.getInBusiness(userId, businessId);
         return scheduleRepository
                 .findAllByMembershipIdOrderByDayOfWeekAscStartTimeAsc(userId)
                 .stream().map(EmployeeScheduleResponse::from).toList();
@@ -67,7 +59,7 @@ public class EmployeeScheduleService {
      */
     @Transactional(readOnly = true)
     public EmployeeScheduleResponse getById(Long businessId, Long userId, Long id) {
-        ensureMembershipOfBusiness(businessId, userId);
+        membershipRepository.getInBusiness(userId, businessId);
         return EmployeeScheduleResponse.from(findOrThrow(userId, id));
     }
 
@@ -75,7 +67,7 @@ public class EmployeeScheduleService {
      * actualiza dia y horas de un tramo existente
      */
     public EmployeeScheduleResponse update(Long businessId, Long userId, Long id, EmployeeScheduleRequest request) {
-        ensureMembershipOfBusiness(businessId, userId);
+        membershipRepository.getInBusiness(userId, businessId);
         validateHours(request.startTime(), request.endTime());
 
         EmployeeSchedule s = findOrThrow(userId, id);
@@ -92,17 +84,9 @@ public class EmployeeScheduleService {
      * elimina un tramo del horario
      */
     public void delete(Long businessId, Long userId, Long id) {
-        ensureMembershipOfBusiness(businessId, userId);
+        membershipRepository.getInBusiness(userId, businessId);
         EmployeeSchedule s = findOrThrow(userId, id);
         scheduleRepository.delete(s);
-    }
-
-    /**
-     * comprueba que la relacion existe y pertenece al negocio
-     */
-    private Membership ensureMembershipOfBusiness(Long businessId, Long membershipId) {
-        return membershipRepository.findByIdAndBusinessId(membershipId, businessId)
-                .orElseThrow(() -> new NotFoundException("el empleado", membershipId));
     }
 
     /** busca el tramo dentro de la relacion */
@@ -126,7 +110,7 @@ public class EmployeeScheduleService {
         List<EmployeeSchedule> existingSchedules = scheduleRepository
                 .findAllByMembershipIdAndDayOfWeek(membershipId, dayOfWeek);
         for (EmployeeSchedule existing : existingSchedules) {
-            if (excludeId != null && excludeId.equals(existing.getId())) continue;
+            if (existing.getId().equals(excludeId)) continue;
             if (startTime.isBefore(existing.getEndTime())
                     && endTime.isAfter(existing.getStartTime())) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT,

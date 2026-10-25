@@ -1,5 +1,6 @@
 package com.optima.api.modules.business.repository;
 
+import com.optima.api.common.exception.NotFoundException;
 import com.optima.api.modules.business.model.Membership;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
@@ -71,4 +72,10 @@ public interface MembershipRepository extends JpaRepository<Membership, Long> {
 
     /** cuenta las personas activas con un rol en un negocio (para no dejarlo sin ADMIN) */
     long countByBusinessIdAndIsActiveTrueAndRoleName(Long businessId, String roleName);
+
+    /** devuelve la membresia del negocio o un 404; lo usan los servicios de horarios y ausencias (B8) */
+    default Membership getInBusiness(Long membershipId, Long businessId) {
+        return findByIdAndBusinessId(membershipId, businessId)
+                .orElseThrow(() -> new NotFoundException("el empleado", membershipId));
+    }
 }

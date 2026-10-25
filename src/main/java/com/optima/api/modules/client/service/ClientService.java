@@ -1,6 +1,7 @@
 package com.optima.api.modules.client.service;
 
 import com.optima.api.common.exception.NotFoundException;
+import com.optima.api.common.utils.TextUtils;
 import com.optima.api.modules.appointment.repository.AppointmentRepository;
 import com.optima.api.modules.business.model.Business;
 import com.optima.api.modules.business.repository.BusinessRepository;
@@ -38,8 +39,8 @@ public class ClientService {
         Client c = new Client();
         c.setBusiness(business);
         c.setFullName(request.fullName().trim());
-        c.setEmail(normalize(request.email()));
-        c.setPhone(normalize(request.phone()));
+        c.setEmail(TextUtils.blankToNull(request.email()));
+        c.setPhone(TextUtils.blankToNull(request.phone()));
         c.setNotes(request.notes());
         c.setIsActive(true);
 
@@ -77,8 +78,8 @@ public class ClientService {
         }
 
         c.setFullName(request.fullName().trim());
-        c.setEmail(normalize(request.email()));
-        c.setPhone(normalize(request.phone()));
+        c.setEmail(TextUtils.blankToNull(request.email()));
+        c.setPhone(TextUtils.blankToNull(request.phone()));
         c.setNotes(request.notes());
 
         return ClientResponse.from(clientRepository.save(c));
@@ -121,12 +122,6 @@ public class ClientService {
                 .orElseThrow(() -> new NotFoundException("el cliente", id));
     }
 
-    /** limpia campos opcionales para que no se guarden vacios innecesarios */
-    private String normalize(String value) {
-        if (value == null) return null;
-        String trimmed = value.trim();
-        return trimmed.isEmpty() ? null : trimmed;
-    }
 
     /**
      * en un LIKE, % y _ son comodines: se escapan con ! para buscarlos como texto (B20)
