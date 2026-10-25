@@ -170,6 +170,13 @@ public class UserService {
                         HttpStatus.NOT_FOUND,
                         "No se encontró el rol con ID: " + request.roleId()));
 
+        // quitar el rol al ultimo ADMIN dejaria el negocio sin nadie que lo gestione (B13)
+        boolean losesAdmin = "ADMIN".equals(m.getRole().getName()) && !"ADMIN".equals(role.getName());
+        if (losesAdmin && membershipRepository.countByBusinessIdAndIsActiveTrueAndRoleName(businessId, "ADMIN") <= 1) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "El negocio debe tener al menos un administrador");
+        }
+
         m.setRole(role);
         m.setColor(request.color());
         return UserResponse.from(membershipRepository.save(m));

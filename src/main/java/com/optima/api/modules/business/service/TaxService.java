@@ -6,6 +6,7 @@ import com.optima.api.modules.business.dto.request.UpdateTaxRequest;
 import com.optima.api.modules.business.model.Tax;
 import com.optima.api.modules.business.repository.BusinessRepository;
 import com.optima.api.modules.business.repository.TaxRepository;
+import com.optima.api.modules.catalog.repository.BusinessServiceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +25,7 @@ public class TaxService {
 
     private final TaxRepository taxRepository;
     private final BusinessRepository businessRepository;
+    private final BusinessServiceRepository businessServiceRepository;
 
     /**
      * crea un impuesto nuevo del negocio
@@ -34,14 +36,16 @@ public class TaxService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                 "No se encontró el negocio con ID: " + businessId));
 
-        if (taxRepository.existsByBusinessIdAndNameIgnoreCase(businessId, request.name())) {
+        // se compara con el nombre ya recortado, igual que se guarda (B11)
+        String name = request.name().trim();
+        if (taxRepository.existsByBusinessIdAndNameIgnoreCase(businessId, name)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                 "Ya existe un impuesto con ese nombre en este negocio");
         }
 
         Tax t = new Tax();
         t.setBusiness(business);
-        t.setName(request.name().trim());
+        t.setName(name);
         t.setPercentage(request.percentage());
         t.setIsActive(true);
 
@@ -90,6 +94,14 @@ public class TaxService {
         if (!t.getIsActive()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                 "El impuesto ya está desactivado");
+        }
+        // igual que con las categorias: no se archiva si lo usan servicios activos (B11)
+        long activeServices = businessServiceRepository.countByTaxIdAndIsActiveTrue(id);
+        if (activeServices > 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "No se puede archivar el impuesto: lo usan " + activeServices
+                    + " servicio" + (activeServices == 1 ? "" : "s") + " activo" + (activeServices == 1 ? "" : "s")
+                    + ". Cambia o archiva esos servicios primero.");
         }
         t.setIsActive(false);
         t.setDeactivatedAt(LocalDateTime.now());

@@ -68,4 +68,7 @@ public interface MembershipRepository extends JpaRepository<Membership, Long> {
     /** lista todas las relaciones de un usuario */
     @EntityGraph(attributePaths = {"business", "role"})
     List<Membership> findAllByUserId(Long userId);
+
+    /** cuenta las personas activas con un rol en un negocio (para no dejarlo sin ADMIN) */
+    long countByBusinessIdAndIsActiveTrueAndRoleName(Long businessId, String roleName);
 }

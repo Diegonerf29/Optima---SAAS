@@ -35,4 +35,7 @@ public interface BusinessServiceRepository extends JpaRepository<BusinessService
 
     /** cuenta los servicios activos asociados a una categoria */
     long countByCategoryIdAndIsActiveTrue(Long categoryId);
+
+    /** cuenta los servicios activos que usan un impuesto */
+    long countByTaxIdAndIsActiveTrue(Long taxId);
 }
