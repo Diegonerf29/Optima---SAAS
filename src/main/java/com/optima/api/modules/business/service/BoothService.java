@@ -27,6 +27,7 @@ public class BoothService {
     private final BoothRepository boothRepository;
     private final BusinessRepository businessRepository;
     private final AppointmentRepository appointmentRepository;
+    private final BusinessClock businessClock;
 
     /**
      * crea una cabina para el negocio
@@ -99,7 +100,7 @@ public class BoothService {
                     "La cabina ya está desactivada");
         }
         long pendientes = appointmentRepository.countActiveByBoothAndBusiness(
-                id, businessId, LocalDateTime.now());
+                id, businessId, businessClock.now(businessId));
         if (pendientes > 0) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "La cabina tiene " + pendientes + " cita(s) pendiente(s); "

@@ -14,6 +14,7 @@ import com.optima.api.modules.business.repository.BusinessHourRepository;
 import com.optima.api.modules.business.repository.BusinessRepository;
 import com.optima.api.modules.business.repository.MembershipRepository;
 import com.optima.api.modules.business.repository.ScheduleBlockRepository;
+import com.optima.api.modules.business.service.BusinessClock;
 import com.optima.api.modules.user.model.EmployeeAbsence;
 import com.optima.api.modules.user.model.EmployeeSchedule;
 import com.optima.api.modules.user.repository.EmployeeAbsenceRepository;
@@ -48,6 +49,7 @@ public class AvailabilityService {
     private final BoothRepository boothRepository;
     private final ScheduleBlockRepository scheduleBlockRepository;
     private final AppointmentRepository appointmentRepository;
+    private final BusinessClock businessClock;
 
     /** calcula la disponibilidad teniendo en cuenta horarios y bloqueos */
     public AvailabilityResponse getAvailability(Long businessId,
@@ -61,6 +63,11 @@ public class AvailabilityService {
         Business business = businessRepository.findById(businessId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "No se encontró el negocio con ID: " + businessId));
+
+        // "hoy" segun la zona horaria del negocio, no la del servidor (M14)
+        if (date.isBefore(businessClock.today(business))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La fecha no puede estar en el pasado");
+        }
 
         int totalDuration = BookableServices.totalMinutes(bookableServices.load(businessId, serviceIds));
 
@@ -108,6 +115,9 @@ public class AvailabilityService {
                                 || !excludeAppointmentId.equals(a.getId()))
                         .toList();
 
+        // si es hoy, no se ofrecen huecos que ya han pasado (B12)
+        LocalDateTime notBefore = date.equals(businessClock.today(business)) ? businessClock.now(business) : null;
+
         // se cargan horarios y ausencias antes de recorrer los huecos
         int interval = business.getAppointmentInterval();
         List<AvailabilitySlotResponse> slots = new ArrayList<>();
@@ -151,7 +161,7 @@ public class AvailabilityService {
                     LocalDateTime dayStart = date.atTime(bh.getStartTime());
                     LocalDateTime dayEnd = date.atTime(bh.getEndTime());
                     addSlotsForEmployeeRange(
-                            slots, date, range, dayStart, dayEnd,
+                            slots, date, range, dayStart, dayEnd, notBefore,
                             interval, totalDuration,
                             emp, absences, empAppts,
                             candidateBooths, blockedBoothIds, activeAppointments
@@ -210,6 +220,7 @@ public class AvailabilityService {
             EmployeeSchedule range,
             LocalDateTime dayStart,
             LocalDateTime dayEnd,
+            LocalDateTime notBefore,
             int interval,
             int totalDuration,
             Membership emp,
@@ -222,6 +233,9 @@ public class AvailabilityService {
         // se cruza el horario del empleado con el tramo del negocio
         LocalDateTime rangeStart = max(date.atTime(range.getStartTime()), dayStart);
         LocalDateTime rangeEnd   = min(date.atTime(range.getEndTime()),   dayEnd);
+        if (notBefore != null) {
+            rangeStart = max(rangeStart, notBefore);
+        }
 
         // se ajusta el inicio al siguiente hueco contando desde la apertura del tramo (M2)
         LocalDateTime cursor = SlotGrid.alignUp(rangeStart, dayStart, interval);

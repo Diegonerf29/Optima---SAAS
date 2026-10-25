@@ -12,7 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.DateTimeException;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 /** logica del modulo de negocios */
@@ -59,6 +61,7 @@ public class BusinessService {
         b.setCountry(request.country());
         b.setPostalCode(request.postalCode());
         b.setAppointmentInterval(interval);
+        b.setTimezone(validTimezone(request.timezone(), "Europe/Madrid"));
         b.setIsActive(true);
 
         geocodingService.geocode(request.address(), request.city(), request.postalCode(), request.country())
@@ -105,6 +108,7 @@ public class BusinessService {
         if (request.appointmentInterval() != null) {
             b.setAppointmentInterval(request.appointmentInterval());
         }
+        b.setTimezone(validTimezone(request.timezone(), b.getTimezone()));
 
         geocodingService.geocode(request.address(), request.city(), request.postalCode(), request.country())
                 .ifPresent(coords -> {
@@ -144,5 +148,18 @@ public class BusinessService {
         return businessRepository.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                 "No se encontró el negocio con ID: " + id));
+    }
+
+    /** comprueba que la zona horaria exista; si viene vacia se deja la que habia */
+    private static String validTimezone(String timezone, String current) {
+        if (timezone == null || timezone.isBlank()) {
+            return current;
+        }
+        try {
+            return ZoneId.of(timezone.trim()).getId();
+        } catch (DateTimeException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "La zona horaria '" + timezone + "' no es válida. Ejemplo: Europe/Madrid");
+        }
     }
 }

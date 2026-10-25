@@ -8,6 +8,7 @@ import com.optima.api.modules.client.dto.request.UpdateClientRequest;
 import com.optima.api.modules.client.dto.response.ClientResponse;
 import com.optima.api.modules.client.model.Client;
 import com.optima.api.modules.client.repository.ClientRepository;
+import com.optima.api.modules.business.service.BusinessClock;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +28,7 @@ public class ClientService {
     private final ClientRepository clientRepository;
     private final BusinessRepository businessRepository;
     private final AppointmentRepository appointmentRepository;
+    private final BusinessClock businessClock;
 
     /** crea el cliente dentro del negocio correspondiente */
     public ClientResponse create(Long businessId, CreateClientRequest request) {
@@ -92,7 +94,7 @@ public class ClientService {
                     "El cliente ya está desactivado");
         }
         long pendientes = appointmentRepository.countActiveByClientAndBusiness(
-                id, businessId, LocalDateTime.now());
+                id, businessId, businessClock.now(businessId));
         if (pendientes > 0) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "El cliente tiene " + pendientes + " cita(s) pendiente(s); "

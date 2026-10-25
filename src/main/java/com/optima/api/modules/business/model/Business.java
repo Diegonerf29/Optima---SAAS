@@ -74,6 +74,10 @@ public class Business {
     @Column(name = "appointment_interval", nullable = false)
     private Integer appointmentInterval = 30;
 
+    /** zona horaria del negocio, por ejemplo Europe/Madrid o Atlantic/Canary */
+    @Column(name = "timezone", nullable = false, length = 50)
+    private String timezone = "Europe/Madrid";
+
     /** indica si el negocio sigue activo */
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;

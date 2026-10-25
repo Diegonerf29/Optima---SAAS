@@ -46,5 +46,9 @@ public record UpdateBusinessRequest(
         )
         String postalCode,
 
-        Integer appointmentInterval
+        Integer appointmentInterval,
+
+        // opcional: si no se indica, Europe/Madrid
+        @Size(max = 50, message = "La zona horaria no puede superar los 50 caracteres")
+        String timezone
 ) {}

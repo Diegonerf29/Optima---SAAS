@@ -1,6 +1,5 @@
 package com.optima.api.modules.appointment.dto.request;
 
-import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -26,8 +25,8 @@ public record CreateAppointmentRequest(
         @Positive(message = "El ID de la cabina debe ser positivo")
         Long boothId,
 
+        // que no sea pasada se comprueba en el servicio con la hora del negocio (M14)
         @NotNull(message = "La fecha/hora de inicio es obligatoria")
-        @FutureOrPresent(message = "La cita no puede ser en el pasado")
         LocalDateTime startDateTime,
 
         @Size(max = 2000, message = "Las notas no pueden superar los 2000 caracteres")

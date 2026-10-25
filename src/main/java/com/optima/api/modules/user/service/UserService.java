@@ -17,6 +17,7 @@ import com.optima.api.modules.user.dto.response.MeResponse;
 import com.optima.api.modules.user.dto.response.UserResponse;
 import com.optima.api.modules.user.model.User;
 import com.optima.api.modules.user.repository.UserRepository;
+import com.optima.api.modules.business.service.BusinessClock;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -45,6 +46,7 @@ public class UserService {
     private final AppointmentRepository appointmentRepository;
     private final MailService mailService;
     private final EmailVerificationService emailVerificationService;
+    private final BusinessClock businessClock;
 
     /** direccion del frontend para el enlace de la invitacion */
     @Value("${app.frontend.url:http://localhost:5173}")
@@ -193,7 +195,7 @@ public class UserService {
                     "El empleado ya está desactivado");
         }
         long pendientes = appointmentRepository.countActiveByMembershipAndBusiness(
-                id, businessId, LocalDateTime.now());
+                id, businessId, businessClock.now(businessId));
         if (pendientes > 0) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "El empleado tiene " + pendientes + " cita(s) pendiente(s); "

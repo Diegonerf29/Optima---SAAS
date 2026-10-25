@@ -20,6 +20,7 @@ public record BusinessResponse(
     BigDecimal latitude,
     BigDecimal longitude,
     Integer appointmentInterval,
+    String timezone,
     Boolean isActive,
     LocalDateTime createdAt,
     LocalDateTime deactivatedAt
@@ -29,7 +30,7 @@ public record BusinessResponse(
             b.getEmail(), b.getPhone(), b.getAddress(),
             b.getCity(), b.getState(), b.getCountry(), b.getPostalCode(),
             b.getLatitude(), b.getLongitude(),
-            b.getAppointmentInterval(), b.getIsActive(), b.getCreatedAt(),
+            b.getAppointmentInterval(), b.getTimezone(), b.getIsActive(), b.getCreatedAt(),
             b.getDeactivatedAt());
     }
 }

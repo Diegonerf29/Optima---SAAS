@@ -19,6 +19,7 @@ import com.optima.api.modules.business.model.Membership;
 import com.optima.api.modules.business.repository.BoothRepository;
 import com.optima.api.modules.business.repository.BusinessRepository;
 import com.optima.api.modules.business.repository.MembershipRepository;
+import com.optima.api.modules.business.service.BusinessClock;
 import com.optima.api.modules.catalog.model.BusinessService;
 import com.optima.api.modules.client.model.Client;
 import com.optima.api.modules.client.repository.ClientRepository;
@@ -37,6 +38,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -69,6 +71,7 @@ public class AppointmentService {
     private final MembershipRepository membershipRepository;
     private final AppointmentValidator validator;
     private final BookableServices bookableServices;
+    private final BusinessClock businessClock;
 
     /**
      * crea una cita nueva
@@ -86,8 +89,9 @@ public class AppointmentService {
         Membership membership = lockActiveEmployee(businessId, request.membershipId());
         Booth booth = request.boothId() != null ? lockActiveBooth(businessId, request.boothId()) : null;
 
-        List<BusinessService> services = bookableServices.load(businessId, request.serviceIds());
         LocalDateTime start = request.startDateTime();
+        validateNotInPast(business, start);
+        List<BusinessService> services = bookableServices.load(businessId, request.serviceIds());
         LocalDateTime end = start.plusMinutes(BookableServices.totalMinutes(services));
         validateSlot(business, membership, booth, start, end, null);
 
@@ -206,6 +210,22 @@ public class AppointmentService {
         List<BusinessService> services = bookableServices.load(businessId, request.serviceIds());
         LocalDateTime start = request.startDateTime();
         LocalDateTime end = start.plusMinutes(BookableServices.totalMinutes(services));
+
+        boolean scheduleChanges = !start.equals(appointment.getStartDateTime())
+                || !end.equals(appointment.getEndDateTime())
+                || !membership.getId().equals(appointment.getMembership().getId())
+                || !Objects.equals(booth != null ? booth.getId() : null,
+                                   appointment.getBooth() != null ? appointment.getBooth().getId() : null)
+                || !serviceIdsOf(services).equals(bookedServiceIds(appointment));
+        // una cita que ya ha empezado no se mueve ni cambia de servicios (B12)
+        if (scheduleChanges && "IN_PROGRESS".equals(currentStatus)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Una cita en curso solo permite cambiar las notas");
+        }
+        // si cambia la hora, la nueva no puede ser pasada (B12, M14)
+        if (!start.equals(appointment.getStartDateTime())) {
+            validateNotInPast(business, start);
+        }
         // la propia cita no cuenta como ocupada
         validateSlot(business, membership, booth, start, end, appointmentId);
 
@@ -237,6 +257,23 @@ public class AppointmentService {
     }
 
     // pasos comunes de crear y editar
+
+    private static Set<Long> serviceIdsOf(List<BusinessService> services) {
+        return services.stream().map(BusinessService::getId).collect(Collectors.toSet());
+    }
+
+    private Set<Long> bookedServiceIds(Appointment appointment) {
+        return bookedServiceRepository.findAllByAppointmentId(appointment.getId()).stream()
+                .map(b -> b.getService().getId())
+                .collect(Collectors.toSet());
+    }
+
+    /** una cita no puede empezar antes de la hora actual del negocio (M14) */
+    private void validateNotInPast(Business business, LocalDateTime start) {
+        if (start.isBefore(businessClock.now(business))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La cita no puede ser en el pasado");
+        }
+    }
 
     /** todas las comprobaciones de horario y solapes de un hueco */
     private void validateSlot(Business business, Membership membership, Booth booth,
