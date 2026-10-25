@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -36,7 +37,7 @@ public class BusinessServiceController {
     @GetMapping
     public Page<BusinessServiceResponse> getServicesByBusiness(@PathVariable @Positive Long businessId,
                                                        @RequestParam(defaultValue = "true") boolean active,
-                                                       Pageable pageable) {
+                                                       @PageableDefault(sort = "name") Pageable pageable) {
         return businessServiceService.getActiveServicesByBusiness(businessId, active, pageable);
     }
 

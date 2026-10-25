@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -41,7 +42,7 @@ public class EmployeeAbsenceController {
     @GetMapping
     public Page<EmployeeAbsenceResponse> listByEmployee(@PathVariable @Positive Long businessId,
                                                         @PathVariable @Positive Long userId,
-                                                        Pageable pageable) {
+                                                        @PageableDefault(sort = {"startDateTime", "id"}) Pageable pageable) {
         return absenceService.listByEmployee(businessId, userId, pageable);
     }
 

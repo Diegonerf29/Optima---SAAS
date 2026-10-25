@@ -11,6 +11,7 @@ import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
@@ -42,7 +43,7 @@ public class AppointmentController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(required = false) @Positive Long membershipId,
-            Pageable pageable) {
+            @PageableDefault(sort = {"startDateTime", "id"}) Pageable pageable) {
         return appointmentService.searchAppointments(businessId, from, to, membershipId, pageable);
     }
 

@@ -10,6 +10,7 @@ import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -42,7 +43,7 @@ public class UserController {
      */
     @GetMapping("/invitations")
     @PreAuthorize("hasRole('ADMIN')")
-    public Page<UserResponse> listInvitations(@PathVariable @Positive Long businessId, Pageable pageable) {
+    public Page<UserResponse> listInvitations(@PathVariable @Positive Long businessId, @PageableDefault(sort = "invitedAt") Pageable pageable) {
         return userService.listInvitations(businessId, pageable);
     }
 
@@ -52,7 +53,7 @@ public class UserController {
     @GetMapping
     public Page<UserResponse> listByBusiness(@PathVariable @Positive Long businessId,
                                              @RequestParam(defaultValue = "true") boolean active,
-                                             Pageable pageable) {
+                                             @PageableDefault(sort = {"user.fullName", "id"}) Pageable pageable) {
         return userService.listByBusiness(businessId, active, pageable);
     }
 
