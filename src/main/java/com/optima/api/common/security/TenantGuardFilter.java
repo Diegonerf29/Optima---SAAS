@@ -1,6 +1,7 @@
 package com.optima.api.common.security;
 
 import com.optima.api.common.exception.ErrorWriter;
+import com.optima.api.modules.billing.service.BillingService;
 import com.optima.api.modules.business.model.Membership;
 import com.optima.api.modules.business.repository.MembershipRepository;
 import jakarta.servlet.FilterChain;
@@ -34,6 +35,7 @@ public class TenantGuardFilter extends OncePerRequestFilter {
 
     private final ErrorWriter errorWriter;
     private final MembershipRepository membershipRepository;
+    private final BillingService billingService;
 
     /** compara el negocio de la ruta con el del token */
     @Override
@@ -83,6 +85,13 @@ public class TenantGuardFilter extends OncePerRequestFilter {
                     writeForbidden(response, "El negocio está desactivado. Un administrador puede reactivarlo.");
                     return;
                 }
+                // sin suscripcion (prueba terminada o pago cancelado) solo se puede ver el negocio y pagar (9.7)
+                if (!billingService.hasAccess(membershipOpt.get().getBusiness())
+                        && !isAllowedWithoutSubscription(request, m.group(2))) {
+                    writeError(response, HttpStatus.PAYMENT_REQUIRED,
+                            "La suscripción no está activa. Un administrador puede renovarla en Configuración → Suscripción.");
+                    return;
+                }
             }
         }
 
@@ -96,6 +105,14 @@ public class TenantGuardFilter extends OncePerRequestFilter {
             return "GET".equalsIgnoreCase(method);
         }
         return "PATCH".equalsIgnoreCase(method) && subPath.equals("/reactivate");
+    }
+
+    /** rutas permitidas sin suscripcion: ver el negocio y todo lo de pagos */
+    private boolean isAllowedWithoutSubscription(HttpServletRequest request, String subPath) {
+        if (subPath == null || subPath.equals("/")) {
+            return "GET".equalsIgnoreCase(request.getMethod());
+        }
+        return subPath.equals("/billing") || subPath.startsWith("/billing/");
     }
 
     private void writeForbidden(HttpServletResponse response, String message) throws IOException {

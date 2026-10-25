@@ -85,6 +85,13 @@
 			<version>8.21.0</version>
 		</dependency>
 
+		<!-- suscripciones: Checkout, portal del cliente y firma de los webhooks de Stripe -->
+		<dependency>
+			<groupId>com.stripe</groupId>
+			<artifactId>stripe-java</artifactId>
+			<version>34.0.0</version>
+		</dependency>
+
 		<!-- codigos de sesion -->
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>

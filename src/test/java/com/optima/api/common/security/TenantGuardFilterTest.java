@@ -1,6 +1,7 @@
 package com.optima.api.common.security;
 
 import com.optima.api.common.exception.ErrorWriter;
+import com.optima.api.modules.billing.service.BillingService;
 import com.optima.api.modules.business.model.Business;
 import com.optima.api.modules.business.model.Membership;
 import com.optima.api.modules.business.model.Role;
@@ -19,18 +20,38 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class TenantGuardFilterTest {
 
     private MembershipRepository membershipRepository;
+    private BillingService billingService;
     private TenantGuardFilter filter;
 
     @BeforeEach
     void setUp() {
         membershipRepository = mock(MembershipRepository.class);
-        filter = new TenantGuardFilter(new ErrorWriter(new JsonMapper()), membershipRepository);
+        billingService = mock(BillingService.class);
+        // por defecto la suscripcion esta al dia
+        when(billingService.hasAccess(any())).thenReturn(true);
+        filter = new TenantGuardFilter(new ErrorWriter(new JsonMapper()), membershipRepository, billingService);
+    }
+
+    @Test
+    void sinSuscripcionSoloSeVeElNegocioYSusPagos() throws Exception {
+        autenticar(1L, "ADMIN");
+        when(membershipRepository.findForSessionGuard(10L, 1L)).thenReturn(Optional.of(membresia(true, "ADMIN")));
+        when(billingService.hasAccess(any())).thenReturn(false);
+
+        assertThat(ejecutar("/api/businesses/1/clients").getStatus()).isEqualTo(402);
+        assertThat(ejecutar("PUT", "/api/businesses/1").getStatus()).isEqualTo(402);
+        assertThat(ejecutar("/api/businesses/1").getStatus()).isEqualTo(200);
+        assertThat(ejecutar("/api/businesses/1/billing").getStatus()).isEqualTo(200);
+        assertThat(ejecutar("POST", "/api/businesses/1/billing/checkout").getStatus()).isEqualTo(200);
+        // una ruta que solo empieza igual no cuela
+        assertThat(ejecutar("/api/businesses/1/billingx").getStatus()).isEqualTo(402);
     }
 
     @AfterEach

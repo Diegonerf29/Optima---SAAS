@@ -1,5 +1,6 @@
 package com.optima.api.modules.business.model;
 
+import com.optima.api.modules.billing.model.SubscriptionStatuses;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -93,6 +94,25 @@ public class Business {
     /** momento de la desactivacion sin valor mientras el negocio este activo */
     @Column(name = "deactivated_at")
     private LocalDateTime deactivatedAt;
+
+    /** estado de la suscripcion a Optima (ver SubscriptionStatuses) */
+    @Column(name = "subscription_status", nullable = false, length = 30)
+    private String subscriptionStatus = SubscriptionStatuses.TRIALING;
+
+    /** fin de la prueba gratis, en UTC */
+    @Column(name = "trial_ends_at")
+    private LocalDateTime trialEndsAt;
+
+    /** hasta cuando esta pagado el periodo actual, en UTC */
+    @Column(name = "current_period_end")
+    private LocalDateTime currentPeriodEnd;
+
+    /** cliente y suscripcion en Stripe (vacios hasta que se suscribe) */
+    @Column(name = "stripe_customer_id", length = 255, unique = true)
+    private String stripeCustomerId;
+
+    @Column(name = "stripe_subscription_id", length = 255)
+    private String stripeSubscriptionId;
 
     /** asigna la fecha de creacion antes de guardar */
     @PrePersist

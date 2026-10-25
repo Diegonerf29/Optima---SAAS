@@ -65,6 +65,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/auth/reset-password").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/verify-email").permitAll()
                 .requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**").permitAll()
+                // avisos de Stripe: sin token, pero con su firma comprobada en StripeWebhookService
+                .requestMatchers(HttpMethod.POST, "/api/webhooks/stripe").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/roles").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/appointment-statuses/**").permitAll()
                 // Swagger queda publico para pruebas

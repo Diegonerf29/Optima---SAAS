@@ -6,6 +6,7 @@ import com.optima.api.modules.auth.dto.request.LoginRequest;
 import com.optima.api.modules.auth.dto.request.RegisterRequest;
 import com.optima.api.modules.auth.dto.response.MembershipSummaryResponse;
 import com.optima.api.modules.auth.dto.response.TokenResponse;
+import com.optima.api.modules.billing.service.BillingService;
 import com.optima.api.modules.business.model.Business;
 import com.optima.api.modules.business.model.Membership;
 import com.optima.api.modules.business.model.Role;
@@ -44,6 +45,7 @@ public class AuthService {
     private final MembershipRepository membershipRepository;
     private final RoleRepository roleRepository;
     private final BusinessService businessService;
+    private final BillingService billingService;
     private final TaxService taxService;
     private final ServiceCategoryService categoryService;
     private final PasswordEncoder passwordEncoder;
@@ -166,6 +168,8 @@ public class AuthService {
                         "Error de configuración: no se encontró el rol ADMIN en la base de datos."));
 
         Business business = businessService.createEntity(request.business());
+        // 14 dias de prueba gratis, sin pedir tarjeta (9.3)
+        billingService.startTrial(business);
 
         User user = new User();
         user.setFullName(request.admin().fullName().trim());
