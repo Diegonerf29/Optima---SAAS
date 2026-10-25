@@ -62,6 +62,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/auth/forgot-password").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/reset-password").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/verify-email").permitAll()
+                .requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/roles").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/appointment-statuses/**").permitAll()
                 // Swagger queda publico para pruebas

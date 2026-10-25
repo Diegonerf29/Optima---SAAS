@@ -100,4 +100,14 @@ class AuthIntegrationTest extends IntegrationTest {
                         .content(toJson(Map.of("name", "Huerfano " + u, "slug", "huerfano-" + u, "email", "h-" + u + "@ejemplo.com"))))
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    void laSaludEsPublicaYSinDetalles() throws Exception {
+        mockMvc.perform(get("/actuator/health"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UP"))
+                .andExpect(jsonPath("$.components").doesNotExist());
+        // el resto de Actuator no esta expuesto
+        mockMvc.perform(get("/actuator/env")).andExpect(status().is4xxClientError());
+    }
 }
