@@ -5,8 +5,8 @@ import com.optima.api.modules.business.dto.request.CreateBusinessRequest;
 import com.optima.api.modules.business.dto.request.UpdateBusinessRequest;
 import com.optima.api.modules.business.model.Business;
 import com.optima.api.modules.business.repository.BusinessRepository;
-import com.optima.api.common.geocoding.GeocodingService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.DateTimeException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Objects;
 import java.util.List;
 
 /** logica del modulo de negocios */
@@ -24,7 +25,7 @@ import java.util.List;
 public class BusinessService {
 
     private final BusinessRepository businessRepository;
-    private final GeocodingService geocodingService;
+    private final ApplicationEventPublisher events;
 
     /** crea el negocio y devuelve la entidad para usarla dentro del registro */
     public Business createEntity(CreateBusinessRequest request) {
@@ -64,13 +65,10 @@ public class BusinessService {
         b.setTimezone(validTimezone(request.timezone(), "Europe/Madrid"));
         b.setIsActive(true);
 
-        geocodingService.geocode(request.address(), request.city(), request.postalCode(), request.country())
-                .ifPresent(coords -> {
-                    b.setLatitude(coords.latitude());
-                    b.setLongitude(coords.longitude());
-                });
-
-        return businessRepository.save(b);
+        Business saved = businessRepository.save(b);
+        // las coordenadas se calculan despues de guardar, fuera de la transaccion (B19)
+        events.publishEvent(new BusinessAddressChanged(saved.getId()));
+        return saved;
     }
 
     /** devuelve un negocio aunque este desactivado */
@@ -97,6 +95,11 @@ public class BusinessService {
                 "El intervalo de cita debe ser 15, 30, 45 o 60 minutos");
         }
 
+        boolean addressChanges = !Objects.equals(b.getAddress(), request.address())
+                || !Objects.equals(b.getCity(), request.city())
+                || !Objects.equals(b.getPostalCode(), request.postalCode())
+                || !Objects.equals(b.getCountry(), request.country());
+
         b.setName(request.name().trim());
         b.setEmail(email);
         b.setPhone(request.phone());
@@ -113,12 +116,10 @@ public class BusinessService {
             b.setSendClientEmails(request.sendClientEmails());
         }
 
-        geocodingService.geocode(request.address(), request.city(), request.postalCode(), request.country())
-                .ifPresent(coords -> {
-                    b.setLatitude(coords.latitude());
-                    b.setLongitude(coords.longitude());
-                });
-
+        // solo se vuelve a geocodificar si ha cambiado la direccion
+        if (addressChanges) {
+            events.publishEvent(new BusinessAddressChanged(b.getId()));
+        }
         return BusinessResponse.from(businessRepository.save(b));
     }
 

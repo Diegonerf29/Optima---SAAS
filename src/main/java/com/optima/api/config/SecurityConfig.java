@@ -4,8 +4,10 @@ import com.optima.api.common.exception.ErrorWriter;
 import com.optima.api.common.security.JwtAuthenticationFilter;
 import com.optima.api.common.security.RateLimitFilter;
 import com.optima.api.common.security.TenantGuardFilter;
+import jakarta.servlet.Filter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -97,6 +99,31 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", config);
         return source;
+    }
+
+    /*
+     * los filtros son @Component y Spring Boot los registraria tambien en el servidor, ademas de en
+     * la cadena de seguridad. Con estos tres beans solo se ejecutan dentro de la cadena (B14)
+     */
+    @Bean
+    public FilterRegistrationBean<RateLimitFilter> rateLimitFilterRegistration(RateLimitFilter filter) {
+        return disabledRegistration(filter);
+    }
+
+    @Bean
+    public FilterRegistrationBean<JwtAuthenticationFilter> jwtFilterRegistration(JwtAuthenticationFilter filter) {
+        return disabledRegistration(filter);
+    }
+
+    @Bean
+    public FilterRegistrationBean<TenantGuardFilter> tenantGuardFilterRegistration(TenantGuardFilter filter) {
+        return disabledRegistration(filter);
+    }
+
+    private static <T extends Filter> FilterRegistrationBean<T> disabledRegistration(T filter) {
+        FilterRegistrationBean<T> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
     }
 
     /** crea el cifrado usado para las contraseñas */
