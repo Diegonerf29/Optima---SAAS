@@ -1,0 +1,74 @@
+/* ajustes del calendario para que use los colores de la aplicacion */
+.rbc-calendar {
+  font-family: inherit;
+  color: var(--foreground);
+}
+.rbc-time-view,
+.rbc-month-view,
+.rbc-header,
+.rbc-time-header-content,
+.rbc-time-content,
+.rbc-timeslot-group,
+.rbc-day-slot .rbc-time-slot,
+.rbc-time-header.rbc-overflowing,
+.rbc-day-bg + .rbc-day-bg,
+.rbc-time-content > * + * > * {
+  border-color: var(--border) !important;
+}
+.rbc-time-view {
+  border-radius: var(--radius);
+  background: var(--card);
+}
+.rbc-header {
+  padding: 0.5rem 0.25rem;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+.rbc-label {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+.rbc-today {
+  background: color-mix(in oklch, var(--primary) 5%, transparent);
+}
+.rbc-current-time-indicator {
+  background: var(--destructive);
+  height: 2px;
+}
+.rbc-event {
+  border-radius: 6px;
+  border: none;
+  padding: 2px 6px;
+  font-size: 0.78rem;
+  line-height: 1.2;
+}
+.rbc-event-label {
+  font-size: 0.7rem;
+  opacity: 0.9;
+}
+.rbc-event.rbc-selected {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+.rbc-background-event {
+  background: repeating-linear-gradient(-45deg, var(--muted), var(--muted) 6px, transparent 6px, transparent 12px) !important;
+  color: var(--muted-foreground) !important;
+  border: none !important;
+  opacity: 1 !important;
+}
+.rbc-slot-selection {
+  background: color-mix(in oklch, var(--primary) 20%, transparent);
+  color: var(--primary);
+}
+.rbc-allday-cell {
+  display: none;
+}
+/* horas en las que el local esta cerrado (segun su horario) */
+.rbc-day-slot .rbc-time-slot.rbc-fuera-horario {
+  background: color-mix(in oklch, var(--muted) 70%, transparent);
+}
+/* citas canceladas o de clientes que no vinieron */
+.rbc-event.cita-inactiva {
+  opacity: 0.55;
+  text-decoration: line-through;
+}
