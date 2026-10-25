@@ -1,7 +1,7 @@
 package com.optima.api.modules.business;
 
-import com.optima.api.support.Escenario;
 import com.optima.api.support.Escenario.Empleado;
+import com.optima.api.support.Escenario;
 import com.optima.api.support.IntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;

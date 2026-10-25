@@ -1,8 +1,7 @@
 package com.optima.api.modules.business.controller;
 
-import com.optima.api.modules.business.dto.request.CreateTaxRequest;
+import com.optima.api.modules.business.dto.request.TaxRequest;
 import com.optima.api.modules.business.dto.response.TaxResponse;
-import com.optima.api.modules.business.dto.request.UpdateTaxRequest;
 import com.optima.api.modules.business.service.TaxService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -29,7 +28,7 @@ public class TaxController {
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
     public TaxResponse create(@PathVariable @Positive Long businessId,
-                              @Valid @RequestBody CreateTaxRequest request) {
+                              @Valid @RequestBody TaxRequest request) {
         return taxService.create(businessId, request);
     }
 
@@ -53,7 +52,7 @@ public class TaxController {
     @PreAuthorize("hasRole('ADMIN')")
     public TaxResponse update(@PathVariable @Positive Long businessId,
                               @PathVariable @Positive Long id,
-                              @Valid @RequestBody UpdateTaxRequest request) {
+                              @Valid @RequestBody TaxRequest request) {
         return taxService.update(businessId, id, request);
     }
 

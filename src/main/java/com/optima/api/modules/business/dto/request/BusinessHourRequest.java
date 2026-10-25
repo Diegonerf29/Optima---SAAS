@@ -6,8 +6,8 @@ import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalTime;
 
-/** datos para crear un tramo horario del negocio */
-public record CreateBusinessHourRequest(
+/** datos para crear o actualizar un tramo horario del negocio */
+public record BusinessHourRequest(
 
         @NotNull(message = "El día de la semana es obligatorio")
         @Min(value = 1, message = "El día debe ser entre 1 (lunes) y 7 (domingo)")

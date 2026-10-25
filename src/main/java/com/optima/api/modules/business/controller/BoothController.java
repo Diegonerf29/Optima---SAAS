@@ -1,8 +1,7 @@
 package com.optima.api.modules.business.controller;
 
+import com.optima.api.modules.business.dto.request.BoothRequest;
 import com.optima.api.modules.business.dto.response.BoothResponse;
-import com.optima.api.modules.business.dto.request.CreateBoothRequest;
-import com.optima.api.modules.business.dto.request.UpdateBoothRequest;
 import com.optima.api.modules.business.service.BoothService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -29,7 +28,7 @@ public class BoothController {
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
     public BoothResponse create(@PathVariable @Positive Long businessId,
-                                @Valid @RequestBody CreateBoothRequest request) {
+                                @Valid @RequestBody BoothRequest request) {
         return boothService.create(businessId, request);
     }
 
@@ -53,7 +52,7 @@ public class BoothController {
     @PreAuthorize("hasRole('ADMIN')")
     public BoothResponse update(@PathVariable @Positive Long businessId,
                                 @PathVariable @Positive Long id,
-                                @Valid @RequestBody UpdateBoothRequest request) {
+                                @Valid @RequestBody BoothRequest request) {
         return boothService.update(businessId, id, request);
     }
 

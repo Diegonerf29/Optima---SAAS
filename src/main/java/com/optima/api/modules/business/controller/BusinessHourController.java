@@ -1,8 +1,7 @@
 package com.optima.api.modules.business.controller;
 
+import com.optima.api.modules.business.dto.request.BusinessHourRequest;
 import com.optima.api.modules.business.dto.response.BusinessHourResponse;
-import com.optima.api.modules.business.dto.request.CreateBusinessHourRequest;
-import com.optima.api.modules.business.dto.request.UpdateBusinessHourRequest;
 import com.optima.api.modules.business.service.BusinessHourService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -28,7 +27,7 @@ public class BusinessHourController {
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
     public BusinessHourResponse create(@PathVariable @Positive Long businessId,
-                                       @Valid @RequestBody CreateBusinessHourRequest request) {
+                                       @Valid @RequestBody BusinessHourRequest request) {
         return hourService.create(businessId, request);
     }
 
@@ -50,7 +49,7 @@ public class BusinessHourController {
     @PreAuthorize("hasRole('ADMIN')")
     public BusinessHourResponse update(@PathVariable @Positive Long businessId,
                                        @PathVariable @Positive Long id,
-                                       @Valid @RequestBody UpdateBusinessHourRequest request) {
+                                       @Valid @RequestBody BusinessHourRequest request) {
         return hourService.update(businessId, id, request);
     }
 

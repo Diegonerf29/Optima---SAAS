@@ -1,7 +1,6 @@
 package com.optima.api.modules.catalog.controller;
 
-import com.optima.api.modules.catalog.dto.request.CreateCategoryRequest;
-import com.optima.api.modules.catalog.dto.request.UpdateCategoryRequest;
+import com.optima.api.modules.catalog.dto.request.CategoryRequest;
 import com.optima.api.modules.catalog.dto.response.ServiceCategoryResponse;
 import com.optima.api.modules.catalog.service.ServiceCategoryService;
 import jakarta.validation.Valid;
@@ -29,7 +28,7 @@ public class ServiceCategoryController {
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
     public ServiceCategoryResponse createCategory(@PathVariable @Positive Long businessId,
-                                           @Valid @RequestBody CreateCategoryRequest request) {
+                                           @Valid @RequestBody CategoryRequest request) {
         return categoryService.createCategory(businessId, request);
     }
 
@@ -53,7 +52,7 @@ public class ServiceCategoryController {
     @PreAuthorize("hasRole('ADMIN')")
     public ServiceCategoryResponse updateCategory(@PathVariable @Positive Long businessId,
                                            @PathVariable @Positive Long id,
-                                           @Valid @RequestBody UpdateCategoryRequest request) {
+                                           @Valid @RequestBody CategoryRequest request) {
         return categoryService.updateCategory(businessId, id, request);
     }
 

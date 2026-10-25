@@ -1,9 +1,8 @@
 package com.optima.api.modules.business.service;
 
 import com.optima.api.common.exception.NotFoundException;
-import com.optima.api.modules.business.dto.request.CreateTaxRequest;
+import com.optima.api.modules.business.dto.request.TaxRequest;
 import com.optima.api.modules.business.dto.response.TaxResponse;
-import com.optima.api.modules.business.dto.request.UpdateTaxRequest;
 import com.optima.api.modules.business.model.Tax;
 import com.optima.api.modules.business.repository.BusinessRepository;
 import com.optima.api.modules.business.repository.TaxRepository;
@@ -32,7 +31,7 @@ public class TaxService {
      * crea un impuesto nuevo del negocio
      * si ya existe otro con el mismo nombre devuelve conflicto
      */
-    public TaxResponse create(Long businessId, CreateTaxRequest request) {
+    public TaxResponse create(Long businessId, TaxRequest request) {
         var business = businessRepository.findById(businessId)
             .orElseThrow(() -> new NotFoundException("el negocio", businessId));
 
@@ -68,7 +67,7 @@ public class TaxService {
     }
 
     /** actualiza un impuesto activo del negocio */
-    public TaxResponse update(Long businessId, Long id, UpdateTaxRequest request) {
+    public TaxResponse update(Long businessId, Long id, TaxRequest request) {
         Tax t = findOrThrow(businessId, id);
 
         if (!t.getIsActive()) {

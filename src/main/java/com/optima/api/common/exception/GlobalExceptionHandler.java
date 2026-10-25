@@ -2,8 +2,8 @@ package com.optima.api.common.exception;
 
 import com.optima.api.common.json.StrictLocalDateTimeDeserializer.TimezoneNotAllowedException;
 import jakarta.persistence.EntityNotFoundException;
-import lombok.extern.slf4j.Slf4j;
 import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.dao.DataIntegrityViolationException;

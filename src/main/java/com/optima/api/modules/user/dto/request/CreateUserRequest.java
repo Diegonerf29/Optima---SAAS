@@ -1,7 +1,8 @@
 package com.optima.api.modules.user.dto.request;
 
-import jakarta.validation.constraints.Email;
 import com.optima.api.common.validation.Password;
+import com.optima.api.common.validation.ValidationPatterns;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -32,8 +33,8 @@ public record CreateUserRequest(
 
         @Size(max = 20, message = "El teléfono no puede exceder los 20 caracteres")
         @Pattern(
-                regexp = "^$|^[0-9+\\s()-]{6,20}$",
-                message = "El teléfono solo admite dígitos y los símbolos + - ( ) y espacios (6-20 caracteres)"
+                regexp = ValidationPatterns.PHONE,
+                message = ValidationPatterns.PHONE_MESSAGE
         )
         String phone
 ) {}

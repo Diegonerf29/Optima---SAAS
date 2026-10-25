@@ -3,8 +3,7 @@ package com.optima.api.modules.user.service;
 import com.optima.api.common.exception.NotFoundException;
 import com.optima.api.modules.business.model.Membership;
 import com.optima.api.modules.business.repository.MembershipRepository;
-import com.optima.api.modules.user.dto.request.CreateEmployeeScheduleRequest;
-import com.optima.api.modules.user.dto.request.UpdateEmployeeScheduleRequest;
+import com.optima.api.modules.user.dto.request.EmployeeScheduleRequest;
 import com.optima.api.modules.user.dto.response.EmployeeScheduleResponse;
 import com.optima.api.modules.user.model.EmployeeSchedule;
 import com.optima.api.modules.user.repository.EmployeeScheduleRepository;
@@ -29,7 +28,7 @@ public class EmployeeScheduleService {
     /**
      * crea un tramo del horario semanal de un empleado
      */
-    public EmployeeScheduleResponse create(Long businessId, Long userId, CreateEmployeeScheduleRequest request) {
+    public EmployeeScheduleResponse create(Long businessId, Long userId, EmployeeScheduleRequest request) {
         Membership membership = ensureMembershipOfBusiness(businessId, userId);
         validateHours(request.startTime(), request.endTime());
 
@@ -75,7 +74,7 @@ public class EmployeeScheduleService {
     /**
      * actualiza dia y horas de un tramo existente
      */
-    public EmployeeScheduleResponse update(Long businessId, Long userId, Long id, UpdateEmployeeScheduleRequest request) {
+    public EmployeeScheduleResponse update(Long businessId, Long userId, Long id, EmployeeScheduleRequest request) {
         ensureMembershipOfBusiness(businessId, userId);
         validateHours(request.startTime(), request.endTime());
 

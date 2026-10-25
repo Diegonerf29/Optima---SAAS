@@ -8,8 +8,8 @@ import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 
-/** datos para crear un impuesto */
-public record CreateTaxRequest(
+/** datos para crear o actualizar un impuesto */
+public record TaxRequest(
 
         @NotBlank(message = "El nombre del impuesto es obligatorio")
         @Size(max = 50, message = "El nombre no puede superar los 50 caracteres")

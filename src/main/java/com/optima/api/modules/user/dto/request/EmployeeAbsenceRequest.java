@@ -6,9 +6,9 @@ import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 /**
- * datos para crear una ausencia de empleado
+ * datos para crear o actualizar una ausencia de empleado
  */
-public record CreateEmployeeAbsenceRequest(
+public record EmployeeAbsenceRequest(
 
         @NotNull(message = "La fecha de inicio es obligatoria")
         LocalDateTime startDateTime,

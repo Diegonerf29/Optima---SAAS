@@ -1,5 +1,6 @@
 package com.optima.api.modules.user.dto.request;
 
+import com.optima.api.common.validation.ValidationPatterns;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
@@ -14,8 +15,8 @@ public record UpdateUserRequest(
         Long roleId,
 
         @Pattern(
-                regexp = "cyan|amber|emerald|indigo|pink|sky|violet|teal",
-                message = "El color debe ser uno de la paleta permitida"
+                regexp = ValidationPatterns.COLOR,
+                message = ValidationPatterns.COLOR_MESSAGE
         )
         String color
 ) {}

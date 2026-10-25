@@ -1,17 +1,16 @@
 package com.optima.api.modules.catalog.service;
 
 import com.optima.api.common.exception.NotFoundException;
-import com.optima.api.modules.catalog.dto.request.CreateServiceRequest;
-import com.optima.api.modules.catalog.dto.request.UpdateServiceRequest;
-import com.optima.api.modules.catalog.dto.response.BusinessServiceResponse;
-import com.optima.api.modules.catalog.model.BusinessService;
 import com.optima.api.modules.business.model.Business;
-import com.optima.api.modules.catalog.model.ServiceCategory;
 import com.optima.api.modules.business.model.Tax;
-import com.optima.api.modules.catalog.repository.BusinessServiceRepository;
-import com.optima.api.modules.catalog.repository.ServiceCategoryRepository;
 import com.optima.api.modules.business.repository.BusinessRepository;
 import com.optima.api.modules.business.repository.TaxRepository;
+import com.optima.api.modules.catalog.dto.request.ServiceRequest;
+import com.optima.api.modules.catalog.dto.response.BusinessServiceResponse;
+import com.optima.api.modules.catalog.model.BusinessService;
+import com.optima.api.modules.catalog.model.ServiceCategory;
+import com.optima.api.modules.catalog.repository.BusinessServiceRepository;
+import com.optima.api.modules.catalog.repository.ServiceCategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,7 +33,7 @@ public class BusinessServiceService {
     private final TaxRepository taxRepository;
 
     /** crea un servicio nuevo dentro del negocio */
-    public BusinessServiceResponse createService(Long businessId, CreateServiceRequest request) {
+    public BusinessServiceResponse createService(Long businessId, ServiceRequest request) {
 
         String name = request.name().trim();
 
@@ -95,7 +94,7 @@ public class BusinessServiceService {
     }
 
     /** se actualiza los datos editables */
-    public BusinessServiceResponse updateService(Long businessId, Long id, UpdateServiceRequest request) {
+    public BusinessServiceResponse updateService(Long businessId, Long id, ServiceRequest request) {
         BusinessService service = findOrThrow(businessId, id);
 
         // solo miramos duplicados si de verdad cambia el nombre

@@ -3,8 +3,7 @@ package com.optima.api.modules.user.service;
 import com.optima.api.common.exception.NotFoundException;
 import com.optima.api.modules.business.model.Membership;
 import com.optima.api.modules.business.repository.MembershipRepository;
-import com.optima.api.modules.user.dto.request.CreateEmployeeAbsenceRequest;
-import com.optima.api.modules.user.dto.request.UpdateEmployeeAbsenceRequest;
+import com.optima.api.modules.user.dto.request.EmployeeAbsenceRequest;
 import com.optima.api.modules.user.dto.response.EmployeeAbsenceResponse;
 import com.optima.api.modules.user.model.EmployeeAbsence;
 import com.optima.api.modules.user.repository.EmployeeAbsenceRepository;
@@ -42,7 +41,7 @@ public class EmployeeAbsenceService {
     /**
      * crea una ausencia para un empleado del negocio
      */
-    public EmployeeAbsenceResponse create(Long businessId, Long userId, CreateEmployeeAbsenceRequest request) {
+    public EmployeeAbsenceResponse create(Long businessId, Long userId, EmployeeAbsenceRequest request) {
         Membership membership = ensureMembershipOfBusiness(businessId, userId);
         validateRange(request.startDateTime(), request.endDateTime());
 
@@ -86,7 +85,7 @@ public class EmployeeAbsenceService {
     /**
      * actualiza el rango y motivo de una ausencia existente
      */
-    public EmployeeAbsenceResponse update(Long businessId, Long userId, Long id, UpdateEmployeeAbsenceRequest request) {
+    public EmployeeAbsenceResponse update(Long businessId, Long userId, Long id, EmployeeAbsenceRequest request) {
         ensureMembershipOfBusiness(businessId, userId);
         validateRange(request.startDateTime(), request.endDateTime());
 

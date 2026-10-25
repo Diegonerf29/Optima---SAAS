@@ -2,9 +2,8 @@ package com.optima.api.modules.business.service;
 
 import com.optima.api.common.exception.NotFoundException;
 import com.optima.api.modules.appointment.repository.AppointmentRepository;
+import com.optima.api.modules.business.dto.request.BoothRequest;
 import com.optima.api.modules.business.dto.response.BoothResponse;
-import com.optima.api.modules.business.dto.request.CreateBoothRequest;
-import com.optima.api.modules.business.dto.request.UpdateBoothRequest;
 import com.optima.api.modules.business.model.Booth;
 import com.optima.api.modules.business.model.Business;
 import com.optima.api.modules.business.repository.BoothRepository;
@@ -34,7 +33,7 @@ public class BoothService {
      * crea una cabina para el negocio
      * lanza 409 si ya existe otra con el mismo nombre
      */
-    public BoothResponse create(Long businessId, CreateBoothRequest request) {
+    public BoothResponse create(Long businessId, BoothRequest request) {
         Business business = businessRepository.findById(businessId)
                 .orElseThrow(() -> new NotFoundException("el negocio", businessId));
 
@@ -72,7 +71,7 @@ public class BoothService {
      * actualiza la cabina
      * lanza 400 si esta desactivada o 409 si el nombre ya existe
      */
-    public BoothResponse update(Long businessId, Long id, UpdateBoothRequest request) {
+    public BoothResponse update(Long businessId, Long id, BoothRequest request) {
         Booth b = findOrThrow(businessId, id);
 
         if (!b.getIsActive()) {

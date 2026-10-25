@@ -1,5 +1,6 @@
 package com.optima.api.modules.business.dto.request;
 
+import com.optima.api.common.validation.ValidationPatterns;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -22,8 +23,8 @@ public record UpdateBusinessRequest(
 
         @Size(max = 20, message = "El teléfono no puede superar los 20 caracteres")
         @Pattern(
-                regexp = "^$|^[0-9+\\s()-]{6,20}$",
-                message = "El teléfono solo admite dígitos y los símbolos + - ( ) y espacios (6-20 caracteres)"
+                regexp = ValidationPatterns.PHONE,
+                message = ValidationPatterns.PHONE_MESSAGE
         )
         String phone,
 
@@ -41,8 +42,8 @@ public record UpdateBusinessRequest(
 
         @Size(max = 20, message = "El código postal no puede superar los 20 caracteres")
         @Pattern(
-                regexp = "^$|^[0-9]{4,10}$",
-                message = "El código postal solo admite dígitos (4-10)"
+                regexp = ValidationPatterns.POSTAL_CODE,
+                message = ValidationPatterns.POSTAL_CODE_MESSAGE
         )
         String postalCode,
 

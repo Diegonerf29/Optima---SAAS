@@ -3,8 +3,7 @@ package com.optima.api.modules.catalog.service;
 import com.optima.api.common.exception.NotFoundException;
 import com.optima.api.modules.business.model.Business;
 import com.optima.api.modules.business.repository.BusinessRepository;
-import com.optima.api.modules.catalog.dto.request.CreateCategoryRequest;
-import com.optima.api.modules.catalog.dto.request.UpdateCategoryRequest;
+import com.optima.api.modules.catalog.dto.request.CategoryRequest;
 import com.optima.api.modules.catalog.dto.response.ServiceCategoryResponse;
 import com.optima.api.modules.catalog.model.ServiceCategory;
 import com.optima.api.modules.catalog.repository.BusinessServiceRepository;
@@ -30,7 +29,7 @@ public class ServiceCategoryService {
     private final BusinessServiceRepository businessServiceRepository;
 
     /** crea una categoria nueva */
-    public ServiceCategoryResponse createCategory(Long businessId, CreateCategoryRequest request) {
+    public ServiceCategoryResponse createCategory(Long businessId, CategoryRequest request) {
 
         String name = request.name().trim();
 
@@ -66,7 +65,7 @@ public class ServiceCategoryService {
     }
 
     /** cambia el nombre de una categoria activa */
-    public ServiceCategoryResponse updateCategory(Long businessId, Long id, UpdateCategoryRequest request) {
+    public ServiceCategoryResponse updateCategory(Long businessId, Long id, CategoryRequest request) {
         ServiceCategory category = findOrThrow(businessId, id);
 
         if (!category.getIsActive()) {

@@ -1,7 +1,6 @@
 package com.optima.api.modules.user.controller;
 
-import com.optima.api.modules.user.dto.request.CreateEmployeeScheduleRequest;
-import com.optima.api.modules.user.dto.request.UpdateEmployeeScheduleRequest;
+import com.optima.api.modules.user.dto.request.EmployeeScheduleRequest;
 import com.optima.api.modules.user.dto.response.EmployeeScheduleResponse;
 import com.optima.api.modules.user.service.EmployeeScheduleService;
 import jakarta.validation.Valid;
@@ -31,7 +30,7 @@ public class EmployeeScheduleController {
     @PreAuthorize("hasRole('ADMIN')")
     public EmployeeScheduleResponse create(@PathVariable @Positive Long businessId,
                                            @PathVariable @Positive Long userId,
-                                           @Valid @RequestBody CreateEmployeeScheduleRequest request) {
+                                           @Valid @RequestBody EmployeeScheduleRequest request) {
         return scheduleService.create(businessId, userId, request);
     }
 
@@ -62,7 +61,7 @@ public class EmployeeScheduleController {
     public EmployeeScheduleResponse update(@PathVariable @Positive Long businessId,
                                            @PathVariable @Positive Long userId,
                                            @PathVariable @Positive Long id,
-                                           @Valid @RequestBody UpdateEmployeeScheduleRequest request) {
+                                           @Valid @RequestBody EmployeeScheduleRequest request) {
         return scheduleService.update(businessId, userId, id, request);
     }
 

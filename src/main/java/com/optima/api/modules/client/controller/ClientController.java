@@ -1,7 +1,6 @@
 package com.optima.api.modules.client.controller;
 
-import com.optima.api.modules.client.dto.request.CreateClientRequest;
-import com.optima.api.modules.client.dto.request.UpdateClientRequest;
+import com.optima.api.modules.client.dto.request.ClientRequest;
 import com.optima.api.modules.client.dto.response.ClientResponse;
 import com.optima.api.modules.client.service.ClientService;
 import jakarta.validation.Valid;
@@ -28,7 +27,7 @@ public class ClientController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ClientResponse create(@PathVariable @Positive Long businessId,
-                                 @Valid @RequestBody CreateClientRequest request) {
+                                 @Valid @RequestBody ClientRequest request) {
         return clientService.create(businessId, request);
     }
 
@@ -53,7 +52,7 @@ public class ClientController {
     @PutMapping("/{id}")
     public ClientResponse update(@PathVariable @Positive Long businessId,
                                  @PathVariable @Positive Long id,
-                                 @Valid @RequestBody UpdateClientRequest request) {
+                                 @Valid @RequestBody ClientRequest request) {
         return clientService.update(businessId, id, request);
     }
 

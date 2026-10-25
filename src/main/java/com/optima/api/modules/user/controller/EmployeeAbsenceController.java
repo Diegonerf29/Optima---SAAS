@@ -1,7 +1,6 @@
 package com.optima.api.modules.user.controller;
 
-import com.optima.api.modules.user.dto.request.CreateEmployeeAbsenceRequest;
-import com.optima.api.modules.user.dto.request.UpdateEmployeeAbsenceRequest;
+import com.optima.api.modules.user.dto.request.EmployeeAbsenceRequest;
 import com.optima.api.modules.user.dto.response.EmployeeAbsenceResponse;
 import com.optima.api.modules.user.service.EmployeeAbsenceService;
 import jakarta.validation.Valid;
@@ -32,7 +31,7 @@ public class EmployeeAbsenceController {
     @PreAuthorize("hasRole('ADMIN')")
     public EmployeeAbsenceResponse create(@PathVariable @Positive Long businessId,
                                           @PathVariable @Positive Long userId,
-                                          @Valid @RequestBody CreateEmployeeAbsenceRequest request) {
+                                          @Valid @RequestBody EmployeeAbsenceRequest request) {
         return absenceService.create(businessId, userId, request);
     }
 
@@ -64,7 +63,7 @@ public class EmployeeAbsenceController {
     public EmployeeAbsenceResponse update(@PathVariable @Positive Long businessId,
                                           @PathVariable @Positive Long userId,
                                           @PathVariable @Positive Long id,
-                                          @Valid @RequestBody UpdateEmployeeAbsenceRequest request) {
+                                          @Valid @RequestBody EmployeeAbsenceRequest request) {
         return absenceService.update(businessId, userId, id, request);
     }
 

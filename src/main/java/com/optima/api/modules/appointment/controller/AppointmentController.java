@@ -1,5 +1,6 @@
 package com.optima.api.modules.appointment.controller;
 
+import com.optima.api.common.security.AuthPrincipal;
 import com.optima.api.modules.appointment.dto.request.CreateAppointmentRequest;
 import com.optima.api.modules.appointment.dto.request.UpdateAppointmentRequest;
 import com.optima.api.modules.appointment.dto.request.UpdateAppointmentStatusRequest;
@@ -8,7 +9,6 @@ import com.optima.api.modules.appointment.dto.response.AppointmentResponse;
 import com.optima.api.modules.appointment.service.AppointmentService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
-import com.optima.api.common.security.AuthPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -1,7 +1,6 @@
 package com.optima.api.modules.catalog.controller;
 
-import com.optima.api.modules.catalog.dto.request.CreateServiceRequest;
-import com.optima.api.modules.catalog.dto.request.UpdateServiceRequest;
+import com.optima.api.modules.catalog.dto.request.ServiceRequest;
 import com.optima.api.modules.catalog.dto.response.BusinessServiceResponse;
 import com.optima.api.modules.catalog.service.BusinessServiceService;
 import jakarta.validation.Valid;
@@ -29,7 +28,7 @@ public class BusinessServiceController {
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
     public BusinessServiceResponse createService(@PathVariable @Positive Long businessId,
-                                         @Valid @RequestBody CreateServiceRequest request) {
+                                         @Valid @RequestBody ServiceRequest request) {
         return businessServiceService.createService(businessId, request);
     }
 
@@ -53,7 +52,7 @@ public class BusinessServiceController {
     @PreAuthorize("hasRole('ADMIN')")
     public BusinessServiceResponse updateService(@PathVariable @Positive Long businessId,
                                          @PathVariable @Positive Long id,
-                                         @Valid @RequestBody UpdateServiceRequest request) {
+                                         @Valid @RequestBody ServiceRequest request) {
         return businessServiceService.updateService(businessId, id, request);
     }
 

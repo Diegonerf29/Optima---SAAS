@@ -7,9 +7,9 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalTime;
 
 /**
- * datos para actualizar un tramo del horario de un empleado
+ * datos para crear o actualizar un tramo del horario semanal de un empleado
  */
-public record UpdateEmployeeScheduleRequest(
+public record EmployeeScheduleRequest(
 
         @NotNull(message = "El día de la semana es obligatorio")
         @Min(value = 1, message = "El día debe ser entre 1 (lunes) y 7 (domingo)")

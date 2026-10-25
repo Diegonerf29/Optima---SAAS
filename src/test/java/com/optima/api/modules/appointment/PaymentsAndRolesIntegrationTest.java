@@ -1,7 +1,7 @@
 package com.optima.api.modules.appointment;
 
-import com.optima.api.support.Escenario;
 import com.optima.api.support.Escenario.Empleado;
+import com.optima.api.support.Escenario;
 import com.optima.api.support.IntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

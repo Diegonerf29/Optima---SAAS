@@ -9,8 +9,8 @@ import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 
-/** datos para actualizar un servicio del catalogo */
-public record UpdateServiceRequest(
+/** datos para crear o actualizar un servicio del catalogo */
+public record ServiceRequest(
 
         @NotNull(message = "El ID de la categoría es obligatorio")
         @Positive(message = "El ID de la categoría debe ser positivo")

@@ -1,7 +1,7 @@
 package com.optima.api.modules.business.controller;
 
-import com.optima.api.modules.business.dto.response.BusinessResponse;
 import com.optima.api.modules.business.dto.request.UpdateBusinessRequest;
+import com.optima.api.modules.business.dto.response.BusinessResponse;
 import com.optima.api.modules.business.service.BusinessService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;

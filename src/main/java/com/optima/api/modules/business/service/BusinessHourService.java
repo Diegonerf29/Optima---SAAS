@@ -1,9 +1,8 @@
 package com.optima.api.modules.business.service;
 
 import com.optima.api.common.exception.NotFoundException;
+import com.optima.api.modules.business.dto.request.BusinessHourRequest;
 import com.optima.api.modules.business.dto.response.BusinessHourResponse;
-import com.optima.api.modules.business.dto.request.CreateBusinessHourRequest;
-import com.optima.api.modules.business.dto.request.UpdateBusinessHourRequest;
 import com.optima.api.modules.business.model.Business;
 import com.optima.api.modules.business.model.BusinessHour;
 import com.optima.api.modules.business.repository.BusinessHourRepository;
@@ -27,7 +26,7 @@ public class BusinessHourService {
     private final BusinessRepository businessRepository;
 
     /** crea un tramo horario y evita solapes en el mismo dia */
-    public BusinessHourResponse create(Long businessId, CreateBusinessHourRequest request) {
+    public BusinessHourResponse create(Long businessId, BusinessHourRequest request) {
         Business business = businessRepository.findById(businessId)
                 .orElseThrow(() -> new NotFoundException("el negocio", businessId));
 
@@ -60,7 +59,7 @@ public class BusinessHourService {
     }
 
     /** sustituye dia hora de inicio y hora de fin de un tramo existente */
-    public BusinessHourResponse update(Long businessId, Long id, UpdateBusinessHourRequest request) {
+    public BusinessHourResponse update(Long businessId, Long id, BusinessHourRequest request) {
         BusinessHour bh = findOrThrow(businessId, id);
 
         validateNoOverlap(businessId, request.dayOfWeek(),

@@ -4,12 +4,11 @@ import com.optima.api.common.exception.NotFoundException;
 import com.optima.api.modules.appointment.repository.AppointmentRepository;
 import com.optima.api.modules.business.model.Business;
 import com.optima.api.modules.business.repository.BusinessRepository;
-import com.optima.api.modules.client.dto.request.CreateClientRequest;
-import com.optima.api.modules.client.dto.request.UpdateClientRequest;
+import com.optima.api.modules.business.service.BusinessClock;
+import com.optima.api.modules.client.dto.request.ClientRequest;
 import com.optima.api.modules.client.dto.response.ClientResponse;
 import com.optima.api.modules.client.model.Client;
 import com.optima.api.modules.client.repository.ClientRepository;
-import com.optima.api.modules.business.service.BusinessClock;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,7 +31,7 @@ public class ClientService {
     private final BusinessClock businessClock;
 
     /** crea el cliente dentro del negocio correspondiente */
-    public ClientResponse create(Long businessId, CreateClientRequest request) {
+    public ClientResponse create(Long businessId, ClientRequest request) {
         Business business = businessRepository.findById(businessId)
                 .orElseThrow(() -> new NotFoundException("el negocio", businessId));
 
@@ -69,7 +68,7 @@ public class ClientService {
     }
 
     /** actualiza los datos del cliente si sigue activo */
-    public ClientResponse update(Long businessId, Long id, UpdateClientRequest request) {
+    public ClientResponse update(Long businessId, Long id, ClientRequest request) {
         Client c = findOrThrow(businessId, id);
 
         if (!c.getIsActive()) {
