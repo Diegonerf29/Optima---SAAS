@@ -29,7 +29,8 @@ public interface BusinessServiceRepository extends JpaRepository<BusinessService
     /** busca por id dentro del negocio */
     Optional<BusinessService> findByIdAndBusinessId(Long id, Long businessId);
 
-    /** carga varios servicios de un negocio en una sola consulta */
+    /** carga varios servicios de un negocio (con su impuesto) en una sola consulta */
+    @EntityGraph(attributePaths = {"tax"})
     List<BusinessService> findAllByIdInAndBusinessId(Collection<Long> ids, Long businessId);
 
     /** cuenta los servicios activos asociados a una categoria */

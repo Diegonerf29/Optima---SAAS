@@ -1,5 +1,6 @@
 package com.optima.api.modules.appointment.service;
 
+import com.optima.api.common.exception.NotFoundException;
 import com.optima.api.modules.appointment.dto.request.CreateAppointmentRequest;
 import com.optima.api.modules.appointment.dto.request.UpdateAppointmentRequest;
 import com.optima.api.modules.appointment.dto.request.UpdateAppointmentStatusRequest;
@@ -18,10 +19,10 @@ import com.optima.api.modules.business.repository.BoothRepository;
 import com.optima.api.modules.business.repository.BusinessRepository;
 import com.optima.api.modules.business.repository.MembershipRepository;
 import com.optima.api.modules.catalog.model.BusinessService;
-import com.optima.api.modules.catalog.repository.BusinessServiceRepository;
 import com.optima.api.modules.client.model.Client;
 import com.optima.api.modules.client.repository.ClientRepository;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,7 +33,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,229 +41,63 @@ import java.util.stream.Collectors;
 /**
  * logica principal de citas
  * valida disponibilidad estados y servicios reservados
+ * crear y editar comparten los mismos pasos (metodos privados de abajo) para que no se separen (M12)
  */
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class AppointmentService {
 
+    /** campos permitidos para ordenar la busqueda de citas */
+    private static final Set<String> SORTABLE_FIELDS =
+            Set.of("id", "startDateTime", "endDateTime", "createdAt", "isPaid");
+
+    /** estados que no permiten editar la cita */
+    private static final Set<String> NON_EDITABLE_STATUSES = Set.of("COMPLETED");
+
+    /** estados que vuelven a pendiente al editarse */
+    private static final Set<String> RESET_TO_PENDING_ON_EDIT = Set.of("CANCELLED", "NO_SHOW");
+
     private final AppointmentRepository appointmentRepository;
     private final AppointmentStatusRepository statusRepository;
     private final BookedServiceRepository bookedServiceRepository;
     private final BoothRepository boothRepository;
     private final BusinessRepository businessRepository;
-    private final BusinessServiceRepository serviceRepository;
     private final ClientRepository clientRepository;
     private final MembershipRepository membershipRepository;
     private final AppointmentValidator validator;
+    private final BookableServices bookableServices;
 
     /**
      * crea una cita nueva
      * guarda los servicios con su precio e impuesto actuales
      */
     public AppointmentResponse createAppointment(Long businessId, CreateAppointmentRequest request) {
-        // primero se revisa negocio y cliente
+        Business business = findActiveBusiness(businessId);
+        Client client = findActiveClient(businessId, request.clientId());
+        // se bloquean empleado y cabina (siempre en este orden) para que dos reservas del mismo hueco vayan por turnos
+        Membership membership = lockActiveEmployee(businessId, request.membershipId());
+        Booth booth = request.boothId() != null ? lockActiveBooth(businessId, request.boothId()) : null;
 
-        Business business = businessRepository.findById(businessId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró el negocio con ID: " + businessId
-                ));
-
-        if (!Boolean.TRUE.equals(business.getIsActive())) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "El negocio con ID: " + businessId + " está desactivado"
-            );
-        }
-
-        Client client = clientRepository.findByIdAndBusinessId(
-                        request.clientId(), businessId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró el cliente con ID: " + request.clientId()
-                                + " en el negocio con ID: " + businessId
-                ));
-
-        if (!client.getIsActive()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "El cliente con ID: " + request.clientId() + " está desactivado"
-            );
-        }
-
-        // se bloquea la relacion para evitar altas simultaneas en el mismo hueco
-        Membership membership = membershipRepository.findByIdAndBusinessIdForUpdate(
-                        request.membershipId(), businessId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró el empleado con ID: " + request.membershipId()
-                                + " en el negocio con ID: " + businessId
-                ));
-
-        if (!membership.getIsActive()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "El empleado con ID: " + request.membershipId() + " está desactivado"
-            );
-        }
-
-        validator.validateAppointmentInterval(
-                request.startDateTime(),
-                business.getAppointmentInterval()
-        );
-
-        // se cargan los servicios de la reserva
-        List<BusinessService> services = new ArrayList<>();
-        for (Long serviceId : request.serviceIds()) {
-            BusinessService service = serviceRepository
-                    .findByIdAndBusinessId(serviceId, businessId)
-                    .orElseThrow(() -> new ResponseStatusException(
-                            HttpStatus.NOT_FOUND,
-                            "No se encontró el servicio con ID: " + serviceId
-                                    + " en el negocio con ID: " + businessId
-                    ));
-
-            if (!service.getIsActive()) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "El servicio con ID: " + serviceId + " está desactivado"
-                );
-            }
-
-            services.add(service);
-        }
-
-        // el final se calcula con la duracion total de los servicios
-        int totalMinutes = services.stream()
-                .mapToInt(BusinessService::getDurationMinutes)
-                .sum();
-
-        LocalDateTime endDateTime = request.startDateTime().plusMinutes(totalMinutes);
-
-        // despues se valida horario empleado y solapes
-        validator.validateBusinessHours(
-                businessId,
-                request.startDateTime(),
-                endDateTime
-        );
-
-        validator.validateEmployeeSchedule(
-                request.membershipId(),
-                request.startDateTime(),
-                endDateTime
-        );
-
-        validator.validateNoOverlap(
-                request.membershipId(),
-                request.startDateTime(),
-                endDateTime,
-                null
-        );
-
-        // se valida otra vez aunque el calendario ya filtre esos huecos
-        validator.validateNoEmployeeAbsence(
-                request.membershipId(),
-                request.startDateTime(),
-                endDateTime
-        );
-
-        // si hay cabina tambien se bloquea para evitar reservas a la vez
-        Booth booth = null;
-        if (request.boothId() != null) {
-            booth = boothRepository
-                    .findByIdAndBusinessIdForUpdate(request.boothId(), businessId)
-                    .orElseThrow(() -> new ResponseStatusException(
-                            HttpStatus.NOT_FOUND,
-                            "No se encontró la cabina con ID: " + request.boothId()
-                                    + " en el negocio con ID: " + businessId
-                    ));
-
-            if (!booth.getIsActive()) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "La cabina con ID: " + request.boothId() + " está desactivada"
-                );
-            }
-
-            validator.validateNoBoothOverlap(
-                    request.boothId(),
-                    request.startDateTime(),
-                    endDateTime,
-                    null
-            );
-        }
-
-        validator.validateNoScheduleBlock(
-                businessId,
-                request.membershipId(),
-                request.boothId(),
-                request.startDateTime()
-        );
-
-        // toda cita nueva empieza en pendiente
-        // si falta el estado pendiente el problema es de datos base del servidor
-        AppointmentStatus pendingStatus = statusRepository.findByName("PENDING")
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.INTERNAL_SERVER_ERROR,
-                        "Error de configuración: no se encontró el estado PENDING "
-                                + "en la base de datos. Ejecutar los INSERT del schema."
-                ));
+        List<BusinessService> services = bookableServices.load(businessId, request.serviceIds());
+        LocalDateTime start = request.startDateTime();
+        LocalDateTime end = start.plusMinutes(BookableServices.totalMinutes(services));
+        validateSlot(business, membership, booth, start, end, null);
 
         Appointment appointment = new Appointment();
         appointment.setBusiness(business);
         appointment.setClient(client);
         appointment.setMembership(membership);
         appointment.setBooth(booth);  // queda sin valor si la cita no usa cabina
-        appointment.setStatus(pendingStatus);
-        appointment.setStartDateTime(request.startDateTime());
-        appointment.setEndDateTime(endDateTime);
+        // toda cita nueva empieza en pendiente
+        appointment.setStatus(findStatus("PENDING"));
+        appointment.setStartDateTime(start);
+        appointment.setEndDateTime(end);
         appointment.setNotes(request.notes());
 
-        // el guardado previo adelanta errores de duplicado para devolver un 409 controlado
-        Appointment saved;
-        try {
-            saved = appointmentRepository.saveAndFlush(appointment);
-        } catch (DataIntegrityViolationException ex) {
-            String msg = ex.getMessage() == null ? "" : ex.getMessage();
-            if (msg.contains("uq_appointment_active_slot")) {
-                throw new ResponseStatusException(
-                        HttpStatus.CONFLICT,
-                        "El empleado ya tiene una cita en ese horario"
-                );
-            }
-            if (msg.contains("uq_appointment_active_booth_slot")) {
-                throw new ResponseStatusException(
-                        HttpStatus.CONFLICT,
-                        "La cabina ya tiene una cita en ese horario"
-                );
-            }
-            throw ex;
-        }
-
-        // se congelan precio e impuesto de cada servicio
-        List<BookedService> bookedServices = new ArrayList<>();
-        for (BusinessService service : services) {
-            BookedService booked = new BookedService();
-            booked.setAppointment(saved);
-            booked.setService(service);
-
-            booked.setAppliedPrice(service.getPrice());
-
-            booked.setAppliedTaxPercentage(service.getTax().getPercentage());
-
-            bookedServices.add(booked);
-        }
-
-        List<BookedService> savedBookedServices =
-                bookedServiceRepository.saveAll(bookedServices);
-
-        return AppointmentResponse.from(saved, savedBookedServices);
+        Appointment saved = saveCheckingConflicts(appointment);
+        return AppointmentResponse.from(saved, saveBookedServices(saved, services));
     }
-
-    /** campos permitidos para ordenar la busqueda de citas */
-    private static final Set<String> SORTABLE_FIELDS =
-            Set.of("id", "startDateTime", "endDateTime", "createdAt", "isPaid");
 
     /** busca citas con paginacion y filtros opcionales */
     @Transactional(readOnly = true)
@@ -306,9 +140,7 @@ public class AppointmentService {
         Map<Long, List<BookedService>> bookedServicesByAppointmentId =
                 bookedServiceRepository.findAllByAppointmentIdIn(appointmentIds)
                         .stream()
-                        .collect(Collectors.groupingBy(
-                                bs -> bs.getAppointment().getId()
-                        ));
+                        .collect(Collectors.groupingBy(bs -> bs.getAppointment().getId()));
 
         return appointmentPage.map(a -> AppointmentResponse.from(
                 a,
@@ -319,35 +151,17 @@ public class AppointmentService {
     /** busca una cita dentro de un negocio */
     @Transactional(readOnly = true)
     public AppointmentResponse getAppointmentById(Long businessId, Long id) {
-        Appointment appointment = appointmentRepository.findByIdAndBusinessId(id, businessId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró la cita con ID: " + id
-                                + " en el negocio con ID: " + businessId
-                ));
-
-        List<BookedService> bookedServices =
-                bookedServiceRepository.findAllByAppointmentId(appointment.getId());
-        return AppointmentResponse.from(appointment, bookedServices);
+        return toResponse(findAppointment(businessId, id));
     }
 
     /** cambia el estado de una cita validando la transicion */
     public AppointmentResponse updateAppointmentStatus(Long businessId,
                                                        Long appointmentId,
                                                        UpdateAppointmentStatusRequest request) {
-
-        // se carga la cita y luego el estado pedido
-        Appointment appointment = appointmentRepository
-                .findByIdAndBusinessId(appointmentId, businessId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró la cita con ID: " + appointmentId
-                                + " en el negocio con ID: " + businessId
-                ));
+        Appointment appointment = findAppointment(businessId, appointmentId);
 
         // un estado inexistente se trata como entrada invalida
-        AppointmentStatus newStatus = statusRepository
-                .findByName(request.statusName())
+        AppointmentStatus newStatus = statusRepository.findByName(request.statusName())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
                         "El estado '" + request.statusName() + "' no es válido. "
@@ -355,237 +169,181 @@ public class AppointmentService {
                                 + "COMPLETED, CANCELLED, NO_SHOW"
                 ));
 
-        String currentStatusName = appointment.getStatus().getName();
-        validator.validateStatusTransition(currentStatusName, request.statusName());
+        validator.validateStatusTransition(appointment.getStatus().getName(), request.statusName());
 
         // si la transicion es valida se guarda el cambio
         appointment.setStatus(newStatus);
-
-        Appointment updated = appointmentRepository.save(appointment);
-        List<BookedService> bookedServices =
-                bookedServiceRepository.findAllByAppointmentId(updated.getId());
-        return AppointmentResponse.from(updated, bookedServices);
+        return toResponse(appointmentRepository.save(appointment));
     }
 
-    /** estados que no permiten editar la cita */
-    private static final Set<String> NON_EDITABLE_STATUSES = Set.of("COMPLETED");
-
-    /** estados que vuelven a pendiente al editarse */
-    private static final Set<String> RESET_TO_PENDING_ON_EDIT =
-            Set.of("CANCELLED", "NO_SHOW");
-
-    /** actualiza los datos editables de una cita */
+    /** actualiza los datos editables de una cita (no cambia cliente ni pago) */
     public AppointmentResponse updateAppointment(Long businessId,
                                                  Long appointmentId,
                                                  UpdateAppointmentRequest request) {
-
-        // se bloquea la cita porque puede cambiar casi todo menos cliente y pago
+        // se bloquea la cita porque puede cambiar casi todo
         Appointment appointment = appointmentRepository
                 .findByIdAndBusinessIdForUpdate(appointmentId, businessId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró la cita con ID: " + appointmentId
-                                + " en el negocio con ID: " + businessId
-                ));
+                .orElseThrow(() -> new NotFoundException("la cita", appointmentId));
 
         String currentStatus = appointment.getStatus().getName();
         if (NON_EDITABLE_STATUSES.contains(currentStatus)) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "No se puede editar una cita en estado " + currentStatus
-            );
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "No se puede editar una cita en estado " + currentStatus);
         }
 
-        Business business = businessRepository.findById(businessId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró el negocio con ID: " + businessId
-                ));
-        if (!Boolean.TRUE.equals(business.getIsActive())) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "El negocio con ID: " + businessId + " está desactivado"
-            );
-        }
+        Business business = findActiveBusiness(businessId);
+        Membership membership = lockActiveEmployee(businessId, request.membershipId());
+        Booth booth = request.boothId() != null ? lockActiveBooth(businessId, request.boothId()) : null;
 
-        // se bloquea el empleado porque puede cambiar al reagendar
-        Membership membership = membershipRepository
-                .findByIdAndBusinessIdForUpdate(request.membershipId(), businessId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró el empleado con ID: " + request.membershipId()
-                                + " en el negocio con ID: " + businessId
-                ));
-        if (!membership.getIsActive()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "El empleado con ID: " + request.membershipId() + " está desactivado"
-            );
-        }
-
-        validator.validateAppointmentInterval(
-                request.startDateTime(),
-                business.getAppointmentInterval()
-        );
-
-        // se recargan los servicios para recalcular duracion y precios
-        List<BusinessService> services = new ArrayList<>();
-        for (Long serviceId : request.serviceIds()) {
-            BusinessService service = serviceRepository
-                    .findByIdAndBusinessId(serviceId, businessId)
-                    .orElseThrow(() -> new ResponseStatusException(
-                            HttpStatus.NOT_FOUND,
-                            "No se encontró el servicio con ID: " + serviceId
-                                    + " en el negocio con ID: " + businessId
-                    ));
-            if (!service.getIsActive()) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "El servicio con ID: " + serviceId + " está desactivado"
-                );
-            }
-            services.add(service);
-        }
-
-        // al editar se recalcula la duracion con los servicios actuales
-        int totalMinutes = services.stream()
-                .mapToInt(BusinessService::getDurationMinutes)
-                .sum();
-        LocalDateTime endDateTime = request.startDateTime().plusMinutes(totalMinutes);
-
-        // con los datos nuevos se repiten las validaciones
-        validator.validateBusinessHours(
-                businessId,
-                request.startDateTime(),
-                endDateTime
-        );
-
-        validator.validateEmployeeSchedule(
-                request.membershipId(),
-                request.startDateTime(),
-                endDateTime
-        );
-
-        validator.validateNoOverlap(
-                request.membershipId(),
-                request.startDateTime(),
-                endDateTime,
-                appointmentId
-        );
-
-        validator.validateNoEmployeeAbsence(
-                request.membershipId(),
-                request.startDateTime(),
-                endDateTime
-        );
-
-        // si hay cabina se valida igual que en creacion pero excluyendo esta cita
-        Booth booth = null;
-        if (request.boothId() != null) {
-            booth = boothRepository
-                    .findByIdAndBusinessIdForUpdate(request.boothId(), businessId)
-                    .orElseThrow(() -> new ResponseStatusException(
-                            HttpStatus.NOT_FOUND,
-                            "No se encontró la cabina con ID: " + request.boothId()
-                                    + " en el negocio con ID: " + businessId
-                    ));
-            if (!booth.getIsActive()) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "La cabina con ID: " + request.boothId() + " está desactivada"
-                );
-            }
-            validator.validateNoBoothOverlap(
-                    request.boothId(),
-                    request.startDateTime(),
-                    endDateTime,
-                    appointmentId
-            );
-        }
-
-        validator.validateNoScheduleBlock(
-                businessId,
-                request.membershipId(),
-                request.boothId(),
-                request.startDateTime()
-        );
+        List<BusinessService> services = bookableServices.load(businessId, request.serviceIds());
+        LocalDateTime start = request.startDateTime();
+        LocalDateTime end = start.plusMinutes(BookableServices.totalMinutes(services));
+        // la propia cita no cuenta como ocupada
+        validateSlot(business, membership, booth, start, end, appointmentId);
 
         // reagendar una cita cancelada la devuelve al flujo normal desde pendiente
         if (RESET_TO_PENDING_ON_EDIT.contains(currentStatus)) {
-            AppointmentStatus pending = statusRepository.findByName("PENDING")
-                    .orElseThrow(() -> new ResponseStatusException(
-                            HttpStatus.INTERNAL_SERVER_ERROR,
-                            "Error de configuración: no se encontró el estado PENDING "
-                                    + "en la base de datos."
-                    ));
-            appointment.setStatus(pending);
+            appointment.setStatus(findStatus("PENDING"));
         }
         appointment.setMembership(membership);
         appointment.setBooth(booth);
-        appointment.setStartDateTime(request.startDateTime());
-        appointment.setEndDateTime(endDateTime);
+        appointment.setStartDateTime(start);
+        appointment.setEndDateTime(end);
         appointment.setNotes(request.notes());
 
-        // el guardado previo adelanta posibles errores de duplicado para devolver 409
-        Appointment saved;
-        try {
-            saved = appointmentRepository.saveAndFlush(appointment);
-        } catch (DataIntegrityViolationException ex) {
-            String msg = ex.getMessage() == null ? "" : ex.getMessage();
-            if (msg.contains("uq_appointment_active_slot")) {
-                throw new ResponseStatusException(
-                        HttpStatus.CONFLICT,
-                        "El empleado ya tiene una cita en ese horario"
-                );
-            }
-            if (msg.contains("uq_appointment_active_booth_slot")) {
-                throw new ResponseStatusException(
-                        HttpStatus.CONFLICT,
-                        "La cabina ya tiene una cita en ese horario"
-                );
-            }
-            throw ex;
-        }
+        Appointment saved = saveCheckingConflicts(appointment);
 
         // se borra lo viejo y se guarda lo nuevo
-        // al editar se vuelven a guardar precios e impuestos actuales
         bookedServiceRepository.deleteAllByAppointmentId(saved.getId());
         bookedServiceRepository.flush();
-
-        List<BookedService> bookedServices = new ArrayList<>();
-        for (BusinessService service : services) {
-            BookedService booked = new BookedService();
-            booked.setAppointment(saved);
-            booked.setService(service);
-            booked.setAppliedPrice(service.getPrice());
-            booked.setAppliedTaxPercentage(service.getTax().getPercentage());
-            bookedServices.add(booked);
-        }
-        List<BookedService> savedBookedServices =
-                bookedServiceRepository.saveAll(bookedServices);
-
-        return AppointmentResponse.from(saved, savedBookedServices);
+        return AppointmentResponse.from(saved, saveBookedServices(saved, services));
     }
 
     /** cambia el estado de pago de una cita del negocio */
     public AppointmentResponse markPayment(Long businessId,
                                            Long appointmentId,
                                            UpdatePaymentRequest request) {
-
-        // este cambio solo toca si esta pagada o no
-        Appointment appointment = appointmentRepository
-                .findByIdAndBusinessId(appointmentId, businessId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No se encontró la cita con ID: " + appointmentId
-                                + " en el negocio con ID: " + businessId
-                ));
-
+        Appointment appointment = findAppointment(businessId, appointmentId);
         appointment.setIsPaid(request.isPaid());
-        Appointment updated = appointmentRepository.save(appointment);
+        return toResponse(appointmentRepository.save(appointment));
+    }
 
-        List<BookedService> bookedServices =
-                bookedServiceRepository.findAllByAppointmentId(updated.getId());
-        return AppointmentResponse.from(updated, bookedServices);
+    // pasos comunes de crear y editar
+
+    /** todas las comprobaciones de horario y solapes de un hueco */
+    private void validateSlot(Business business, Membership membership, Booth booth,
+                              LocalDateTime start, LocalDateTime end, Long excludeAppointmentId) {
+        Long membershipId = membership.getId();
+        Long boothId = booth != null ? booth.getId() : null;
+
+        validator.validateAppointmentInterval(start, business.getAppointmentInterval());
+        validator.validateBusinessHours(business.getId(), start, end);
+        validator.validateEmployeeSchedule(membershipId, start, end);
+        validator.validateNoOverlap(membershipId, start, end, excludeAppointmentId);
+        validator.validateNoEmployeeAbsence(membershipId, start, end);
+        if (boothId != null) {
+            validator.validateNoBoothOverlap(boothId, start, end, excludeAppointmentId);
+        }
+        validator.validateNoScheduleBlock(business.getId(), membershipId, boothId, start);
+    }
+
+    /**
+     * guarda la cita en el momento para convertir un duplicado en un 409 controlado
+     * los indices unicos de la base de datos son la ultima barrera contra la doble reserva
+     */
+    private Appointment saveCheckingConflicts(Appointment appointment) {
+        try {
+            return appointmentRepository.saveAndFlush(appointment);
+        } catch (DataIntegrityViolationException ex) {
+            String constraint = constraintName(ex);
+            if (constraint.contains("uq_appointment_active_booth_slot")) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "La cabina ya tiene una cita en ese horario");
+            }
+            if (constraint.contains("uq_appointment_active_slot")) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "El empleado ya tiene una cita en ese horario");
+            }
+            throw ex;
+        }
+    }
+
+    /** nombre de la restriccion que ha fallado, segun Hibernate */
+    private static String constraintName(DataIntegrityViolationException ex) {
+        for (Throwable t = ex; t != null; t = t.getCause()) {
+            if (t instanceof ConstraintViolationException cve && cve.getConstraintName() != null) {
+                return cve.getConstraintName();
+            }
+        }
+        return "";
+    }
+
+    /** congela precio e impuesto de cada servicio en el momento de reservar */
+    private List<BookedService> saveBookedServices(Appointment appointment, List<BusinessService> services) {
+        List<BookedService> booked = services.stream().map(service -> {
+            BookedService b = new BookedService();
+            b.setAppointment(appointment);
+            b.setService(service);
+            b.setAppliedPrice(service.getPrice());
+            b.setAppliedTaxPercentage(service.getTax().getPercentage());
+            return b;
+        }).toList();
+        return bookedServiceRepository.saveAll(booked);
+    }
+
+    // busquedas con su error correspondiente
+
+    private Business findActiveBusiness(Long businessId) {
+        Business business = businessRepository.findById(businessId)
+                .orElseThrow(() -> new NotFoundException("el negocio", businessId));
+        if (!Boolean.TRUE.equals(business.getIsActive())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El negocio está desactivado");
+        }
+        return business;
+    }
+
+    private Client findActiveClient(Long businessId, Long clientId) {
+        Client client = clientRepository.findByIdAndBusinessId(clientId, businessId)
+                .orElseThrow(() -> new NotFoundException("el cliente", clientId));
+        if (!client.getIsActive()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "El cliente con ID: " + clientId + " está desactivado");
+        }
+        return client;
+    }
+
+    private Membership lockActiveEmployee(Long businessId, Long membershipId) {
+        Membership membership = membershipRepository.findByIdAndBusinessIdForUpdate(membershipId, businessId)
+                .orElseThrow(() -> new NotFoundException("el empleado", membershipId));
+        if (!membership.getIsActive()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "El empleado con ID: " + membershipId + " está desactivado");
+        }
+        return membership;
+    }
+
+    private Booth lockActiveBooth(Long businessId, Long boothId) {
+        Booth booth = boothRepository.findByIdAndBusinessIdForUpdate(boothId, businessId)
+                .orElseThrow(() -> new NotFoundException("la cabina", boothId));
+        if (!booth.getIsActive()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "La cabina con ID: " + boothId + " está desactivada");
+        }
+        return booth;
+    }
+
+    private Appointment findAppointment(Long businessId, Long appointmentId) {
+        return appointmentRepository.findByIdAndBusinessId(appointmentId, businessId)
+                .orElseThrow(() -> new NotFoundException("la cita", appointmentId));
+    }
+
+    /** si falta un estado el problema es de datos base, no de la peticion */
+    private AppointmentStatus findStatus(String name) {
+        return statusRepository.findByName(name)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Error de configuración: no se encontró el estado " + name + " en la base de datos"));
+    }
+
+    private AppointmentResponse toResponse(Appointment appointment) {
+        return AppointmentResponse.from(appointment,
+                bookedServiceRepository.findAllByAppointmentId(appointment.getId()));
     }
 }

@@ -14,8 +14,6 @@ import com.optima.api.modules.business.repository.BusinessHourRepository;
 import com.optima.api.modules.business.repository.BusinessRepository;
 import com.optima.api.modules.business.repository.MembershipRepository;
 import com.optima.api.modules.business.repository.ScheduleBlockRepository;
-import com.optima.api.modules.catalog.model.BusinessService;
-import com.optima.api.modules.catalog.repository.BusinessServiceRepository;
 import com.optima.api.modules.user.model.EmployeeAbsence;
 import com.optima.api.modules.user.model.EmployeeSchedule;
 import com.optima.api.modules.user.repository.EmployeeAbsenceRepository;
@@ -31,10 +29,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /** calcula los huecos libres para una fecha y unos servicios */
@@ -45,7 +41,7 @@ public class AvailabilityService {
 
     private final BusinessRepository businessRepository;
     private final BusinessHourRepository businessHourRepository;
-    private final BusinessServiceRepository serviceRepository;
+    private final BookableServices bookableServices;
     private final MembershipRepository membershipRepository;
     private final EmployeeScheduleRepository scheduleRepository;
     private final EmployeeAbsenceRepository absenceRepository;
@@ -66,7 +62,7 @@ public class AvailabilityService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "No se encontró el negocio con ID: " + businessId));
 
-        int totalDuration = resolveServicesAndSumDuration(businessId, serviceIds);
+        int totalDuration = BookableServices.totalMinutes(bookableServices.load(businessId, serviceIds));
 
         // un mismo dia puede tener varios tramos abiertos
         int dayOfWeek = date.getDayOfWeek().getValue(); // 1 lunes 7 domingo
@@ -170,38 +166,6 @@ public class AvailabilityService {
 
         // al final se devuelven ordenados por hora
         return new AvailabilityResponse(date, businessId, totalDuration, slots);
-    }
-
-    /** busca los servicios y suma su duracion total */
-    private int resolveServicesAndSumDuration(Long businessId, List<Long> serviceIds) {
-        if (serviceIds == null || serviceIds.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Debe indicar al menos un servicio");
-        }
-        // se eliminan repetidos para no sumar duracion dos veces
-        Set<Long> uniqueIds = new HashSet<>(serviceIds);
-        List<BusinessService> services =
-                serviceRepository.findAllByIdInAndBusinessId(uniqueIds, businessId);
-
-        if (services.size() != uniqueIds.size()) {
-            Set<Long> found = services.stream()
-                    .map(BusinessService::getId)
-                    .collect(Collectors.toSet());
-            Long missing = uniqueIds.stream()
-                    .filter(id -> !found.contains(id))
-                    .findFirst()
-                    .orElseThrow();
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    "No se encontró el servicio con ID: " + missing
-                            + " en el negocio con ID: " + businessId);
-        }
-        for (BusinessService s : services) {
-            if (!s.getIsActive()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "El servicio con ID: " + s.getId() + " está desactivado");
-            }
-        }
-        return services.stream().mapToInt(BusinessService::getDurationMinutes).sum();
     }
 
     /** devuelve los empleados que se van a revisar */
