@@ -207,11 +207,11 @@ Objetivo: trabajar sobre una versión que recibe parches y saber al momento si u
 Hazla **antes del frontend**: así la API ya no cambia mientras se construyen las pantallas.
 
 - [x] 6.1 Clase común `ErrorWriter` para los errores JSON de los filtros (B5)
-- [ ] 6.2 `NotFoundException` en lugar de los "No se encontró…" repetidos (B6)
-- [ ] 6.3 Unificar los DTOs `Create*`/`Update*` idénticos y guardar las regex en `ValidationPatterns` (B7)
-- [ ] 6.4 Quitar la lógica repetida de ausencias y horarios (B8)
-- [ ] 6.5 Nombres que digan la verdad: `{membershipId}`, `JwtUtil` → `JwtService` (B9)
-- [ ] 6.6 Estados y roles como constantes en lugar de texto suelto (B10)
+- [x] 6.2 `NotFoundException` en lugar de los "No se encontró…" repetidos (B6)
+- [x] 6.3 Unificar los DTOs `Create*`/`Update*` idénticos y guardar las regex en `ValidationPatterns` (B7)
+- [x] 6.4 Quitar la lógica repetida de ausencias y horarios (B8)
+- [x] 6.5 Nombres que digan la verdad: `{membershipId}`, `JwtUtil` → `JwtService` (B9)
+- [x] 6.6 Estados y roles como constantes en lugar de texto suelto (B10)
 
 ### Fase 7 — Frontend
 

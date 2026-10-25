@@ -44,6 +44,11 @@ Cada cambio que se aplica al código se apunta aquí y en la columna **Estado** 
 | 25/10/2026 | `a6eda71` | Geocodificación después de guardar y en segundo plano, apagado ordenado y filtros registrados una sola vez (pasos 5.6 y 5.7) | B19 ✅, B14 ✅ |
 | 25/10/2026 | `ca9de43` | `Dockerfile` de producción (dos etapas, usuario sin privilegios), `docker-compose.yml` solo para desarrollo con puertos en `127.0.0.1` y `docker-compose.prod.yml` sin MySQL expuesto; la CI construye la imagen (pasos 5.4 y 5.5) | M10 ✅, M3 ✅ |
 | 25/10/2026 | `97d07e0` | README nuevo (arranque, tests, variables, permisos por rol), `pom.xml` con el repositorio correcto y fuera la colección de Postman antigua (paso 5.9) | B18 ✅ |
+| 25/10/2026 | `9ea1c95` | `NotFoundException` en todos los servicios: 37 errores 404 dejan de construirse a mano (paso 6.2) | B6 ✅ |
+| 25/10/2026 | `de06f3a` | Un DTO por recurso en lugar de 8 parejas `Create*`/`Update*` idénticas, regex comunes en `ValidationPatterns` e imports ordenados (paso 6.3) | B7 ✅ |
+| 25/10/2026 | `83a1160` | Ausencias y horarios con una sola regla de solape, `getInBusiness` y `TextUtils.blankToNull` en lugar de copias (paso 6.4) | B8 ✅ |
+| 25/10/2026 | `b79433b` | La entidad del catálogo pasa a `Offering`, `JwtUtil` a `common.security.JwtService` y `{userId}` a `{membershipId}` (paso 6.5) | B9 ✅ |
+| 25/10/2026 | `749e585` | Estados de cita y roles como constantes, también en las consultas JPQL (paso 6.6) | B10 ✅ |
 
 **Estados:** ⏳ Pendiente · 🟡 En parte · ✅ Resuelto
 
@@ -110,11 +115,11 @@ Además hay 14 problemas de gravedad media (por ejemplo, **doble reserva posible
 | B3 | Se devuelven al cliente mensajes internos de `IllegalArgumentException` | API | 🟢 Baja | `GlobalExceptionHandler.java:48` | ✅ Resuelto |
 | B4 | Faltan límites de tamaño en textos y listas | API | 🟢 Baja | varios DTOs | ✅ Resuelto |
 | B5 | Código que escribe errores JSON repetido en 4 sitios | Código repetido | 🟢 Baja | `SecurityConfig.java:57`, filtros | ✅ Resuelto |
-| B6 | "No se encontró…" y `findOrThrow` repetidos en todos los servicios | Código repetido | 🟢 Baja | todos los `*Service.java` | 🟡 En parte |
-| B7 | DTOs `Create*`/`Update*` idénticos y expresiones regulares copiadas | Código repetido | 🟢 Baja | `dto/request/*` | ⏳ Pendiente |
-| B8 | Lógica duplicada en ausencias y horarios de empleados | Código repetido | 🟢 Baja | `EmployeeAbsenceService.java:48` | ⏳ Pendiente |
-| B9 | Nombres engañosos (`{userId}` es un id de membresía, etc.) | Estructura | 🟢 Baja | `EmployeeAbsenceController.java:19` | ⏳ Pendiente |
-| B10 | Estados y roles como texto suelto; IDs fijos en el SQL | Estructura / BD | 🟢 Baja | `schema_v20.sql:185` | 🟡 En parte |
+| B6 | "No se encontró…" y `findOrThrow` repetidos en todos los servicios | Código repetido | 🟢 Baja | todos los `*Service.java` | ✅ Resuelto |
+| B7 | DTOs `Create*`/`Update*` idénticos y expresiones regulares copiadas | Código repetido | 🟢 Baja | `dto/request/*` | ✅ Resuelto |
+| B8 | Lógica duplicada en ausencias y horarios de empleados | Código repetido | 🟢 Baja | `EmployeeAbsenceService.java:48` | ✅ Resuelto |
+| B9 | Nombres engañosos (`{userId}` es un id de membresía, etc.) | Estructura | 🟢 Baja | `EmployeeAbsenceController.java:19` | ✅ Resuelto |
+| B10 | Estados y roles como texto suelto; IDs fijos en el SQL | Estructura / BD | 🟢 Baja | `schema_v20.sql:185` | ✅ Resuelto |
 | B11 | Un impuesto se puede archivar aunque lo usen servicios activos | API | 🟢 Baja | `TaxService.java:88` | ✅ Resuelto |
 | B12 | Huecos pasados en disponibilidad y edición de citas hacia el pasado | API | 🟢 Baja | `UpdateAppointmentRequest.java:23` | ✅ Resuelto |
 | B13 | Un negocio puede quedarse sin ningún administrador | Permisos | 🟢 Baja | `UserService.java:98` | ✅ Resuelto |
