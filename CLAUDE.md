@@ -9,3 +9,4 @@
 - Cada cambio que hagas se apunta en `AUDITORIA.md`
   (sección 0 y columna Estado de la tabla resumen).
 - Comprueba que compila (`./mvnw compile`) antes de subir.
+- Sigue el orden de `plan.md`: al terminar un paso, marca su casilla `[x]`.
