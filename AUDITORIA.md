@@ -2,6 +2,20 @@
 
 > Fecha: 25/10/2026 · Rama auditada: `claude/laughing-knuth-u9vz3w` (commit `2f8566a`)
 > Alcance: backend Spring Boot completo, esquema SQL, Docker, configuración, documentación e historial de Git.
+> Última actualización: 25/10/2026. Las correcciones aplicadas después de la auditoría se apuntan en la sección 0.
+
+---
+
+## 0. Registro de correcciones
+
+Cada cambio que se aplica al código se apunta aquí y en la columna **Estado** de la tabla resumen (sección 2). Los números de línea del resto del informe se refieren al commit auditado (`2f8566a`).
+
+| Fecha | Commit | Cambio | Hallazgos afectados |
+|-------|--------|--------|---------------------|
+| 25/10/2026 | `a641114` | La clave JWT ya no tiene valor por defecto. La clave de desarrollo pasa a `application-dev.properties` y `JwtUtil` la rechaza fuera del perfil `dev` | A2 ✅ |
+| 25/10/2026 | `e208a28` | Se elimina `README.md` (daba por hechas cosas falsas y publicaba la URL de producción con credenciales de demo) | M10, M13 🟡, B18 🟡 |
+
+**Estados:** ⏳ Pendiente · 🟡 En parte · ✅ Resuelto
 
 ---
 
@@ -12,7 +26,7 @@ Optima es un backend REST **multi-tenant** (varios negocios comparten la misma b
 Aun así hay **4 problemas de gravedad alta** que conviene arreglar cuanto antes:
 
 1. **Secretos reales en el historial de Git** (clave JWT de producción y contraseña de aplicación de Gmail).
-2. **Clave JWT con un valor por defecto público**: si en producción falta la variable `JWT_SECRET`, cualquiera puede fabricar tokens válidos.
+2. **Clave JWT con un valor por defecto público**: si en producción falta la variable `JWT_SECRET`, cualquiera puede fabricar tokens válidos. ✅ *Resuelto en `a641114`.*
 3. **Fuga de datos entre negocios**: al dar de alta un empleado con un email que ya existe, el sistema reutiliza esa cuenta y devuelve su nombre y teléfono a un negocio ajeno.
 4. **No hay ni un solo test automatizado.**
 
@@ -41,48 +55,48 @@ Además hay 14 problemas de gravedad media (por ejemplo, **doble reserva posible
 
 ## 2. Tabla resumen
 
-| ID | Problema | Área | Gravedad | Archivo principal |
-|----|----------|------|----------|-------------------|
-| A1 | Secretos reales en el historial de Git | Configuración | 🔴 Alta | `.env-example`, `application.properties` (commits < `16335ce`) |
-| A2 | Clave JWT con valor por defecto público | Autenticación | 🔴 Alta | `src/main/resources/application.properties:23` |
-| A3 | Alta de empleado reutiliza cuentas ajenas y filtra sus datos | Permisos / multi-tenant | 🔴 Alta | `modules/user/service/UserService.java:57` |
-| A4 | No existe ningún test automatizado | Tests | 🔴 Alta | `pom.xml`, falta `src/test` |
-| M1 | Doble reserva posible con peticiones simultáneas | API / BD | 🟠 Media | `modules/appointment/service/AppointmentService.java:67` |
-| M2 | Con intervalo de 45 min la disponibilidad ofrece huecos que luego se rechazan | API | 🟠 Media | `AvailabilityService.java:325` / `AppointmentValidator.java:182` |
-| M3 | El límite de intentos se puede saltar con `X-Forwarded-For` | Autenticación | 🟠 Media | `common/security/RateLimitFilter.java:102` |
-| M4 | Negocio desactivado: los tokens siguen funcionando y no se puede reactivar | Permisos | 🟠 Media | `common/security/TenantGuardFilter.java:72` |
-| M5 | Los tokens no se invalidan al cambiar contraseña; email cambiable sin contraseña | Autenticación | 🟠 Media | `modules/user/service/UserService.java:163` |
-| M6 | "Olvidé mi contraseña" permite enumerar cuentas por tiempo y deja tokens viejos válidos | Autenticación | 🟠 Media | `modules/auth/service/PasswordResetService.java:53` |
-| M7 | Un empleado puede modificar cualquier cita, pagos y clientes | Permisos | 🟠 Media | `AppointmentController.java:72`, `ClientController.java:58` |
-| M8 | El estado de pago no tiene control ni registro y editar recalcula precios | Pagos | 🟠 Media | `AppointmentService.java:550` |
-| M9 | `POST /api/businesses` crea negocios huérfanos | API / permisos | 🟠 Media | `modules/business/controller/BusinessController.java:25` |
-| M10 | Base de datos y Docker con configuración insegura para producción | Configuración / BD | 🟠 Media | `docker-compose.yml`, `docs/schema_v20.sql:902` |
-| M11 | Dependencias desactualizadas con vulnerabilidades conocidas | Dependencias | 🟠 Media | `pom.xml:8` |
-| M12 | `AppointmentService` duplica ~120 líneas entre crear y editar | Código repetido | 🟠 Media | `AppointmentService.java:117` y `:432` |
-| M13 | Credenciales de demo publicadas junto a la URL de producción | Configuración | 🟠 Media | `README.md:7`, `README.md:139` |
-| M14 | Fechas comparadas con el reloj del servidor (UTC) y no con la hora del negocio | API | 🟠 Media | `CreateAppointmentRequest.java:29` |
-| B1 | Swagger público y activado por defecto | Configuración | 🟢 Baja | `application.properties:50` |
-| B2 | `show-sql=true` por defecto | Configuración | 🟢 Baja | `application.properties:13` |
-| B3 | Se devuelven al cliente mensajes internos de `IllegalArgumentException` | API | 🟢 Baja | `GlobalExceptionHandler.java:48` |
-| B4 | Faltan límites de tamaño en textos y listas | API | 🟢 Baja | varios DTOs |
-| B5 | Código que escribe errores JSON repetido en 4 sitios | Código repetido | 🟢 Baja | `SecurityConfig.java:57`, filtros |
-| B6 | "No se encontró…" y `findOrThrow` repetidos en todos los servicios | Código repetido | 🟢 Baja | todos los `*Service.java` |
-| B7 | DTOs `Create*`/`Update*` idénticos y expresiones regulares copiadas | Código repetido | 🟢 Baja | `dto/request/*` |
-| B8 | Lógica duplicada en ausencias y horarios de empleados | Código repetido | 🟢 Baja | `EmployeeAbsenceService.java:48` |
-| B9 | Nombres engañosos (`{userId}` es un id de membresía, etc.) | Estructura | 🟢 Baja | `EmployeeAbsenceController.java:19` |
-| B10 | Estados y roles como texto suelto; IDs fijos en el SQL | Estructura / BD | 🟢 Baja | `schema_v20.sql:185` |
-| B11 | Un impuesto se puede archivar aunque lo usen servicios activos | API | 🟢 Baja | `TaxService.java:88` |
-| B12 | Huecos pasados en disponibilidad y edición de citas hacia el pasado | API | 🟢 Baja | `UpdateAppointmentRequest.java:23` |
-| B13 | Un negocio puede quedarse sin ningún administrador | Permisos | 🟢 Baja | `UserService.java:98` |
-| B14 | Filtros de seguridad registrados dos veces | Estructura | 🟢 Baja | `common/security/*Filter.java` |
-| B15 | Sin migraciones de BD ni validación del esquema | Base de datos | 🟢 Baja | `application.properties:12`, `schema_v20.sql` |
-| B16 | La tabla `password_resets` crece sin límite | Base de datos | 🟢 Baja | `PasswordResetService.java` |
-| B17 | Listados paginados sin orden por defecto | API | 🟢 Baja | repositorios `findByBusinessId…` |
-| B18 | Documentación desactualizada y sin integración continua | Documentación | 🟢 Baja | `README.md:121`, `pom.xml:16` |
-| B19 | Llamadas externas dentro de transacciones y datos personales en logs | API | 🟢 Baja | `BusinessService.java:69`, `GeocodingService.java:91` |
-| B20 | Búsqueda de clientes sin escapar `%` y `_`; bloqueos de BD → 500 | API | 🟢 Baja | `ClientRepository.java:30` |
-| — | Frontend no presente en el repositorio | Frontend | Informativo | `README.md:121` |
-| — | Pagos: solo existe un indicador `isPaid` | Pagos | Informativo | ver M8 |
+| ID | Problema | Área | Gravedad | Archivo principal | Estado |
+|----|----------|------|----------|-------------------|--------|
+| A1 | Secretos reales en el historial de Git | Configuración | 🔴 Alta | `.env-example`, `application.properties` (commits < `16335ce`) | ⏳ Pendiente |
+| A2 | Clave JWT con valor por defecto público | Autenticación | 🔴 Alta | `src/main/resources/application.properties:23` | ✅ Resuelto |
+| A3 | Alta de empleado reutiliza cuentas ajenas y filtra sus datos | Permisos / multi-tenant | 🔴 Alta | `modules/user/service/UserService.java:57` | ⏳ Pendiente |
+| A4 | No existe ningún test automatizado | Tests | 🔴 Alta | `pom.xml`, falta `src/test` | ⏳ Pendiente |
+| M1 | Doble reserva posible con peticiones simultáneas | API / BD | 🟠 Media | `modules/appointment/service/AppointmentService.java:67` | ⏳ Pendiente |
+| M2 | Con intervalo de 45 min la disponibilidad ofrece huecos que luego se rechazan | API | 🟠 Media | `AvailabilityService.java:325` / `AppointmentValidator.java:182` | ⏳ Pendiente |
+| M3 | El límite de intentos se puede saltar con `X-Forwarded-For` | Autenticación | 🟠 Media | `common/security/RateLimitFilter.java:102` | ⏳ Pendiente |
+| M4 | Negocio desactivado: los tokens siguen funcionando y no se puede reactivar | Permisos | 🟠 Media | `common/security/TenantGuardFilter.java:72` | ⏳ Pendiente |
+| M5 | Los tokens no se invalidan al cambiar contraseña; email cambiable sin contraseña | Autenticación | 🟠 Media | `modules/user/service/UserService.java:163` | ⏳ Pendiente |
+| M6 | "Olvidé mi contraseña" permite enumerar cuentas por tiempo y deja tokens viejos válidos | Autenticación | 🟠 Media | `modules/auth/service/PasswordResetService.java:53` | ⏳ Pendiente |
+| M7 | Un empleado puede modificar cualquier cita, pagos y clientes | Permisos | 🟠 Media | `AppointmentController.java:72`, `ClientController.java:58` | ⏳ Pendiente |
+| M8 | El estado de pago no tiene control ni registro y editar recalcula precios | Pagos | 🟠 Media | `AppointmentService.java:550` | ⏳ Pendiente |
+| M9 | `POST /api/businesses` crea negocios huérfanos | API / permisos | 🟠 Media | `modules/business/controller/BusinessController.java:25` | ⏳ Pendiente |
+| M10 | Base de datos y Docker con configuración insegura para producción | Configuración / BD | 🟠 Media | `docker-compose.yml`, `docs/schema_v20.sql:902` | ⏳ Pendiente |
+| M11 | Dependencias desactualizadas con vulnerabilidades conocidas | Dependencias | 🟠 Media | `pom.xml:8` | ⏳ Pendiente |
+| M12 | `AppointmentService` duplica ~120 líneas entre crear y editar | Código repetido | 🟠 Media | `AppointmentService.java:117` y `:432` | ⏳ Pendiente |
+| M13 | Credenciales de demo publicadas junto a la URL de producción | Configuración | 🟠 Media | `README.md:7`, `README.md:139` | 🟡 En parte |
+| M14 | Fechas comparadas con el reloj del servidor (UTC) y no con la hora del negocio | API | 🟠 Media | `CreateAppointmentRequest.java:29` | ⏳ Pendiente |
+| B1 | Swagger público y activado por defecto | Configuración | 🟢 Baja | `application.properties:50` | ⏳ Pendiente |
+| B2 | `show-sql=true` por defecto | Configuración | 🟢 Baja | `application.properties:13` | ⏳ Pendiente |
+| B3 | Se devuelven al cliente mensajes internos de `IllegalArgumentException` | API | 🟢 Baja | `GlobalExceptionHandler.java:48` | ⏳ Pendiente |
+| B4 | Faltan límites de tamaño en textos y listas | API | 🟢 Baja | varios DTOs | ⏳ Pendiente |
+| B5 | Código que escribe errores JSON repetido en 4 sitios | Código repetido | 🟢 Baja | `SecurityConfig.java:57`, filtros | ⏳ Pendiente |
+| B6 | "No se encontró…" y `findOrThrow` repetidos en todos los servicios | Código repetido | 🟢 Baja | todos los `*Service.java` | ⏳ Pendiente |
+| B7 | DTOs `Create*`/`Update*` idénticos y expresiones regulares copiadas | Código repetido | 🟢 Baja | `dto/request/*` | ⏳ Pendiente |
+| B8 | Lógica duplicada en ausencias y horarios de empleados | Código repetido | 🟢 Baja | `EmployeeAbsenceService.java:48` | ⏳ Pendiente |
+| B9 | Nombres engañosos (`{userId}` es un id de membresía, etc.) | Estructura | 🟢 Baja | `EmployeeAbsenceController.java:19` | ⏳ Pendiente |
+| B10 | Estados y roles como texto suelto; IDs fijos en el SQL | Estructura / BD | 🟢 Baja | `schema_v20.sql:185` | ⏳ Pendiente |
+| B11 | Un impuesto se puede archivar aunque lo usen servicios activos | API | 🟢 Baja | `TaxService.java:88` | ⏳ Pendiente |
+| B12 | Huecos pasados en disponibilidad y edición de citas hacia el pasado | API | 🟢 Baja | `UpdateAppointmentRequest.java:23` | ⏳ Pendiente |
+| B13 | Un negocio puede quedarse sin ningún administrador | Permisos | 🟢 Baja | `UserService.java:98` | ⏳ Pendiente |
+| B14 | Filtros de seguridad registrados dos veces | Estructura | 🟢 Baja | `common/security/*Filter.java` | ⏳ Pendiente |
+| B15 | Sin migraciones de BD ni validación del esquema | Base de datos | 🟢 Baja | `application.properties:12`, `schema_v20.sql` | ⏳ Pendiente |
+| B16 | La tabla `password_resets` crece sin límite | Base de datos | 🟢 Baja | `PasswordResetService.java` | ⏳ Pendiente |
+| B17 | Listados paginados sin orden por defecto | API | 🟢 Baja | repositorios `findByBusinessId…` | ⏳ Pendiente |
+| B18 | Documentación desactualizada y sin integración continua | Documentación | 🟢 Baja | `README.md:121`, `pom.xml:16` | 🟡 En parte |
+| B19 | Llamadas externas dentro de transacciones y datos personales en logs | API | 🟢 Baja | `BusinessService.java:69`, `GeocodingService.java:91` | ⏳ Pendiente |
+| B20 | Búsqueda de clientes sin escapar `%` y `_`; bloqueos de BD → 500 | API | 🟢 Baja | `ClientRepository.java:30` | ⏳ Pendiente |
+| — | Frontend no presente en el repositorio | Frontend | Informativo | `README.md:121` | — |
+| — | Pagos: solo existe un indicador `isPaid` | Pagos | Informativo | ver M8 | — |
 
 ---
 
@@ -117,11 +131,12 @@ Git guarda todas las versiones. Cualquiera que clone el repositorio puede ver es
 
 ---
 
-### A2. Clave JWT con valor por defecto público
+### A2. Clave JWT con valor por defecto público ✅
 
 - **Área:** Autenticación
 - **Archivos:** `src/main/resources/application.properties:23`, `.env-example:4`, `src/main/java/com/optima/api/common/utils/JwtUtil.java:33-40`
 - **Gravedad:** 🔴 Alta
+- **Estado:** ✅ Resuelto en `a641114` (25/10/2026). Ver "Corrección aplicada" al final de este apartado.
 
 **¿Qué pasa?**
 ```properties
@@ -151,6 +166,28 @@ También puede fabricar tokens de negocio (`businessId`, `role=ADMIN`): `TenantG
    }
    ```
 4. Cambiar el README: en producción **sí** hay que definir `JWT_SECRET`.
+
+**Corrección aplicada (`a641114`):**
+1. `application.properties`: `app.jwt.secret=${JWT_SECRET}`, sin valor por defecto. Si falta la variable, Spring no arranca (`Could not resolve placeholder 'JWT_SECRET'`).
+2. Nuevo `src/main/resources/application-dev.properties` con la clave de desarrollo. Solo se carga con `SPRING_PROFILES_ACTIVE=dev`.
+3. `JwtUtil.init()`: recibe `Environment` por constructor y lanza `IllegalStateException` si la clave es la de desarrollo y el perfil `dev` no está activo (`environment.matchesProfiles("dev")`). Se compara con la clave **exacta** y no con `startsWith("dev-secret")`, para no rechazar por casualidad una clave válida.
+4. `.env-example`: `JWT_SECRET=CAMBIAME`, que no llega a 32 caracteres y por eso no deja arrancar. Un comentario explica cómo generarla con `openssl rand -base64 64` (la salida ocupa 2 líneas y hay que juntarla en una) y cómo arrancar en local con el perfil `dev`.
+5. README: en lugar de actualizarlo se ha eliminado (`e208a28`, ver B18).
+
+**Verificación:** `./mvnw compile` sin errores. Con un programa de prueba aparte:
+
+| Caso | Resultado |
+|------|-----------|
+| Clave de desarrollo + perfil `dev` | ✅ arranca, crea y valida tokens |
+| Clave de desarrollo sin perfil o con perfil `prod` | ❌ `IllegalStateException` |
+| `CAMBIAME` | ❌ "al menos 32 caracteres" |
+| Clave generada con `openssl` (88 caracteres) | ✅ arranca, crea y valida tokens |
+| Sin `JWT_SECRET` y sin perfil | ❌ no se resuelve `app.jwt.secret` |
+| Sin `JWT_SECRET` y perfil `dev` | ✅ usa la clave de desarrollo |
+
+**Queda fuera del código:**
+- Si el `.env` del servidor de AWS tiene la clave de desarrollo, la aplicación **no arrancará** al desplegar este cambio. Antes de desplegar hay que poner una clave nueva generada con `openssl rand -base64 64 | tr -d '\n'` y no activar el perfil `dev` en producción.
+- Esto **no resuelve A1**: la clave de producción antigua que está en el historial sigue sirviendo hasta que se rote.
 
 ---
 
@@ -442,6 +479,7 @@ Cualquier ADMIN puede llamar a `POST /api/businesses`. Se crea el negocio, pero 
 - **Área:** Configuración / Base de datos
 - **Archivos:** `src/main/resources/application.properties:6-8`; `docker-compose.yml:8-12`, `:33-34`, `:38`, `:48`; `docs/schema_v20.sql:4` y `:902-905`; `README.md:41-44`
 - **Gravedad:** 🟠 Media (Alta si este `docker-compose.yml` es el que se usa en AWS)
+- **Estado:** ⏳ Pendiente. Al eliminar el README (`e208a28`) desaparece la frase falsa *"las credenciales viven en variables de entorno"*, pero los problemas de configuración siguen igual.
 
 **¿Qué pasa?**
 - Usuario y contraseña de la BD **fijos en el código** (`optima_user` / `optima_pass`) y `MYSQL_ROOT_PASSWORD: root_password` en el compose. El README dice que *"las credenciales viven en variables de entorno"*, pero no es así.
@@ -529,6 +567,7 @@ private void validarHorario(Long businessId, Long membershipId, Long boothId, Lo
 - **Área:** Configuración / Autenticación
 - **Archivos:** `README.md:7` (URL de producción), `README.md:139-140` (`admin@optima.com` / `12345678`); `docs/schema_v20.sql` (semilla); validaciones `@Size(min = 8)`
 - **Gravedad:** 🟠 Media
+- **Estado:** 🟡 En parte. Con el README eliminado (`e208a28`), el repositorio ya no publica la URL de producción junto a las credenciales de demo. Pero siguen en el historial de Git (`git show e208a28^:README.md`), así que la contraseña del admin de demo en producción hay que cambiarla igualmente. Los pasos 1 y 3 siguen pendientes.
 
 **¿Qué pasa?**
 El README invita a probar en `optima-aws.duckdns.org` y publica la contraseña del ADMIN de demo. Si esa semilla está cargada allí, **cualquier visitante es administrador**: puede cambiar la contraseña del admin (`PUT /api/me/password`) y dejar fuera al tribunal, borrar datos o usar el fallo A3. La única regla de contraseñas es "mínimo 8 caracteres", así que se aceptan `12345678` o `aaaaaaaa`.
@@ -680,6 +719,7 @@ Las citas llegan como `LocalDateTime` sin zona (hora de Madrid, por ejemplo), pe
 ### B18. Documentación desactualizada y sin integración continua
 - **Archivos:** `README.md:121-125` y `:162` (habla de `frontend-v2/`, que se borró en el último commit), `README.md:151-165` (la estructura no coincide con `modules/…`), `README.md:41-44` (ver M10), `pom.xml:16-18` (`url`/`scm` apuntan a `mirsugogu/tfg-backend`), `docs/optima-postman-collection-v4.json` (describe el "flujo v16"); no existe `.github/workflows`
 - **Por qué:** quien llega al proyecto (o el tribunal) sigue instrucciones que ya no funcionan.
+- **Estado:** 🟡 En parte. El README desactualizado se ha eliminado (`e208a28`). Ahora **no hay README**: las únicas instrucciones de arranque son los comentarios de `.env-example`. Siguen pendientes el `pom.xml`, la colección de Postman y la integración continua.
 - **Arreglo:** actualizar el README y el `pom.xml`; añadir un workflow mínimo de GitHub Actions que ejecute `./mvnw -B verify` en cada push (útil sobre todo cuando haya tests, ver A4).
 
 ### B19. Llamadas externas dentro de transacciones y datos personales en los logs
@@ -803,7 +843,7 @@ Para valorar el informe en su justa medida, esto está **bien hecho**:
 
 ## 9. Orden sugerido de corrección
 
-1. **Hoy:** A1 (rotar secretos) y A2 (quitar la clave JWT por defecto). Son cambios pequeños con mucho impacto.
+1. **Hoy:** A1 (rotar secretos) y A2 (quitar la clave JWT por defecto, ✅ hecho en `a641114`). Son cambios pequeños con mucho impacto.
 2. **Esta semana:** A3 (alta de empleados), M3 (rate limit), M10 (BD y puertos), M13 (demo en producción), M11 (actualizar Spring Boot y `max = 72`).
 3. **Siguiente:** A4. Montar los tests de la sección 7 y escribir primero los que reproducen M1 y M2; después arreglar esos bugs.
 4. **Después:** M4–M9 y M14, que son decisiones de diseño (qué puede hacer cada rol, reglas de pago y de reactivación).
