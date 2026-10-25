@@ -29,9 +29,21 @@ public class MailService {
     /** envia un correo con asunto y texto, en otro hilo */
     @Async
     public void sendSimpleEmail(String to, String subject, String body) {
+        sendSimpleEmail(to, subject, body, null);
+    }
+
+    /**
+     * igual, indicando a quien responde el destinatario
+     * los avisos a clientes salen de Optima pero las respuestas van al negocio
+     */
+    @Async
+    public void sendSimpleEmail(String to, String subject, String body, String replyTo) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(from);
         message.setTo(to);
+        if (replyTo != null) {
+            message.setReplyTo(replyTo);
+        }
         message.setSubject(subject);
         message.setText(body);
 

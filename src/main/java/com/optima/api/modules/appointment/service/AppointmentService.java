@@ -10,6 +10,7 @@ import com.optima.api.modules.appointment.dto.response.AppointmentResponse;
 import com.optima.api.modules.appointment.model.Appointment;
 import com.optima.api.modules.appointment.model.AppointmentStatus;
 import com.optima.api.modules.appointment.model.BookedService;
+import com.optima.api.modules.appointment.notification.AppointmentEvent;
 import com.optima.api.modules.appointment.repository.AppointmentRepository;
 import com.optima.api.modules.appointment.repository.AppointmentStatusRepository;
 import com.optima.api.modules.appointment.repository.BookedServiceRepository;
@@ -25,6 +26,7 @@ import com.optima.api.modules.catalog.model.BusinessService;
 import com.optima.api.modules.client.model.Client;
 import com.optima.api.modules.client.repository.ClientRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -73,6 +75,7 @@ public class AppointmentService {
     private final AppointmentValidator validator;
     private final BookableServices bookableServices;
     private final BusinessClock businessClock;
+    private final ApplicationEventPublisher events;
 
     /**
      * crea una cita nueva
@@ -108,7 +111,10 @@ public class AppointmentService {
         appointment.setNotes(request.notes());
 
         Appointment saved = saveCheckingConflicts(appointment);
-        return AppointmentResponse.from(saved, saveBookedServices(saved, services, Map.of()));
+        List<BookedService> booked = saveBookedServices(saved, services, Map.of());
+        // email de confirmacion al cliente, cuando la transaccion se haya guardado (P6)
+        events.publishEvent(new AppointmentEvent(saved.getId(), AppointmentEvent.Type.CREATED));
+        return AppointmentResponse.from(saved, booked);
     }
 
     /** busca citas con paginacion y filtros opcionales */
@@ -185,7 +191,11 @@ public class AppointmentService {
 
         // si la transicion es valida se guarda el cambio
         appointment.setStatus(newStatus);
-        return toResponse(appointmentRepository.save(appointment));
+        Appointment saved = appointmentRepository.save(appointment);
+        if ("CANCELLED".equals(newStatus.getName())) {
+            events.publishEvent(new AppointmentEvent(saved.getId(), AppointmentEvent.Type.CANCELLED));
+        }
+        return toResponse(saved);
     }
 
     /** actualiza los datos editables de una cita (no cambia cliente ni pago); READ_COMMITTED como al crear (M1) */
@@ -236,6 +246,8 @@ public class AppointmentService {
         // la propia cita no cuenta como ocupada
         validateSlot(business, membership, booth, start, end, appointmentId);
 
+        boolean timeChanges = !start.equals(appointment.getStartDateTime());
+
         // reagendar una cita cancelada la devuelve al flujo normal desde pendiente
         if (RESET_TO_PENDING_ON_EDIT.contains(currentStatus)) {
             appointment.setStatus(findStatus("PENDING"));
@@ -254,7 +266,11 @@ public class AppointmentService {
                 .collect(Collectors.toMap(bs -> bs.getService().getId(), bs -> bs));
         bookedServiceRepository.deleteAllByAppointmentId(saved.getId());
         bookedServiceRepository.flush();
-        return AppointmentResponse.from(saved, saveBookedServices(saved, services, previousByService));
+        List<BookedService> booked = saveBookedServices(saved, services, previousByService);
+        if (timeChanges) {
+            events.publishEvent(new AppointmentEvent(saved.getId(), AppointmentEvent.Type.RESCHEDULED));
+        }
+        return AppointmentResponse.from(saved, booked);
     }
 
     /**

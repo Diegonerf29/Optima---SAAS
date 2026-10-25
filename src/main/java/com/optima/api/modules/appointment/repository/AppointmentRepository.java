@@ -19,6 +19,10 @@ import java.util.Optional;
 @Repository
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
 
+    /** carga una cita con todo lo que necesita un email al cliente */
+    @EntityGraph(attributePaths = {"business", "client", "membership", "membership.user", "status"})
+    Optional<Appointment> findWithDetailsById(Long id);
+
     /** busca una cita por id dentro del negocio */
     Optional<Appointment> findByIdAndBusinessId(Long id, Long businessId);
 
@@ -161,4 +165,20 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             @Param("businessId") Long businessId,
             @Param("now") LocalDateTime now
     );
+
+    /**
+     * citas activas sin recordatorio que empiezan en una ventana de fechas
+     * la ventana es amplia porque cada negocio tiene su zona horaria; el filtro fino se hace en Java
+     */
+    @EntityGraph(attributePaths = {"business", "client", "membership", "membership.user"})
+    @Query("""
+            SELECT a FROM Appointment a
+            WHERE a.reminderSentAt IS NULL
+              AND a.startDateTime >= :from
+              AND a.startDateTime <  :to
+              AND a.status.name IN ('PENDING', 'CONFIRMED')
+              AND a.business.sendClientEmails = true
+              AND a.client.email IS NOT NULL
+            """)
+    List<Appointment> findPendingReminders(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
 }

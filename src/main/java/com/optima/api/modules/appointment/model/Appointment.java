@@ -71,6 +71,10 @@ public class Appointment {
     @Column(name = "payment_method", length = 20)
     private String paymentMethod;
 
+    /** cuando se envio el recordatorio al cliente (vacio si aun no) */
+    @Column(name = "reminder_sent_at")
+    private LocalDateTime reminderSentAt;
+
     /** fecha y hora de inicio */
     @Column(name = "start_datetime", nullable = false)
     private LocalDateTime startDateTime;

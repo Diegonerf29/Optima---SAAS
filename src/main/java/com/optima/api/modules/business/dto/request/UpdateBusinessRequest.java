@@ -50,5 +50,8 @@ public record UpdateBusinessRequest(
 
         // opcional: si no se indica, Europe/Madrid
         @Size(max = 50, message = "La zona horaria no puede superar los 50 caracteres")
-        String timezone
+        String timezone,
+
+        // opcional: activar o desactivar los emails a clientes
+        Boolean sendClientEmails
 ) {}

@@ -109,6 +109,9 @@ public class BusinessService {
             b.setAppointmentInterval(request.appointmentInterval());
         }
         b.setTimezone(validTimezone(request.timezone(), b.getTimezone()));
+        if (request.sendClientEmails() != null) {
+            b.setSendClientEmails(request.sendClientEmails());
+        }
 
         geocodingService.geocode(request.address(), request.city(), request.postalCode(), request.country())
                 .ifPresent(coords -> {

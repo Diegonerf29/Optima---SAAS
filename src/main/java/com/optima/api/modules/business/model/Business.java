@@ -78,6 +78,10 @@ public class Business {
     @Column(name = "timezone", nullable = false, length = 50)
     private String timezone = "Europe/Madrid";
 
+    /** si se envian emails a los clientes (confirmacion, cambios y recordatorio) */
+    @Column(name = "send_client_emails", nullable = false)
+    private Boolean sendClientEmails = true;
+
     /** indica si el negocio sigue activo */
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
