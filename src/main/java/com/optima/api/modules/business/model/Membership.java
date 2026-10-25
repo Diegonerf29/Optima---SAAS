@@ -51,6 +51,17 @@ public class Membership {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
+    /**
+     * invitacion sin aceptar: la persona ya tenia cuenta y aun no ha dicho que si
+     * mientras tanto la membresia esta inactiva y el negocio no ve sus datos personales
+     */
+    @Column(name = "invitation_pending", nullable = false)
+    private Boolean invitationPending = false;
+
+    /** momento en que se envio la invitacion */
+    @Column(name = "invited_at")
+    private LocalDateTime invitedAt;
+
     /** color usado por la interfaz para identificar al empleado */
     @Column(name = "color")
     private String color;

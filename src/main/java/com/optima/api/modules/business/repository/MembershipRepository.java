@@ -22,9 +22,20 @@ public interface MembershipRepository extends JpaRepository<Membership, Long> {
     @EntityGraph(attributePaths = {"user", "role"})
     Page<Membership> findByBusinessIdAndIsActiveTrue(Long businessId, Pageable pageable);
 
-    /** lista empleados archivados con usuario y rol cargados */
+    /** lista empleados archivados con usuario y rol cargados (sin las invitaciones pendientes) */
     @EntityGraph(attributePaths = {"user", "role"})
-    Page<Membership> findByBusinessIdAndIsActiveFalse(Long businessId, Pageable pageable);
+    Page<Membership> findByBusinessIdAndIsActiveFalseAndInvitationPendingFalse(Long businessId, Pageable pageable);
+
+    /** lista las invitaciones pendientes de un negocio */
+    @EntityGraph(attributePaths = {"user", "role"})
+    Page<Membership> findByBusinessIdAndInvitationPendingTrue(Long businessId, Pageable pageable);
+
+    /** invitaciones pendientes de una persona, con el negocio y el rol cargados */
+    @EntityGraph(attributePaths = {"business", "role"})
+    List<Membership> findAllByUserIdAndInvitationPendingTrue(Long userId);
+
+    /** cuenta las invitaciones pendientes de una persona */
+    long countByUserIdAndInvitationPendingTrue(Long userId);
 
     /** lista las relaciones activas sin paginar */
     @EntityGraph(attributePaths = {"user"})

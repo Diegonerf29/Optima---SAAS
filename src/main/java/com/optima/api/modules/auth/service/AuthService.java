@@ -40,6 +40,7 @@ public class AuthService {
     private final BusinessService businessService;
     private final PasswordEncoder passwordEncoder;
     private final MailService mailService;
+    private final LoginAttemptService loginAttemptService;
 
     /**
      * comprueba el inicio de sesion y devuelve el codigo que corresponda
@@ -47,11 +48,14 @@ public class AuthService {
      */
     public TokenResponse login(LoginRequest request) {
         String email = request.email().trim();
+        // la cuenta puede estar bloqueada por demasiados fallos seguidos
+        loginAttemptService.checkNotBlocked(email);
 
         Optional<User> userOpt = userRepository.findByEmailIgnoreCase(email);
         if (userOpt.isEmpty()) {
             // se revisa la clave aunque no exista el usuario para no filtrar emails por tiempo
             passwordEncoder.matches(request.password(), DUMMY_BCRYPT_HASH);
+            loginAttemptService.recordFailure(email);
             throw new ResponseStatusException(
                     HttpStatus.UNAUTHORIZED, "Credenciales incorrectas");
         }
@@ -60,14 +64,17 @@ public class AuthService {
         if (!user.getIsActive()) {
             // mantiene la misma respuesta que una contrasena incorrecta
             passwordEncoder.matches(request.password(), DUMMY_BCRYPT_HASH);
+            loginAttemptService.recordFailure(email);
             throw new ResponseStatusException(
                     HttpStatus.UNAUTHORIZED, "Credenciales incorrectas");
         }
 
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+            loginAttemptService.recordFailure(email);
             throw new ResponseStatusException(
                     HttpStatus.UNAUTHORIZED, "Credenciales incorrectas");
         }
+        loginAttemptService.recordSuccess(email);
 
         // solo se tienen en cuenta relaciones y negocios activos
         List<Membership> activeMemberships = membershipRepository.findAllByUserId(user.getId())
@@ -76,7 +83,10 @@ public class AuthService {
                 .filter(m -> Boolean.TRUE.equals(m.getBusiness().getIsActive()))
                 .toList();
 
-        if (activeMemberships.isEmpty()) {
+        long pendingInvitations = membershipRepository.countByUserIdAndInvitationPendingTrue(user.getId());
+
+        // sin negocios activos solo puede entrar si tiene invitaciones que aceptar
+        if (activeMemberships.isEmpty() && pendingInvitations == 0) {
             throw new ResponseStatusException(
                     HttpStatus.UNAUTHORIZED, "Credenciales incorrectas");
         }
@@ -89,14 +99,14 @@ public class AuthService {
                     only.getBusiness().getId(),
                     only.getRole().getName()
             );
-            return TokenResponse.tenant(token);
+            return TokenResponse.tenant(token, pendingInvitations);
         }
 
         String token = jwtUtil.generateIdentityToken(user.getEmail(), user.getId());
         List<MembershipSummaryResponse> summaries = activeMemberships.stream()
                 .map(MembershipSummaryResponse::from)
                 .toList();
-        return TokenResponse.identity(token, summaries);
+        return TokenResponse.identity(token, summaries, pendingInvitations);
     }
 
     /** cambia un codigo de identidad por un codigo de negocio */

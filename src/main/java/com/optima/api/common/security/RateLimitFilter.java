@@ -8,25 +8,28 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 /**
  * limita peticiones por ip en rutas de auth
  * sirve para frenar intentos repetidos
+ *
+ * la ip sale de request.getRemoteAddr(): detras de Caddy, Tomcat ya la sustituye por la real
+ * (server.forward-headers-strategy=native), pero solo si la peticion viene de un proxy de confianza.
+ * Asi un cliente no puede inventarse otra ip con la cabecera X-Forwarded-For (M3)
  */
 @Component
-@RequiredArgsConstructor
 public class RateLimitFilter extends OncePerRequestFilter {
 
     // cada ruta tiene su propio limite
@@ -55,11 +58,19 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private static final int MAX_TRACKED_IPS = 10_000;
 
     // se guarda un cubo por ip
-    private final Map<String, Bucket> loginBuckets = new ConcurrentHashMap<>();
-    private final Map<String, Bucket> registerBuckets = new ConcurrentHashMap<>();
-    private final Map<String, Bucket> forgotBuckets = new ConcurrentHashMap<>();
-    private final Map<String, Bucket> resetBuckets = new ConcurrentHashMap<>();
+    private final Map<String, Bucket> loginBuckets = Collections.synchronizedMap(new BoundedCache<>(MAX_TRACKED_IPS));
+    private final Map<String, Bucket> registerBuckets = Collections.synchronizedMap(new BoundedCache<>(MAX_TRACKED_IPS));
+    private final Map<String, Bucket> forgotBuckets = Collections.synchronizedMap(new BoundedCache<>(MAX_TRACKED_IPS));
+    private final Map<String, Bucket> resetBuckets = Collections.synchronizedMap(new BoundedCache<>(MAX_TRACKED_IPS));
+
     private final ErrorWriter errorWriter;
+    private final boolean enabled;
+
+    public RateLimitFilter(ErrorWriter errorWriter,
+                           @Value("${app.rate-limit.enabled:true}") boolean enabled) {
+        this.errorWriter = errorWriter;
+        this.enabled = enabled;
+    }
 
     /** revisa si la peticion debe pasar por rate limit */
     @Override
@@ -68,7 +79,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
                                     @NonNull FilterChain chain)
             throws ServletException, IOException {
 
-        Bucket bucket = pickBucket(request);
+        Bucket bucket = enabled ? pickBucket(request) : null;
         // si no hay limite para esta ruta se deja pasar
         if (bucket == null) {
             chain.doFilter(request, response);
@@ -94,9 +105,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
             return null;
         }
         String uri = request.getRequestURI();
-        // en produccion con Caddy la ip real llega en X-Forwarded-For
-        String xff = request.getHeader("X-Forwarded-For");
-        String ip = (xff != null && !xff.isBlank()) ? xff.split(",")[0].trim() : request.getRemoteAddr();
+        String ip = request.getRemoteAddr();
         if ("/api/auth/token".equals(uri)) {
             return bucketFor(loginBuckets, ip, LOGIN_BUCKET);
         }
@@ -112,12 +121,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
         return null;
     }
 
-    /** devuelve el cubo de la ip y vacia el mapa si crece demasiado */
+    /** devuelve el cubo de la ip; si el mapa esta lleno se olvida la ip menos reciente */
     private Bucket bucketFor(Map<String, Bucket> buckets, String ip, Supplier<Bucket> factory) {
-        // se prefiere reiniciar los limites a dejar que la memoria crezca sin tope
-        if (buckets.size() > MAX_TRACKED_IPS) {
-            buckets.clear();
-        }
         return buckets.computeIfAbsent(ip, k -> factory.get());
     }
 

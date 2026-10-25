@@ -37,6 +37,15 @@ public class UserController {
     }
 
     /**
+     * lista las invitaciones pendientes del negocio
+     */
+    @GetMapping("/invitations")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Page<UserResponse> listInvitations(@PathVariable @Positive Long businessId, Pageable pageable) {
+        return userService.listInvitations(businessId, pageable);
+    }
+
+    /**
      * lista empleados activos o archivados del negocio
      */
     @GetMapping
