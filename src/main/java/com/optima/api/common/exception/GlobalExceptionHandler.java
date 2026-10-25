@@ -15,6 +15,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -73,6 +74,13 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleMissingParam(MissingServletRequestParameterException ex) {
         return new ErrorResponse(400, HttpStatus.BAD_REQUEST.getReasonPhrase(), "Falta el parametro obligatorio: " + ex.getParameterName(), Instant.now().toString());
+    }
+
+    /** avisa cuando falta una cabecera obligatoria (por ejemplo la firma de Stripe) */
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleMissingHeader(MissingRequestHeaderException ex) {
+        return new ErrorResponse(400, HttpStatus.BAD_REQUEST.getReasonPhrase(), "Falta la cabecera obligatoria: " + ex.getHeaderName(), Instant.now().toString());
     }
 
     /** maneja tipos incorrectos en parametros */
