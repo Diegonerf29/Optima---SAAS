@@ -38,9 +38,9 @@ Si hay cualquier problema ejecutándola en local, se puede acceder a esa URL dir
 
 ## Configuración y seguridad
 
-Toda la configuración sensible (clave JWT, credenciales de base de datos y correo) se externaliza mediante variables de entorno; el repositorio no contiene valores de producción. El fichero [`.env-example`](.env-example) documenta cada variable con valores de desarrollo listos para arrancar en local, y para producción se usa un `.env` propio —no versionado— con claves aleatorias.
+Toda la configuración sensible (clave JWT, credenciales de base de datos y correo) se externaliza mediante variables de entorno; el repositorio no contiene valores de producción. El fichero [`.env-example`](.env-example) documenta cada variable, y para producción se usa un `.env` propio —no versionado— con claves aleatorias.
 
-- **JWT**: la clave de firma se lee de `JWT_SECRET`. En local hay un valor de desarrollo por defecto; en producción se define una clave aleatoria de 64+ caracteres.
+- **JWT**: la clave de firma se lee de `JWT_SECRET`. **En producción `JWT_SECRET` es obligatoria**: no tiene valor por defecto y la aplicación no arranca si falta. Se genera con `openssl rand -base64 64` (la salida ocupa dos líneas: hay que juntarla en una sola). En local se arranca con el perfil `dev` (`SPRING_PROFILES_ACTIVE=dev`), que usa la clave de desarrollo de `application-dev.properties`; esa clave se rechaza fuera del perfil `dev`.
 - **Base de datos y correo**: las credenciales viven en variables de entorno, fuera del control de versiones.
 
 ---
@@ -61,7 +61,11 @@ Copy-Item .env-example .env
 cp .env-example .env
 ```
 
-El `.env-example` ya trae los valores necesarios (incluida la clave JWT), así que no hace falta modificar nada.
+Después, añadir esta línea al `.env` para arrancar en modo desarrollo (usa la clave JWT de desarrollo):
+
+```
+SPRING_PROFILES_ACTIVE=dev
+```
 
 ### 2. Levantar los contenedores
 
@@ -101,15 +105,18 @@ El script crea la base de datos, las tablas, el usuario `optima_user` y carga lo
 
 ### 2. Arrancar el backend
 
+Se arranca con el perfil `dev` para usar la clave JWT de desarrollo.
+
 **Windows (PowerShell):**
 ```powershell
+$env:SPRING_PROFILES_ACTIVE="dev"
 .\mvnw.cmd spring-boot:run
 ```
 
 **Linux / macOS:**
 ```bash
 chmod +x mvnw
-./mvnw spring-boot:run
+SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
 ```
 
 La API queda en [http://localhost:8080](http://localhost:8080).

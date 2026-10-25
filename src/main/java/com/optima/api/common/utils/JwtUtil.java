@@ -4,7 +4,9 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -18,7 +20,14 @@ import java.util.Map;
  * hay una basica y otra con negocio y rol
  */
 @Component
+@RequiredArgsConstructor
 public class JwtUtil {
+
+    /** clave publica de application-dev.properties, solo valida en el perfil dev */
+    private static final String DEV_SECRET = "dev-secret-solo-para-local-no-usar-en-produccion-0123456789";
+
+    // perfiles activos de la aplicacion
+    private final Environment environment;
 
     // valor tomado de la configuracion
     @Value("${app.jwt.secret}")
@@ -35,6 +44,10 @@ public class JwtUtil {
         // la clave necesita un minimo para ser valida
         if (secretString == null || secretString.length() < 32) {
             throw new IllegalStateException("La clave 'app.jwt.secret' debe tener al menos 32 caracteres.");
+        }
+        // la clave de desarrollo es publica, fuera de dev cualquiera podria firmar tokens
+        if (DEV_SECRET.equals(secretString) && !environment.matchesProfiles("dev")) {
+            throw new IllegalStateException("La clave JWT de desarrollo solo se permite con el perfil 'dev'. Define JWT_SECRET con una clave aleatoria.");
         }
         this.secretKey = Keys.hmacShaKeyFor(secretString.getBytes(StandardCharsets.UTF_8));
     }
