@@ -3,7 +3,7 @@
 #   2) runtime: solo el JRE y el .jar (mas pequeña y sin codigo fuente ni Maven)
 # construir: docker build -t optima-api .
 
-FROM eclipse-temurin:21-jdk-noble AS build
+FROM eclipse-temurin:25-jdk-noble AS build
 WORKDIR /build
 # primero solo lo necesario para descargar dependencias: Docker reutiliza esta capa
 # mientras no cambie el pom.xml, asi las siguientes compilaciones son rapidas
@@ -13,7 +13,7 @@ RUN ./mvnw -B -q dependency:go-offline
 COPY src/ src/
 RUN ./mvnw -B -q package -DskipTests
 
-FROM eclipse-temurin:21-jre-noble
+FROM eclipse-temurin:25-jre-noble
 # la app no se ejecuta como root
 RUN groupadd --system optima && useradd --system --gid optima --no-create-home optima
 WORKDIR /app
