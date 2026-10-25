@@ -13,10 +13,18 @@ import static com.optima.api.support.TestApi.toJson;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /** regresion de B13 (ultimo ADMIN) y B11 (impuesto en uso) */
 class BusinessRulesIntegrationTest extends IntegrationTest {
+
+    @Test
+    void unNegocioNuevoTraeIvaYCategoriaParaCrearServicios() throws Exception {
+        Escenario e = Escenario.nuevo(mockMvc);
+        e.leer("/taxes").andExpect(jsonPath("$.content[?(@.name == 'IVA 21 %%')].percentage").value(21.0));
+        e.leer("/categories").andExpect(jsonPath("$.content[?(@.name == 'General')]").exists());
+    }
 
     @Test
     void elUltimoAdminNoPuedeQuitarseElRol() throws Exception {

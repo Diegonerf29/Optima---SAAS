@@ -12,7 +12,11 @@ import com.optima.api.modules.business.model.Role;
 import com.optima.api.modules.business.model.Roles;
 import com.optima.api.modules.business.repository.MembershipRepository;
 import com.optima.api.modules.business.repository.RoleRepository;
+import com.optima.api.modules.business.dto.request.TaxRequest;
 import com.optima.api.modules.business.service.BusinessService;
+import com.optima.api.modules.business.service.TaxService;
+import com.optima.api.modules.catalog.dto.request.CategoryRequest;
+import com.optima.api.modules.catalog.service.ServiceCategoryService;
 import com.optima.api.modules.user.model.User;
 import com.optima.api.modules.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,6 +44,8 @@ public class AuthService {
     private final MembershipRepository membershipRepository;
     private final RoleRepository roleRepository;
     private final BusinessService businessService;
+    private final TaxService taxService;
+    private final ServiceCategoryService categoryService;
     private final PasswordEncoder passwordEncoder;
     private final MailService mailService;
     private final LoginAttemptService loginAttemptService;
@@ -174,6 +181,10 @@ public class AuthService {
         membership.setRole(adminRole);
         membership.setIsActive(true);
         membershipRepository.save(membership);
+
+        // el negocio nace con un impuesto y una categoria para poder crear servicios desde el primer momento
+        taxService.create(business.getId(), new TaxRequest("IVA 21 %", new BigDecimal("21.00")));
+        categoryService.createCategory(business.getId(), new CategoryRequest("General"));
 
         String token = jwtService.generateTenantToken(
                 user.getEmail(),
