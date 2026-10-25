@@ -8,14 +8,26 @@ updates:
       interval: weekly
     open-pull-requests-limit: 5
 
+  # frontend: las versiones menores y parches llegan juntas en un solo pull request
+  - package-ecosystem: npm
+    directory: /frontend
+    target-branch: develop
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      menores:
+        update-types: [minor, patch]
+
   - package-ecosystem: github-actions
     directory: /
     target-branch: develop
     schedule:
       interval: monthly
 
+  # imagenes base de los Dockerfile (API y web)
   - package-ecosystem: docker
-    directory: /
+    directories: [/, /frontend]
     target-branch: develop
     schedule:
       interval: monthly
