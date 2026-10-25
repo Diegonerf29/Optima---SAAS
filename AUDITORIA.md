@@ -17,6 +17,11 @@ Cada cambio que se aplica al código se apunta aquí y en la columna **Estado** 
 | 25/10/2026 | `ac38ebf` | Todo el trabajo pasa a `develop`. Se sube un `CLAUDE.md` compartido para que todas las sesiones de IA trabajen en esa rama y apunten aquí sus cambios | — |
 | 25/10/2026 | `712c5db` | Nuevo `plan.md`: ordena en fases todos los hallazgos de este informe, añade lo que falta para producción (P1–P10), el frontend y los pagos. `CLAUDE.md` pide seguirlo | — |
 | 25/10/2026 | `92796ee` | `plan.md`: decididos D1 (permisos de EMPLOYEE), D2 (invitaciones) y D7 (VPS de Hostinger), y adaptado a locales pequeños con un solo PC | M7, A3 (solo decisión, sin código) |
+| 25/10/2026 | `48d44ae` | Spring Boot 3.5.16 como paso intermedio (paso 1.1) | M11 🟡 |
+| 25/10/2026 | `70f0e29` | Validación `@Password` común: 8+ caracteres, letras y números, máximo 72 bytes (paso 1.2) | M11, M13 🟡 |
+| 25/10/2026 | `73bebe7`, `00fa333` | Primeros 47 tests: unitarios (`PasswordValidator`, `AppointmentValidator`, `TenantGuardFilter`) y de integración con MySQL real en Docker (Testcontainers) (paso 1.3) | A4 🟡 |
+| 25/10/2026 | `16b8540` | Migración a Spring Boot 4.1.2 (Jackson 3, springdoc 3.2, bucket4j nuevo), páginas con formato JSON estable y clase común `ErrorWriter` para los errores de los filtros (pasos 1.4 y 6.1) | M11 ✅, B5 ✅ |
+| 25/10/2026 | `df026c5` | GitHub Actions (`./mvnw verify` en cada push y pull request) y Dependabot (pasos 1.5 y 1.6) | B18 🟡, M11 ✅ |
 
 **Estados:** ⏳ Pendiente · 🟡 En parte · ✅ Resuelto
 
@@ -63,7 +68,7 @@ Además hay 14 problemas de gravedad media (por ejemplo, **doble reserva posible
 | A1 | Secretos reales en el historial de Git | Configuración | 🔴 Alta | `.env-example`, `application.properties` (commits < `16335ce`) | ⏳ Pendiente |
 | A2 | Clave JWT con valor por defecto público | Autenticación | 🔴 Alta | `src/main/resources/application.properties:23` | ✅ Resuelto |
 | A3 | Alta de empleado reutiliza cuentas ajenas y filtra sus datos | Permisos / multi-tenant | 🔴 Alta | `modules/user/service/UserService.java:57` | ⏳ Pendiente |
-| A4 | No existe ningún test automatizado | Tests | 🔴 Alta | `pom.xml`, falta `src/test` | ⏳ Pendiente |
+| A4 | No existe ningún test automatizado | Tests | 🔴 Alta | `pom.xml`, falta `src/test` | 🟡 En parte |
 | M1 | Doble reserva posible con peticiones simultáneas | API / BD | 🟠 Media | `modules/appointment/service/AppointmentService.java:67` | ⏳ Pendiente |
 | M2 | Con intervalo de 45 min la disponibilidad ofrece huecos que luego se rechazan | API | 🟠 Media | `AvailabilityService.java:325` / `AppointmentValidator.java:182` | ⏳ Pendiente |
 | M3 | El límite de intentos se puede saltar con `X-Forwarded-For` | Autenticación | 🟠 Media | `common/security/RateLimitFilter.java:102` | ⏳ Pendiente |
@@ -74,7 +79,7 @@ Además hay 14 problemas de gravedad media (por ejemplo, **doble reserva posible
 | M8 | El estado de pago no tiene control ni registro y editar recalcula precios | Pagos | 🟠 Media | `AppointmentService.java:550` | ⏳ Pendiente |
 | M9 | `POST /api/businesses` crea negocios huérfanos | API / permisos | 🟠 Media | `modules/business/controller/BusinessController.java:25` | ⏳ Pendiente |
 | M10 | Base de datos y Docker con configuración insegura para producción | Configuración / BD | 🟠 Media | `docker-compose.yml`, `docs/schema_v20.sql:902` | ⏳ Pendiente |
-| M11 | Dependencias desactualizadas con vulnerabilidades conocidas | Dependencias | 🟠 Media | `pom.xml:8` | ⏳ Pendiente |
+| M11 | Dependencias desactualizadas con vulnerabilidades conocidas | Dependencias | 🟠 Media | `pom.xml:8` | ✅ Resuelto |
 | M12 | `AppointmentService` duplica ~120 líneas entre crear y editar | Código repetido | 🟠 Media | `AppointmentService.java:117` y `:432` | ⏳ Pendiente |
 | M13 | Credenciales de demo publicadas junto a la URL de producción | Configuración | 🟠 Media | `README.md:7`, `README.md:139` | 🟡 En parte |
 | M14 | Fechas comparadas con el reloj del servidor (UTC) y no con la hora del negocio | API | 🟠 Media | `CreateAppointmentRequest.java:29` | ⏳ Pendiente |
@@ -82,7 +87,7 @@ Además hay 14 problemas de gravedad media (por ejemplo, **doble reserva posible
 | B2 | `show-sql=true` por defecto | Configuración | 🟢 Baja | `application.properties:13` | ⏳ Pendiente |
 | B3 | Se devuelven al cliente mensajes internos de `IllegalArgumentException` | API | 🟢 Baja | `GlobalExceptionHandler.java:48` | ⏳ Pendiente |
 | B4 | Faltan límites de tamaño en textos y listas | API | 🟢 Baja | varios DTOs | ⏳ Pendiente |
-| B5 | Código que escribe errores JSON repetido en 4 sitios | Código repetido | 🟢 Baja | `SecurityConfig.java:57`, filtros | ⏳ Pendiente |
+| B5 | Código que escribe errores JSON repetido en 4 sitios | Código repetido | 🟢 Baja | `SecurityConfig.java:57`, filtros | ✅ Resuelto |
 | B6 | "No se encontró…" y `findOrThrow` repetidos en todos los servicios | Código repetido | 🟢 Baja | todos los `*Service.java` | ⏳ Pendiente |
 | B7 | DTOs `Create*`/`Update*` idénticos y expresiones regulares copiadas | Código repetido | 🟢 Baja | `dto/request/*` | ⏳ Pendiente |
 | B8 | Lógica duplicada en ausencias y horarios de empleados | Código repetido | 🟢 Baja | `EmployeeAbsenceService.java:48` | ⏳ Pendiente |

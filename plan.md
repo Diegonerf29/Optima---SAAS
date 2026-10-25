@@ -151,12 +151,12 @@ No es código, pero sin esto el resto no protege nada.
 
 Objetivo: trabajar sobre una versión que recibe parches y saber al momento si un cambio rompe algo.
 
-- [ ] 1.1 Subir Spring Boot a 3.5.16. Es el paso intermedio que recomienda Spring: con la 3.5 el compilador avisa de todo lo que desaparece en la 4.x (M11)
-- [ ] 1.2 Contraseñas con `@Size(min = 8, max = 72)` y al menos una letra y un número. Va antes del salto a 4.x porque las versiones nuevas de Spring Security dan error con más de 72 bytes (M11, M13)
-- [ ] 1.3 Añadir `spring-boot-starter-test` y `spring-security-test` y los primeros tests unitarios: `AppointmentValidator` y `TenantGuardFilter` (A4)
-- [ ] 1.4 Migrar a Spring Boot 4.1.x: Jackson 3, springdoc 3.x, nombres nuevos de algunos *starters*. Los tests del paso 1.3 dicen si algo se ha roto (M11)
-- [ ] 1.5 GitHub Actions: `./mvnw -B verify` en cada push y pull request a `develop` (B18)
-- [ ] 1.6 `.github/dependabot.yml` para que avise de versiones nuevas (M11)
+- [x] 1.1 Subir Spring Boot a 3.5.16. Es el paso intermedio que recomienda Spring: con la 3.5 el compilador avisa de todo lo que desaparece en la 4.x (M11)
+- [x] 1.2 Contraseñas con `@Size(min = 8, max = 72)` y al menos una letra y un número. Va antes del salto a 4.x porque las versiones nuevas de Spring Security dan error con más de 72 bytes (M11, M13)
+- [x] 1.3 Añadir `spring-boot-starter-test` y `spring-security-test` y los primeros tests unitarios: `AppointmentValidator` y `TenantGuardFilter` (A4)
+- [x] 1.4 Migrar a Spring Boot 4.1.x: Jackson 3, springdoc 3.x, nombres nuevos de algunos *starters*. Los tests del paso 1.3 dicen si algo se ha roto (M11)
+- [x] 1.5 GitHub Actions: `./mvnw -B verify` en cada push y pull request a `develop` (B18)
+- [x] 1.6 `.github/dependabot.yml` para que avise de versiones nuevas (M11)
 
 **Hecho cuando:** la app arranca con Spring Boot 4.1 y `./mvnw verify` pasa en local y en GitHub.
 
@@ -206,7 +206,7 @@ Objetivo: trabajar sobre una versión que recibe parches y saber al momento si u
 
 Hazla **antes del frontend**: así la API ya no cambia mientras se construyen las pantallas.
 
-- [ ] 6.1 Clase común `ErrorWriter` para los errores JSON de los filtros (B5)
+- [x] 6.1 Clase común `ErrorWriter` para los errores JSON de los filtros (B5)
 - [ ] 6.2 `NotFoundException` en lugar de los "No se encontró…" repetidos (B6)
 - [ ] 6.3 Unificar los DTOs `Create*`/`Update*` idénticos y guardar las regex en `ValidationPatterns` (B7)
 - [ ] 6.4 Quitar la lógica repetida de ausencias y horarios (B8)
