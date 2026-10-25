@@ -27,11 +27,12 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     /**
      * busca clientes activos por nombre email o telefono
      */
+    // :q llega escapado con '!' (ClientService.escapeLike) para que % y _ se busquen como texto (B20)
     @Query("SELECT c FROM Client c WHERE c.business.id = :businessId "
          + "AND c.isActive = true AND ("
-         + "LOWER(c.fullName) LIKE LOWER(CONCAT('%', :q, '%')) "
-         + "OR LOWER(c.email) LIKE LOWER(CONCAT('%', :q, '%')) "
-         + "OR c.phone LIKE CONCAT('%', :q, '%'))")
+         + "LOWER(c.fullName) LIKE LOWER(CONCAT('%', :q, '%')) ESCAPE '!' "
+         + "OR LOWER(c.email) LIKE LOWER(CONCAT('%', :q, '%')) ESCAPE '!' "
+         + "OR c.phone LIKE CONCAT('%', :q, '%') ESCAPE '!')")
     Page<Client> searchActiveByBusiness(@Param("businessId") Long businessId,
                                         @Param("q") String q,
                                         Pageable pageable);

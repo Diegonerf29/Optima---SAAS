@@ -5,6 +5,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.core.convert.ConversionFailedException;
+import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
@@ -162,6 +163,17 @@ public class GlobalExceptionHandler {
         // se anota la causa en el log para poder revisarla despues
         log.warn("Conflicto de integridad en base de datos: {}", ex.getMostSpecificCause().getMessage());
         return new ErrorResponse(409, HttpStatus.CONFLICT.getReasonPhrase(), "Conflicto de integridad: el recurso ya existe o viola una restricción de la base de datos", Instant.now().toString());
+    }
+
+    /**
+     * dos peticiones compiten por el mismo bloqueo (por ejemplo dos reservas del mismo empleado)
+     * y la base de datos corta una por tiempo de espera o interbloqueo (B20)
+     */
+    @ExceptionHandler(ConcurrencyFailureException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleConcurrency(ConcurrencyFailureException ex) {
+        log.warn("Conflicto de concurrencia: {}", ex.getMostSpecificCause().getMessage());
+        return new ErrorResponse(409, HttpStatus.CONFLICT.getReasonPhrase(), "Otra persona está modificando esta agenda, inténtalo de nuevo", Instant.now().toString());
     }
 
     /**

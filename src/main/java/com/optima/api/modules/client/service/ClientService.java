@@ -54,7 +54,7 @@ public class ClientService {
         String q = search == null ? "" : search.trim();
         Page<Client> page;
         if (active && !q.isEmpty()) {
-            page = clientRepository.searchActiveByBusiness(businessId, q, pageable);
+            page = clientRepository.searchActiveByBusiness(businessId, escapeLike(q), pageable);
         } else {
             page = active
                     ? clientRepository.findByBusinessIdAndIsActiveTrue(businessId, pageable)
@@ -131,5 +131,13 @@ public class ClientService {
         if (value == null) return null;
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    /**
+     * en un LIKE, % y _ son comodines: se escapan con ! para buscarlos como texto (B20)
+     * sin esto, buscar "%" devolvia todos los clientes
+     */
+    static String escapeLike(String text) {
+        return text.replace("!", "!!").replace("%", "!%").replace("_", "!_");
     }
 }
