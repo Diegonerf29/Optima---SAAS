@@ -12,7 +12,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 
 /**
  * atajos para los tests de integracion: iniciar sesion y leer JSON
- * los usuarios de demo vienen de docs/schema_v20.sql (contraseña 12345678)
+ * los usuarios de demo vienen de db/demo/V1_1__datos_demo.sql (contraseña 12345678)
  */
 public final class TestApi {
 
