@@ -62,6 +62,7 @@ Cada cambio que se aplica al código se apunta aquí y en la columna **Estado** 
 | 25/10/2026 | `8aee7ec` | Si falta una cabecera obligatoria la API responde 400 en lugar de 500 | — |
 | 25/10/2026 | `287340a` | Suscripción con Stripe (fase 9, migración V8): 14 días de prueba al registrarse, pago con Stripe Checkout, portal de facturas y webhook con la firma comprobada que guarda los avisos procesados. Sin suscripción el negocio solo puede verse y pagar (402), como en M4. Apagado por defecto (`BILLING_ENABLED`) | — (fase 9 del plan) |
 | 25/10/2026 | `17cb683` | Frontend de la suscripción: pestaña en Configuración, aviso de fin de prueba, pantalla de pago y precio en la portada | — |
+| 25/10/2026 | `de0c456`, `42479fa` | RGPD (paso 10.2): descargar los datos de un cliente o de todo el negocio, anonimizar un cliente (sus citas se conservan sin datos personales) y borrar el negocio entero (desactivado antes, con la contraseña y sin suscripción en marcha). Se permite aunque el negocio esté desactivado o sin pagar | — (P7 del plan) |
 
 **Estados:** ⏳ Pendiente · 🟡 En parte · ✅ Resuelto
 

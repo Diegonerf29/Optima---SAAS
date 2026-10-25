@@ -263,7 +263,7 @@ Con Stripe Checkout y el Customer Portal, **los datos de la tarjeta nunca pasan 
 ### Fase 10 — Lanzamiento
 
 - [ ] 10.1 👤 Textos legales: aviso legal, privacidad, condiciones de uso y contrato de encargado del tratamiento (P7)
-- [ ] 10.2 RGPD en la app: exportar y borrar de verdad los datos de un cliente y de un negocio que se da de baja (P7)
+- [x] 10.2 RGPD en la app: exportar y borrar de verdad los datos de un cliente y de un negocio que se da de baja (P7) → el cliente se anonimiza (sus citas se conservan sin datos personales) y el negocio se borra entero tras desactivarlo, con la contraseña
 - [ ] 10.3 Repaso de `AUDITORIA.md`: ningún hallazgo alto o medio pendiente
 - [ ] 10.4 Prueba completa en producción: registro, configurar negocio, citas, suscripción y recuperar contraseña
 - [ ] 10.5 Restaurar una copia de seguridad en un entorno aparte y comprobar que funciona

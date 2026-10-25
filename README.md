@@ -13,6 +13,7 @@ Es un SaaS **multi-tenant**: muchos negocios comparten la misma aplicación y la
 - **Cobros**: quién cobró, cuándo y cómo (efectivo, tarjeta, Bizum); total con IVA calculado en el servidor.
 - **Emails a clientes**: confirmación, cambios, cancelación y recordatorio el día antes.
 - **Suscripción**: 14 días de prueba sin tarjeta y después un único plan mensual con Stripe (pago, portal de facturas y avisos firmados). Sin suscripción activa el negocio solo puede ver su estado y pagar.
+- **Privacidad (RGPD)**: descargar en JSON los datos de un cliente o de todo el negocio, borrar los datos personales de un cliente y borrar el negocio entero al darse de baja.
 - **Cuentas**: registro de negocio, confirmación del email, invitaciones de empleados, recuperación de contraseña y cierre de sesión en todos los dispositivos.
 
 ## Tecnologías
@@ -132,6 +133,7 @@ Se definen en un fichero `.env` (plantilla comentada en [`.env-example`](.env-ex
 | Empleados e invitaciones, sus horarios y ausencias | ✅ | Solo ver |
 | Datos del negocio, desactivarlo y reactivarlo | ✅ | ❌ |
 | Suscripción: pagar, tarjeta y facturas | ✅ | Solo ver su estado |
+| Descargar y borrar datos (RGPD) | ✅ | ❌ |
 
 Los empleados gestionan todas las citas y clientes porque en un local pequeño quien está en recepción atiende a todos; a cambio, cada cobro queda registrado con quién lo hizo. Un negocio siempre conserva al menos un ADMIN.
 
