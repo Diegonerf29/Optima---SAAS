@@ -60,7 +60,7 @@ Optima es para **locales pequeños**: un solo local, pocos empleados y muchas ve
 |--------------|-------------|
 | Quien está en recepción apunta, mueve y cobra citas de cualquier compañero | Los empleados gestionan **todas** las citas y clientes (ver D1). En vez de prohibir, se **registra quién hizo cada cobro** (M8) |
 | El PC de recepción está encendido toda la jornada | La sesión dura una jornada (unas 12 h) en lugar de 4 h, y "cerrar sesión" anula el token de verdad (M5, paso 2.3) |
-| Si en recepción se deja abierta la cuenta del dueño, cualquiera puede tocar la configuración | En el README y en la ayuda de la app: crear una cuenta EMPLOYEE "Recepción" para ese PC; el dueño usa su cuenta ADMIN desde su móvil o su ordenador |
+| Si en recepción se deja abierta la cuenta del dueño, cualquiera puede tocar la configuración | Cada local elige (D8): una cuenta EMPLOYEE "Recepción" compartida para ese PC o una cuenta por persona. El dueño usa su cuenta ADMIN desde su móvil o su ordenador |
 | Casi todos los usuarios tienen un solo negocio | El frontend se salta la pantalla "elige negocio" cuando solo hay uno. El soporte de varios negocios por usuario se queda en el backend (ya existe y no estorba) |
 | Pantalla grande en recepción, pero el dueño mira la agenda desde el móvil | Frontend pensado primero para escritorio, pero usable en móvil |
 | Equipos de 1 a 5 personas | La vista principal de la agenda es **una columna por empleado** |
@@ -82,6 +82,7 @@ Optima es para **locales pequeños**: un solo local, pocos empleados y muchas ve
 | D5 | ¿Los clientes finales reservarán solos por internet? | Frontend, API | Sí, pero **después** del lanzamiento: primero el panel de gestión |
 | D6 | ¿Cómo cobra Optima a los negocios? | Fase 9 | **Un único plan** mensual por local, con 14 días de prueba gratis, con Stripe. Para locales pequeños no hacen falta niveles por número de empleados |
 | D7 ✅ | Servidor y dominio | Fase 8 | **VPS de Hostinger** (KVM 1 para empezar, KVM 2 si se queda corto), en un centro de datos de la UE, con el dominio comprado allí mismo. Nunca los planes de "hosting web" compartido: no ejecutan Java ni Docker |
+| D8 | ¿Cuenta "Recepción" compartida o una cuenta por persona? | Frontend, README | **Se decide más adelante**, viendo cómo lo usan los locales. El backend ya permite las dos formas (una cuenta de recepción es un empleado más) y el registro de quién cobró sirve en ambos casos. Si se elige "por persona", se puede añadir un cambio rápido de usuario en el PC de recepción |
 
 ---
 
@@ -144,7 +145,7 @@ No es código, pero sin esto el resto no protege nada.
 - [ ] 0.2 Revocar la contraseña de aplicación de Gmail que está en el historial y crear otra (A1)
 - [ ] 0.3 Cambiar la contraseña del admin de demo en el servidor publicado (M13)
 - [ ] 0.4 En GitHub, *Settings → Code security*: activar *Secret scanning* y *Dependabot alerts* (A1, M11)
-- [x] 0.5 Decidir D1, D2 y D7 (sección 2). D3–D6 siguen con mi recomendación mientras no digas otra cosa
+- [x] 0.5 Decidir D1, D2 y D7 (sección 2). D3–D6 siguen con mi recomendación mientras no digas otra cosa; D8 se decide más adelante
 
 ### Fase 1 — Cimientos: versión con soporte, tests e integración continua
 
