@@ -1,6 +1,7 @@
 package com.optima.api.modules.auth.service;
 
 import com.optima.api.common.mail.MailService;
+import com.optima.api.common.security.SecureTokens;
 import com.optima.api.modules.auth.dto.request.ForgotPasswordRequest;
 import com.optima.api.modules.auth.dto.request.ResetPasswordRequest;
 import com.optima.api.modules.auth.model.PasswordResetToken;
@@ -8,23 +9,21 @@ import com.optima.api.modules.auth.repository.PasswordResetRepository;
 import com.optima.api.modules.user.model.User;
 import com.optima.api.modules.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Base64;
 import java.util.Optional;
 
 /** logica para solicitar y consumir codigos de recuperacion de contrasena */
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -33,14 +32,10 @@ public class PasswordResetService {
     /** tiempo maximo de validez del codigo de recuperacion */
     private static final Duration TOKEN_TTL = Duration.ofHours(1);
 
-    /** longitud del codigo aleatorio antes de codificarlo */
-    private static final int TOKEN_LENGTH_BYTES = 32;
-
     private final UserRepository userRepository;
     private final PasswordResetRepository resetRepository;
     private final PasswordEncoder passwordEncoder;
     private final MailService mailService;
-    private final SecureRandom secureRandom = new SecureRandom();
 
     /** URL base del frontend para construir el enlace de recuperacion */
     @Value("${app.frontend.url:http://localhost:5173}")
@@ -65,8 +60,11 @@ public class PasswordResetService {
             return;
         }
 
-        String rawToken = generateRawToken();
-        String tokenHash = sha256Hex(rawToken);
+        // solo vale el ultimo enlace pedido (M6)
+        resetRepository.invalidateAllForUser(user.getId(), LocalDateTime.now());
+
+        String rawToken = SecureTokens.generate();
+        String tokenHash = SecureTokens.sha256Hex(rawToken);
 
         PasswordResetToken reset = new PasswordResetToken();
         reset.setUser(user);
@@ -97,12 +95,13 @@ public class PasswordResetService {
                 Optima.
                 """.formatted(user.getFullName(), resetLink, rawToken);
 
+        // se envia en segundo plano (@Async): la respuesta tarda lo mismo exista o no el email (M6)
         mailService.sendSimpleEmail(user.getEmail(), subject, body);
     }
 
     /** valida el codigo y guarda la nueva contrasena */
     public void consumeReset(ResetPasswordRequest request) {
-        String tokenHash = sha256Hex(request.token());
+        String tokenHash = SecureTokens.sha256Hex(request.token());
 
         PasswordResetToken reset = resetRepository.findByTokenHash(tokenHash)
                 .orElseThrow(() -> badToken());
@@ -125,37 +124,22 @@ public class PasswordResetService {
         user.revokeTokens();
         userRepository.save(user);
 
-        reset.setUsedAt(LocalDateTime.now());
-        resetRepository.save(reset);
+        // se anulan este y cualquier otro enlace pendiente del usuario
+        resetRepository.invalidateAllForUser(user.getId(), LocalDateTime.now());
+    }
+
+    /** cada noche borra los codigos caducados hace mas de un dia para que la tabla no crezca sin limite (B16) */
+    @Scheduled(cron = "0 30 3 * * *")
+    public void deleteExpiredTokens() {
+        int deleted = resetRepository.deleteExpiredBefore(LocalDateTime.now().minusDays(1));
+        if (deleted > 0) {
+            log.info("Borrados {} codigos de recuperacion caducados", deleted);
+        }
     }
 
     /** devuelve siempre el mismo error para codigos invalidos */
     private ResponseStatusException badToken() {
         return new ResponseStatusException(HttpStatus.BAD_REQUEST,
                 "El token de reset no es valido o ha caducado");
-    }
-
-    /** genera el codigo aleatorio que se envia por correo */
-    private String generateRawToken() {
-        byte[] bytes = new byte[TOKEN_LENGTH_BYTES];
-        secureRandom.nextBytes(bytes);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
-    }
-
-    /** calcula la huella del codigo para guardarlo en base de datos */
-    private String sha256Hex(String input) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] digest = md.digest(input.getBytes(StandardCharsets.UTF_8));
-            StringBuilder hex = new StringBuilder(digest.length * 2);
-            for (byte b : digest) {
-                hex.append(String.format("%02x", b));
-            }
-            return hex.toString();
-        } catch (NoSuchAlgorithmException e) {
-            // algoritmo de huella deberia estar disponible en cualquier entorno java actual
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Error de configuración: SHA-256 no disponible en la JVM", e);
-        }
     }
 }

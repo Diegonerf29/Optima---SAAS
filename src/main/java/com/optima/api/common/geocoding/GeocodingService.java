@@ -95,7 +95,8 @@ public class GeocodingService {
                     new BigDecimal(lonStr)));
         } catch (Exception ex) {
             // si falla se sigue sin coordenadas pero queda anotado en el log
-            log.warn("Geocoding fallido para '{}': {}", query, ex.getMessage());
+            // no se registra la direccion: es un dato personal (B19)
+            log.warn("Geocoding fallido: {}", ex.getMessage());
             return Optional.empty();
         }
     }
