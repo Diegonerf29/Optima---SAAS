@@ -68,7 +68,7 @@ docker compose up -d mysqldb
 DB_PORT=3307 SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
 ```
 
-Y el frontend (hace falta **Node 22 o superior**), en otra terminal:
+Y el frontend (hace falta **Node 24**, el mismo que la CI, o al menos Node 22.22.2: lo pide jsdom 30, que usan los tests), en otra terminal:
 
 ```bash
 cd frontend

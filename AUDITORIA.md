@@ -2,7 +2,7 @@
 
 > Fecha: 25/10/2026 · Rama auditada: `claude/laughing-knuth-u9vz3w` (commit `2f8566a`)
 > Alcance: backend Spring Boot completo, esquema SQL, Docker, configuración, documentación e historial de Git.
-> Última actualización: 25/10/2026. Las correcciones aplicadas después de la auditoría se apuntan en la sección 0.
+> Última actualización: 30/10/2026. Las correcciones aplicadas después de la auditoría se apuntan en la sección 0.
 
 ---
 
@@ -63,6 +63,9 @@ Cada cambio que se aplica al código se apunta aquí y en la columna **Estado** 
 | 25/10/2026 | `287340a` | Suscripción con Stripe (fase 9, migración V8): 14 días de prueba al registrarse, pago con Stripe Checkout, portal de facturas y webhook con la firma comprobada que guarda los avisos procesados. Sin suscripción el negocio solo puede verse y pagar (402), como en M4. Apagado por defecto (`BILLING_ENABLED`) | — (fase 9 del plan) |
 | 25/10/2026 | `17cb683` | Frontend de la suscripción: pestaña en Configuración, aviso de fin de prueba, pantalla de pago y precio en la portada | — |
 | 25/10/2026 | `de0c456`, `42479fa` | RGPD (paso 10.2): descargar los datos de un cliente o de todo el negocio, anonimizar un cliente (sus citas se conservan sin datos personales) y borrar el negocio entero (desactivado antes, con la contraseña y sin suscripción en marcha). Se permite aunque el negocio esté desactivado o sin pagar | — (P7 del plan) |
+| 25/10/2026 | `551df75` | *(apuntado el 30/10/2026, faltaba)* Caddy 2.11 y jsdom 30, de las PRs de Dependabot. Dependabot deja de proponer saltos de versión mayor de TypeScript, `@types/node`, `@hookform/resolvers`, Java y Node: se quedan en las versiones LTS de la CI (Java 21, Node 24) y se actualizan a mano | — |
+| 30/10/2026 | `34d664e` | Nuevo hallazgo alto **A5**: escribiendo la ruta codificada (`/api/%62usinesses/2/...`) se leían, creaban, exportaban y borraban datos de otro negocio, y `/api/auth/%74oken` se saltaba el límite de intentos. Los dos filtros comparan ahora la ruta ya decodificada, la misma que usa Spring MVC. Primero 4 tests que lo demuestran (incluido el ataque completo contra la aplicación); 169 tests en verde | A5 ✅ |
+| 30/10/2026 | este commit | A5 descrito en la sección 3; `plan.md`: el diagnóstico 1.1 es la situación inicial y al paso 8.6 le falta crear la rama `main`; README: versión de Node correcta (24, o al menos 22.22.2). Cerradas 4 PRs de Dependabot que ya no servían (jsdom 30 y Caddy 2.11 ya aplicadas, Maven 3.10.0 ya en el wrapper y Java 25 en contra de quedarse en la LTS 21) | — |
 
 **Estados:** ⏳ Pendiente · 🟡 En parte · ✅ Resuelto
 
@@ -83,7 +86,7 @@ Además hay 14 problemas de gravedad media (por ejemplo, **doble reserva posible
 
 | Gravedad | Nº de hallazgos |
 |----------|-----------------|
-| 🔴 Alta  | 4  |
+| 🔴 Alta  | 4 (+1, A5, encontrado el 30/10/2026) |
 | 🟠 Media | 14 |
 | 🟢 Baja  | 20 |
 
@@ -110,6 +113,7 @@ Además hay 14 problemas de gravedad media (por ejemplo, **doble reserva posible
 | A2 | Clave JWT con valor por defecto público | Autenticación | 🔴 Alta | `src/main/resources/application.properties:23` | ✅ Resuelto |
 | A3 | Alta de empleado reutiliza cuentas ajenas y filtra sus datos | Permisos / multi-tenant | 🔴 Alta | `modules/user/service/UserService.java:57` | ✅ Resuelto |
 | A4 | No existe ningún test automatizado | Tests | 🔴 Alta | `pom.xml`, falta `src/test` | ✅ Resuelto |
+| A5 | El control de negocio se salta escribiendo la ruta codificada (`/api/%62usinesses/…`) | Permisos / multi-tenant | 🔴 Alta | `common/security/TenantGuardFilter.java:47` | ✅ Resuelto |
 | M1 | Doble reserva posible con peticiones simultáneas | API / BD | 🟠 Media | `modules/appointment/service/AppointmentService.java:67` | ✅ Resuelto |
 | M2 | Con intervalo de 45 min la disponibilidad ofrece huecos que luego se rechazan | API | 🟠 Media | `AvailabilityService.java:325` / `AppointmentValidator.java:182` | ✅ Resuelto |
 | M3 | El límite de intentos se puede saltar con `X-Forwarded-For` | Autenticación | 🟠 Media | `common/security/RateLimitFilter.java:102` | ✅ Resuelto |
@@ -156,6 +160,7 @@ Además hay 14 problemas de gravedad media (por ejemplo, **doble reserva posible
 - **Área:** Configuración y dependencias
 - **Archivos:** `.env-example` y `src/main/resources/application.properties` en las versiones anteriores al commit `16335ce` (por ejemplo, `git show 16335ce^:.env-example`).
 - **Gravedad:** 🔴 Alta
+- **Estado (30/10/2026):** ⏳ Pendiente y urgente. Comprobado que el repositorio en GitHub es **público**: cualquiera puede leer esos secretos en el historial. Solo se arregla a mano (👤, pasos 0.1, 0.2 y 0.4 del plan)
 
 **¿Qué pasa?**
 El commit `16335ce` cambió los secretos por valores de desarrollo, pero el propio mensaje del commit lo reconoce: *"los secretos reales siguen en el historial; deben rotarse en Google/AWS"*. En versiones anteriores de `.env-example` estaban:
@@ -290,6 +295,42 @@ La aplicación tiene lógica delicada: aislamiento entre negocios (`TenantGuardF
 - Bugs como **M2** (intervalo de 45 minutos) habrían aparecido con un test que comparase la disponibilidad con la validación al crear la cita.
 
 **Cómo arreglarlo:** ver la sección 7, *Plan de tests recomendado*, con dependencias y ejemplos.
+
+---
+
+### A5. El control de negocio se salta escribiendo la ruta codificada ✅
+
+- **Área:** Permisos / multi-tenant
+- **Archivos:** `common/security/TenantGuardFilter.java:47` y `common/security/RateLimitFilter.java:117` (commit `50a2d8b`)
+- **Gravedad:** 🔴 Alta
+- **Encontrado:** 30/10/2026, en una revisión posterior a la auditoría, probándolo contra la API arrancada (perfil `dev`)
+- **Estado:** ✅ Resuelto en `34d664e` (30/10/2026)
+
+**¿Qué pasa?**
+Los dos filtros miraban la ruta con `request.getRequestURI()`, que la devuelve **tal cual llega, sin decodificar**. Spring MVC, en cambio, la decodifica antes de elegir el controlador. En una URL `%62` es otra forma de escribir la letra `b`, así que con `/api/%62usinesses/2/clients`:
+1. `TenantGuardFilter` busca el texto `/api/businesses/...`, no lo encuentra y deja pasar la petición **sin comprobar el negocio**.
+2. Spring MVC lee `/api/businesses/2/clients` y ejecuta el controlador con `businessId = 2`.
+
+Lo mismo pasaba en `RateLimitFilter` con `/api/auth/%74oken` (`%74` es la `t`): el login no contaba para el límite por IP.
+
+**¿Por qué es un problema? (probado, no solo razonado)**
+
+| Ataque | Antes |
+|--------|-------|
+| EMPLOYEE del negocio 1 → `GET /api/%62usinesses/2/clients` | 200: nombre, email, teléfono y notas de los clientes del negocio 2 |
+| El mismo EMPLOYEE → `POST /api/%62usinesses/2/clients` | 201: crea datos en el negocio ajeno |
+| Cuenta recién registrada (gratis, sin verificar el email) → `GET /api/%62usinesses/1/export` | 200: la descarga RGPD completa de otro negocio |
+| Esa cuenta → `DELETE /api/%62usinesses/2` y `POST /api/%62usinesses/2/erase` con **su propia** contraseña | 204 y 204: el negocio ajeno queda **borrado entero** |
+| 12 logins seguidos a `/api/auth/%74oken` | ningún 429 (por la ruta normal salta al llegar al límite) |
+
+El rol que se comprueba con `@PreAuthorize` es el del token (ADMIN de su propio negocio), así que el atacante tenía todos los permisos de ADMIN sobre cualquier negocio. Funciona igual detrás de Caddy: `handle /api/*` reenvía la ruta original. Ningún test lo detectaba porque ninguno probaba rutas codificadas.
+
+**Corrección aplicada (`34d664e`):**
+1. Primero los tests que lo demuestran (fallaban antes del cambio): `TenantGuardFilterTest.bloqueaOtroNegocioConLaRutaCodificada`, `RateLimitFilterTest.laRutaCodificadaTambienSeLimita` y `EncodedPathIntegrationTest`, que repite el ataque completo (leer, crear, exportar, desactivar y borrar) contra la aplicación entera y comprueba que el negocio de la víctima sigue intacto. Antes: `Status expected:<403> but was:<200>`.
+2. Los dos filtros usan `UrlPathHelper.defaultInstance.getPathWithinApplication(request)`: la ruta **ya decodificada**, la misma que usa Spring MVC para elegir el controlador. Así el filtro y el controlador ven siempre la misma ruta.
+3. Comprobado también a mano con la API arrancada: `%62usinesses` y `%61pi` dan 403 en un negocio ajeno, el propio negocio sigue dando 200 y `/api/auth/%74oken` da 429 al llegar al límite.
+
+**Lección:** un filtro de seguridad tiene que decidir sobre la misma ruta que luego usa el framework. Si cada uno "lee" la URL a su manera, el atacante busca la forma de escribirla que solo entiende uno de los dos.
 
 ---
 
@@ -879,7 +920,7 @@ Se ejecutan con `./mvnw test`.
 
 Para valorar el informe en su justa medida, esto está **bien hecho**:
 
-- **Aislamiento entre negocios:** `TenantGuardFilter` compara el negocio de la URL con el del token y **vuelve a consultar la BD** en cada petición (detecta revocaciones y cambios de rol). Además todos los repositorios filtran por `businessId` (`findByIdAndBusinessId`) y se comprueba que cliente, empleado, cabina, servicios, categoría e impuesto pertenezcan al negocio. No he encontrado ninguna ruta que permita leer datos de otro negocio por ID (salvo A3, que es por email).
+- **Aislamiento entre negocios:** `TenantGuardFilter` compara el negocio de la URL con el del token y **vuelve a consultar la BD** en cada petición (detecta revocaciones y cambios de rol). Además todos los repositorios filtran por `businessId` (`findByIdAndBusinessId`) y se comprueba que cliente, empleado, cabina, servicios, categoría e impuesto pertenezcan al negocio. No he encontrado ninguna ruta que permita leer datos de otro negocio por ID (salvo A3, que es por email). *Corrección (30/10/2026): sí la había. Escribiendo la ruta codificada (`/api/%62usinesses/2/...`) el filtro no la reconocía y no comprobaba nada; ver A5, ya resuelto.*
 - **Contraseñas con BCrypt** y comparación con un hash ficticio cuando el usuario no existe, para no revelar emails por tiempo en el login.
 - **Token de recuperación** aleatorio (`SecureRandom`, 32 bytes), guardado como **hash SHA-256**, con caducidad de 1 hora y de un solo uso.
 - **Respuestas de error uniformes** (`ErrorResponse`) y un manejador genérico que **no** filtra trazas al cliente.

@@ -21,6 +21,8 @@
 
 ### 1.1 Diagnóstico
 
+> Situación **inicial** (25/10/2026), antes de empezar el plan. El estado actual es el de las casillas de la sección 5 y la tabla resumen de `AUDITORIA.md`.
+
 | Parte | Estado | Comentario |
 |-------|--------|------------|
 | Backend (Spring Boot 3.4.1, Java 21, MySQL 8) | 🟡 Funciona, con fallos | Bien organizado por módulos y con buen aislamiento entre negocios. `AUDITORIA.md` tiene 38 hallazgos: 1 resuelto, 2 en parte y 35 pendientes (3 altos, 13 medios y 19 bajos) |
@@ -237,7 +239,7 @@ Antes de empezar: fases 2 a 6 terminadas y Swagger al día.
 - [ ] 8.3 👤 Servidor: Docker, cortafuegos (solo puertos 22, 80 y 443), SSH solo con clave y `.env` de producción → los comandos están en `deploy/README.md` (secciones 2 y 3)
 - [ ] 8.4 👤 Proveedor de correo transaccional con plan gratuito (por ejemplo Brevo o Resend) conectado al dominio con los registros SPF, DKIM y DMARC (P5) → `deploy/README.md`, sección 4
 - [x] 8.5 Copias de seguridad: `mysqldump` diario guardado **fuera de Hostinger** (las copias del propio proveedor no sirven si se pierde la cuenta), y **probar a restaurar una** (P3) → `deploy/backup.sh` y `deploy/restore.sh`. 👤 Al instalar: crear el remoto de rclone, el cron y hacer el simulacro de restauración
-- [x] 8.6 Publicar versiones: GitHub Actions construye la imagen Docker; en el servidor, `docker compose pull && docker compose up -d` → workflow `release.yml` (ghcr.io, al pasar la CI en `main`) y `deploy/update.sh`
+- [x] 8.6 Publicar versiones: GitHub Actions construye la imagen Docker; en el servidor, `docker compose pull && docker compose up -d` → workflow `release.yml` (ghcr.io, al pasar la CI en `main`) y `deploy/update.sh`. 👤 Aún no se ha publicado ninguna imagen porque **la rama `main` no existe**: hay que crearla con un pull request de `develop` a `main` (`deploy/README.md`, sección 6)
 - [x] 8.7 Monitorización mínima: un servicio gratuito que avise si `/actuator/health` deja de responder, y aviso de disco lleno → UptimeRobot, `deploy/check-disk.sh` y avisos al móvil con ntfy. 👤 Crear el monitor y el tema de ntfy
 - [ ] 8.8 Entorno de demo separado de producción, con datos que se restauran cada noche (M13)
 
@@ -264,7 +266,7 @@ Con Stripe Checkout y el Customer Portal, **los datos de la tarjeta nunca pasan 
 
 - [ ] 10.1 👤 Textos legales: aviso legal, privacidad, condiciones de uso y contrato de encargado del tratamiento (P7)
 - [x] 10.2 RGPD en la app: exportar y borrar de verdad los datos de un cliente y de un negocio que se da de baja (P7) → el cliente se anonimiza (sus citas se conservan sin datos personales) y el negocio se borra entero tras desactivarlo, con la contraseña
-- [ ] 10.3 Repaso de `AUDITORIA.md`: ningún hallazgo alto o medio pendiente → repasado el 25/10/2026: solo quedan dos pasos 👤 tuyos: **A1** (rotar la clave JWT y la contraseña de Gmail antiguas, que siguen en el historial, y activar el *secret scanning* de GitHub) y **M13** (cambiar la contraseña del admin de demo o apagar el despliegue antiguo de duckdns)
+- [ ] 10.3 Repaso de `AUDITORIA.md`: ningún hallazgo alto o medio pendiente → repasado el 25/10/2026: solo quedan dos pasos 👤 tuyos: **A1** (rotar la clave JWT y la contraseña de Gmail antiguas, que siguen en el historial, y activar el *secret scanning* de GitHub) y **M13** (cambiar la contraseña del admin de demo o apagar el despliegue antiguo de duckdns). El 30/10/2026, al repasarlo contra la API arrancada, apareció un hallazgo alto nuevo, **A5** (se entraba en otro negocio escribiendo la ruta codificada), ya resuelto con su test
 - [ ] 10.4 Prueba completa en producción: registro, configurar negocio, citas, suscripción y recuperar contraseña
 - [ ] 10.5 Restaurar una copia de seguridad en un entorno aparte y comprobar que funciona
 - [ ] 10.6 👤 Pasar Stripe a modo real
