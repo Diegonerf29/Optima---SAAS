@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.UrlPathHelper;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -114,7 +115,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
         if (!"POST".equalsIgnoreCase(request.getMethod())) {
             return null;
         }
-        String uri = request.getRequestURI();
+        // ruta ya decodificada: /api/auth/%74oken es el mismo login y comparte el limite (A5)
+        String uri = UrlPathHelper.defaultInstance.getPathWithinApplication(request);
         String ip = request.getRemoteAddr();
         if ("/api/auth/token".equals(uri)) {
             return bucketFor(loginBuckets, ip, LOGIN_BUCKET);

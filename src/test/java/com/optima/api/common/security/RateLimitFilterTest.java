@@ -33,6 +33,19 @@ class RateLimitFilterTest {
         assertThat(login("2.2.2.2", "8.8.8.8").getStatus()).isEqualTo(429);
     }
 
+    /** regresion de A5: la misma ruta escrita de otra forma (%74 es la "t") comparte el limite */
+    @Test
+    void laRutaCodificadaTambienSeLimita() throws Exception {
+        for (int i = 0; i < 10; i++) {
+            login("6.6.6.6", null);
+        }
+        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/auth/%74oken");
+        req.setRemoteAddr("6.6.6.6");
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        filter.doFilter(req, res, new MockFilterChain());
+        assertThat(res.getStatus()).isEqualTo(429);
+    }
+
     @Test
     void otraIpTieneSuPropioLimite() throws Exception {
         for (int i = 0; i < 11; i++) {

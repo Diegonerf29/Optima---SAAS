@@ -89,6 +89,17 @@ class TenantGuardFilterTest {
         assertThat(res.getStatus()).isEqualTo(403);
     }
 
+    // A5: la ruta se compara ya decodificada, igual que la lee Spring MVC
+    @Test
+    void bloqueaOtroNegocioConLaRutaCodificada() throws Exception {
+        autenticar(1L, "ADMIN");
+
+        // %62 es la letra "b" y %61 la "a"
+        assertThat(ejecutar("/api/%62usinesses/2/clients").getStatus()).isEqualTo(403);
+        assertThat(ejecutar("/%61pi/businesses/2/export").getStatus()).isEqualTo(403);
+        assertThat(ejecutar("DELETE", "/api/businesses/%32").getStatus()).isEqualTo(403);
+    }
+
     @Test
     void bloqueaTokenSinNegocioElegido() throws Exception {
         autenticar(null, null);

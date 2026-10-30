@@ -15,6 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.UrlPathHelper;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -44,7 +45,10 @@ public class TenantGuardFilter extends OncePerRequestFilter {
                                     @NonNull FilterChain chain)
             throws ServletException, IOException {
 
-        Matcher m = BUSINESS_PATH.matcher(request.getRequestURI());
+        // la ruta ya decodificada, la misma que usa Spring MVC para elegir el controlador.
+        // getRequestURI() la da tal cual llega: con /api/%62usinesses/2 ("%62" es la "b")
+        // el patron no coincidia y se podia entrar en otro negocio (A5)
+        Matcher m = BUSINESS_PATH.matcher(UrlPathHelper.defaultInstance.getPathWithinApplication(request));
         if (m.matches()) {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             if (auth != null && auth.getPrincipal() instanceof AuthPrincipal principal) {
