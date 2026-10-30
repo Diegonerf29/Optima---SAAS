@@ -8,7 +8,7 @@ import tools.jackson.databind.module.SimpleModule;
 
 import java.time.LocalDateTime;
 
-/** ajusta las fechas del servicio */
+/** Ajusta las fechas del servicio */
 @Configuration
 public class JacksonConfig {
 
