@@ -33,7 +33,8 @@ export default function SettingsPage() {
         </Alert>
       )}
       <Tabs value={tab} onValueChange={(t) => setParams({ tab: t }, { replace: true })}>
-        <TabsList className="mb-4 flex-wrap">
+        {/* en movil las pestañas no caben en una fila: altura automatica para que la segunda fila quede dentro */}
+        <TabsList className="mb-4 h-auto flex-wrap [&>button]:h-[30px]">
           <TabsTrigger value="negocio">Negocio</TabsTrigger>
           <TabsTrigger value="horario">Horario</TabsTrigger>
           <TabsTrigger value="cabinas">Cabinas</TabsTrigger>
