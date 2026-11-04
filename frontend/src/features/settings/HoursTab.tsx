@@ -109,14 +109,14 @@ export function HoursTab() {
           <Input
             type="time"
             aria-label="Abre"
-            className="w-28"
+            className="w-32"
             value={nuevo.startTime}
             onChange={(e) => setNuevo({ ...nuevo, startTime: e.target.value })}
           />
           <Input
             type="time"
             aria-label="Cierra"
-            className="w-28"
+            className="w-32"
             value={nuevo.endTime}
             onChange={(e) => setNuevo({ ...nuevo, endTime: e.target.value })}
           />

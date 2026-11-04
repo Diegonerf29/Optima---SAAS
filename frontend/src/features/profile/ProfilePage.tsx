@@ -43,7 +43,8 @@ export default function ProfilePage() {
           <CardContent>
             <ConfirmButton
               trigger={
-                <Button variant="outline">
+                // texto largo: en pantallas de 320 px se parte en dos lineas en vez de salirse de la tarjeta
+                <Button variant="outline" className="h-auto min-h-9 py-2 whitespace-normal">
                   <LogOut /> Cerrar sesión en todos los dispositivos
                 </Button>
               }

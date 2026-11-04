@@ -195,7 +195,8 @@ function Detalle({ id, onEdit }: { id: number; onEdit: (a: Appointment) => void 
         {cobrable && !a.isPaid && (
           <div className="grid gap-2">
             <p className="text-xs font-medium text-muted-foreground">Cobro</p>
-            <div className="flex gap-2">
+            {/* en pantallas estrechas el boton de cobrar baja a su propia linea */}
+            <div className="flex flex-wrap gap-2">
               <Select value={forma} onValueChange={(v) => setForma(v as PaymentMethod)}>
                 <SelectTrigger className="w-36">
                   <SelectValue />

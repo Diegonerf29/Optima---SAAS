@@ -72,3 +72,34 @@
   opacity: 0.55;
   text-decoration: line-through;
 }
+
+/*
+ * vista de semana en el movil: 7 columnas no caben, asi que cada dia tiene un ancho minimo
+ * y el calendario se desliza en horizontal (igual que la vista de dia con una columna por empleado)
+ * la columna de las horas se queda fija a la izquierda
+ */
+@media (max-width: 639px) {
+  .rbc-time-view:not(.rbc-time-view-resources) .rbc-time-header {
+    overflow: hidden;
+  }
+  .rbc-time-view:not(.rbc-time-view-resources) .rbc-time-header-content {
+    min-width: auto;
+    flex: 1 0 0;
+  }
+  .rbc-time-view:not(.rbc-time-view-resources) .rbc-day-slot,
+  .rbc-time-view:not(.rbc-time-view-resources) .rbc-header {
+    min-width: 88px;
+  }
+  .rbc-time-view:not(.rbc-time-view-resources) .rbc-time-gutter,
+  .rbc-time-view:not(.rbc-time-view-resources) .rbc-time-header-gutter {
+    position: sticky;
+    left: 0;
+    z-index: 10;
+    background-color: var(--card);
+  }
+}
+/* la libreria pinta la columna de las horas en blanco fijo: con el color de la tarjeta vale tambien en modo oscuro */
+.rbc-time-view-resources .rbc-time-gutter,
+.rbc-time-view-resources .rbc-time-header-gutter {
+  background-color: var(--card);
+}

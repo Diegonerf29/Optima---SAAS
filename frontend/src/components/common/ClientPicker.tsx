@@ -52,7 +52,8 @@ export function ClientPicker({ value, onChange }: { value: Client | null; onChan
           aria-label={value ? `Cliente: ${value.fullName}` : 'Buscar cliente'}
           className="w-full justify-between font-normal"
         >
-          <span className={cn('truncate', !value && 'text-muted-foreground')}>
+          {/* w-0 flex-1: sin esto el texto completo fija el ancho minimo del formulario y en 320 px se sale */}
+          <span className={cn('w-0 flex-1 truncate text-left', !value && 'text-muted-foreground')}>
             {value ? value.fullName : 'Buscar cliente por nombre o teléfono'}
           </span>
           <ChevronsUpDown className="opacity-50" />

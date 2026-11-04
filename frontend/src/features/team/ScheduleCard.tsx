@@ -123,14 +123,14 @@ export function ScheduleCard({ membershipId, editable }: { membershipId: number;
             <Input
               type="time"
               aria-label="Desde"
-              className="w-28"
+              className="w-32"
               value={nuevo.startTime}
               onChange={(e) => setNuevo({ ...nuevo, startTime: e.target.value })}
             />
             <Input
               type="time"
               aria-label="Hasta"
-              className="w-28"
+              className="w-32"
               value={nuevo.endTime}
               onChange={(e) => setNuevo({ ...nuevo, endTime: e.target.value })}
             />
